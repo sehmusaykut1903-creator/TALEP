@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Splash from './pages/Splash';
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
@@ -21,22 +21,20 @@ export default function App() {
 
   return (
     <SettingsProvider>
-      <HashRouter>
-        <MainLayout>
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/patients" element={<Patients />} />
-              <Route path="/assessment" element={<Assessment />} />
-              <Route path="/chemicals" element={<Chemicals />} />
-              <Route path="/ai" element={<TalepAI />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </AnimatePresence>
-        </MainLayout>
-        <IosMobileTabBar />
-      </HashRouter>
+      <MainLayout>
+        <AnimatePresence mode="wait">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/patients" element={<Patients />} />
+            <Route path="/assessment" element={<Assessment />} />
+            <Route path="/chemicals" element={<Chemicals />} />
+            <Route path="/ai" element={<TalepAI />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </AnimatePresence>
+      </MainLayout>
+      <IosMobileTabBar />
     </SettingsProvider>
   );
 }
