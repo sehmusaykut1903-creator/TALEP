@@ -21,7 +21,7 @@ export default function App() {
 
   return (
     <SettingsProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={(import.meta as any).env.BASE_URL}>
         <MainLayout>
           <AnimatePresence mode="wait">
             <Routes>
