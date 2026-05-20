@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Splash from './pages/Splash';
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
@@ -21,7 +21,7 @@ export default function App() {
 
   return (
     <SettingsProvider>
-      <BrowserRouter basename={(import.meta as any).env.BASE_URL}>
+      <HashRouter>
         <MainLayout>
           <AnimatePresence mode="wait">
             <Routes>
@@ -36,7 +36,7 @@ export default function App() {
           </AnimatePresence>
         </MainLayout>
         <IosMobileTabBar />
-      </BrowserRouter>
+      </HashRouter>
     </SettingsProvider>
   );
 }
