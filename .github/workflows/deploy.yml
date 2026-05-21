@@ -37,6 +37,8 @@ jobs:
         run: npm ci || npm install
 
       - name: Build platform 🏗️
+        env:
+          VITE_BASE_PATH: /TALEP/
         run: npm run build
 
       - name: Setup Pages ⚙️
