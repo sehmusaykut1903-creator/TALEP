@@ -37,7 +37,16 @@
           <div style="width: 6px; height: 6px; background-color: #06b6d4; border-radius: 50%; animation: bounce-loading 1.4s infinite ease-in-out;"></div>
         </div>
         
-        <p style="font-size: 11px; font-weight: 600; color: #94a3b8; margin: 0; opacity: 0.85;">Güvenli klinik portalı yükleniyor...</p>
+        <p style="font-size: 11px; font-weight: 600; color: #94a3b8; margin: 0 0 24px 0; opacity: 0.85;">Güvenli klinik portalı yükleniyor...</p>
+
+        <!-- Academic Team and Owner Credits inside index.html for Tablet/CDN loader branding -->
+        <div style="margin-top: 20px; padding: 16px 24px 0 24px; border-top: 1px dashed rgba(255,255,255,0.08); max-width: 440px; width: 100%;">
+          <p style="font-size: 8px; font-weight: 900; letter-spacing: 0.15em; color: #06b6d4; text-transform: uppercase; margin: 0 0 6px 0;">PROJE EKİBİ</p>
+          <p style="font-size: 11px; font-weight: 700; color: #cbd5e1; margin: 0 0 4px 0;">Şehmus AYKUT • Fatma Nur AYKUT • Aghajan MUSALI</p>
+          <p style="font-size: 9px; font-weight: 600; color: #94a3b8; margin: 0 0 10px 0;">Akademik Danışman: Prof. Dr. Vugar Ali TÜRKSOY</p>
+          <p style="font-size: 8px; font-weight: 600; color: #64748b; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.05em;">Yozgat Bozok Üniversitesi Tıp Fakültesi</p>
+          <p style="font-size: 10px; font-weight: 700; color: #475569; margin: 8px 0 0 0;">2026 • Şehmus Aykut tarafından geliştirilmiştir.</p>
+        </div>
         
         <style>
           @keyframes pulse-ambient {
@@ -69,12 +78,18 @@
                 </svg>
               </div>
               <h1 style="font-size: 18px; font-weight: 900; letter-spacing: 0.05em; margin: 0 0 8px 0; text-transform: uppercase;">TALEP <span style="color: #06b6d4;">v4.0</span></h1>
-              <p style="font-size: 11px; color: #94a3b8; max-width: 300px; margin: 0 auto 24px auto; line-height: 1.6; font-weight: 500;">
+              <p style="font-size: 11px; color: #94a3b8; max-width: 300px; margin: 0 auto 20px auto; line-height: 1.6; font-weight: 500;">
                 Klinik portal başlatılamadı. Bu durum yerel çevrimdışı önbellek kilitlenmesi veya bağlantı sorunlarından kaynaklanabilir.
               </p>
-              <button onclick="localStorage.setItem('talep_mode', 'demo'); localStorage.removeItem('talep_cached_cases'); localStorage.removeItem('talep_cached_chemicals'); localStorage.removeItem('talep_cached_notifications'); window.location.reload();" style="background-color: #06b6d4; color: #011E26; border: none; padding: 12px 24px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);">
+              <button onclick="localStorage.setItem('talep_mode', 'demo'); localStorage.removeItem('talep_cached_cases'); localStorage.removeItem('talep_cached_chemicals'); localStorage.removeItem('talep_cached_notifications'); window.location.reload();" style="background-color: #06b6d4; color: #011E26; border: none; padding: 12px 24px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; box-shadow: 0 0 20px rgba(6, 182, 212, 0.35); margin-bottom: 24px;">
                 Çevrimdışı Güvenli Modda Başlat
               </button>
+              <div style="padding: 12px 24px 0 24px; border-top: 1px dashed rgba(255,255,255,0.08); max-width: 440px; width: 100%;">
+                <p style="font-size: 8px; font-weight: 900; color: #06b6d4; text-transform: uppercase; margin: 0 0 4px 0;">PROJE EKİBİ</p>
+                <p style="font-size: 10px; font-weight: 700; color: #cbd5e1; margin: 0 0 2px 0;">Şehmus AYKUT • Fatma Nur AYKUT • Aghajan MUSALI</p>
+                <p style="font-size: 9px; font-weight: 600; color: #94a3b8; margin: 0 0 8px 0;">Danışman: Prof. Dr. Vugar Ali TÜRKSOY</p>
+                <p style="font-size: 9px; font-weight: 700; color: #475569; margin: 0;">2026 • Şehmus Aykut tarafından geliştirilmiştir.</p>
+              </div>
             </div>
           `;
         }
