@@ -21,7 +21,7 @@ import { MembershipProvider } from './context/MembershipContext';
 import PremiumUpgradeModal from './components/premium/PremiumUpgradeModal';
 
 function LoginGuard({ children }: { children: React.ReactNode }) {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, startOfflineMode } = useAuth();
   const [timedOut, setTimedOut] = React.useState(false);
 
   React.useEffect(() => {
@@ -36,8 +36,20 @@ function LoginGuard({ children }: { children: React.ReactNode }) {
 
   if (loading && !timedOut) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-brand-bg">
-        <span className="w-10 h-10 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-brand-bg p-4 selection:bg-cyan-500/30 text-slate-900">
+        <div className="flex flex-col items-center gap-6 max-w-sm text-center p-8 bg-white/70 backdrop-blur-xl border border-slate-200/45 rounded-[2.5rem] shadow-xl">
+          <span className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+          <div className="space-y-1">
+            <p className="text-xs text-slate-800 font-bold tracking-tight uppercase">Kimlik Doğrulama Katmanı</p>
+            <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">Tıbbi anahtarlar ve kromatografi modülü kuruluyor.</p>
+          </div>
+          <button
+            onClick={startOfflineMode}
+            className="w-full mt-2 flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs uppercase tracking-wider py-3.5 px-5 rounded-2xl active:scale-95 transition-all cursor-pointer shadow-md shadow-slate-900/10 border border-slate-800"
+          >
+            Çevrimdışı Güvenli Modda Başlat
+          </button>
+        </div>
       </div>
     );
   }
@@ -48,7 +60,7 @@ function LoginGuard({ children }: { children: React.ReactNode }) {
 }
 
 function ProtectedShell() {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, startOfflineMode } = useAuth();
   const [timedOut, setTimedOut] = React.useState(false);
 
   React.useEffect(() => {
@@ -63,10 +75,19 @@ function ProtectedShell() {
   
   if (loading && !timedOut) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-brand-bg">
-        <div className="flex flex-col items-center gap-3">
-          <span className="w-10 h-10 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
-          <p className="text-xs text-brand-navy/60 font-bold tracking-tight">Güvenli klinik oturumu yükleniyor...</p>
+      <div className="flex items-center justify-center min-h-screen bg-brand-bg p-4 selection:bg-cyan-500/30 text-slate-900">
+        <div className="flex flex-col items-center gap-6 max-w-sm text-center p-8 bg-white/70 backdrop-blur-xl border border-slate-200/45 rounded-[2.5rem] shadow-xl">
+          <span className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+          <div className="space-y-1">
+            <p className="text-xs text-slate-800 font-bold tracking-tight uppercase">Güvenli Oturum Başlatılıyor</p>
+            <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">C-DSS Klinik Karar Destek şebekesi yükleniyor.</p>
+          </div>
+          <button
+            onClick={startOfflineMode}
+            className="w-full mt-2 flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs uppercase tracking-wider py-3.5 px-5 rounded-2xl active:scale-95 transition-all cursor-pointer shadow-md shadow-slate-900/10 border border-slate-800"
+          >
+            Çevrimdışı Güvenli Modda Başlat
+          </button>
         </div>
       </div>
     );
@@ -109,6 +130,14 @@ function ProtectedShell() {
 export default function App() {
   const [showSplash, setShowSplash] = React.useState(true);
 
+  React.useEffect(() => {
+    // Guarantees StartupLoader (Splash Screen) finishes inside a maximum of 3.8s
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 3800);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (showSplash) {
     return <Splash onFinish={() => setShowSplash(false)} />;
   }
@@ -133,4 +162,3 @@ export default function App() {
     </SettingsProvider>
   );
 }
-
