@@ -71,14 +71,16 @@ export default function Splash({ onFinish }: { onFinish: () => void }) {
                 <GraduationCap size={10} /> PROJE EKİBİ
               </p>
               <p className="text-xs font-bold text-white leading-tight">Şehmus AYKUT</p>
-              <p className="text-[10px] text-slate-400">Fatma Nur AYKUT</p>
+              <p className="text-xs font-bold text-slate-300">Fatma Nur AYKUT</p>
+              <p className="text-xs font-bold text-slate-400">Aghajan MUSALI</p>
             </div>
             <div>
               <p className="text-[9px] font-black tracking-widest text-amber-400 uppercase mb-1 flex items-center gap-1">
                 <Award size={10} /> DANIŞMAN HOCA
               </p>
               <p className="text-xs font-bold text-white leading-tight">Prof. Dr. Vugar Ali TÜRKSOY</p>
-              <p className="text-[10px] text-amber-500/80 font-semibold tracking-wider text-[8px] uppercase">Halk Sağlığı Anabilim Dalı</p>
+              <p className="text-[10px] text-amber-500/80 font-bold tracking-wider text-[8px] uppercase mt-1">Halk Sağlığı & Toksikoloji Danışmanı</p>
+              <p className="text-[8px] text-slate-500 uppercase">Halk Sağlığı Anabilim Dalı</p>
             </div>
           </div>
 
@@ -88,7 +90,7 @@ export default function Splash({ onFinish }: { onFinish: () => void }) {
               <span>Yozgat Bozok Üniversitesi Tıp Fakültesi</span>
             </div>
             <div className="text-[10px] font-mono tracking-wider opacity-60">
-              C-DSS CLINICAL LEVEL PROTOTYPE v3.0
+              C-DSS CLINICAL LEVEL PROTOTYPE v4.0 PREMIUM
             </div>
           </div>
 

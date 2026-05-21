@@ -318,9 +318,19 @@ export default function LiteratureIntelligence() {
                   </div>
                 </div>
                 
-                <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[9px] text-slate-400 font-mono">
-                  <span>Ana Geliştirici:</span>
-                  <span className="font-bold text-white">Şehmus Aykut</span>
+                <div className="pt-2.5 border-t border-white/5 space-y-1 text-[9px] font-mono text-slate-400">
+                  <div className="flex justify-between items-center">
+                    <span>Ana Geliştirici:</span>
+                    <span className="font-bold text-white">Şehmus AYKUT</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Klinik Koordinasyon:</span>
+                    <span className="font-bold text-slate-200">Fatma Nur AYKUT</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Araştırma Geliştirme:</span>
+                    <span className="font-bold text-slate-300">Aghajan MUSALI</span>
+                  </div>
                 </div>
               </div>
             </div>
