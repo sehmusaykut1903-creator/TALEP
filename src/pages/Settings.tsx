@@ -23,7 +23,8 @@ import {
   Stethoscope,
   FlaskConical,
   Shield,
-  LogOut
+  LogOut,
+  Sparkles
 } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
@@ -31,6 +32,7 @@ import { themes, ThemeId } from '../themes/themes';
 import { Language } from '../i18n/translations';
 import { TalepLogo } from '../components/TalepLogo';
 import { ProjectCredits } from '../components/academic/ProjectCredits';
+import SubscriptionPanel from '../components/premium/SubscriptionPanel';
 
 export default function Settings() {
   const { 
@@ -56,6 +58,7 @@ export default function Settings() {
 
   const categories = [
     { id: 'profile', title: t('profile'), icon: User },
+    { id: 'membership', title: 'Üyelik & Premium Lisans', icon: Sparkles },
     { id: 'language', title: t('language'), icon: Globe },
     { id: 'theme', title: t('theme'), icon: Palette },
     { id: 'accessibility', title: t('accessibility'), icon: Accessibility },
@@ -327,6 +330,15 @@ export default function Settings() {
                </div>
             </div>
           </div>
+        </motion.div>
+      )}
+
+      {catId === 'membership' && (
+        <motion.div key="membership" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-black text-slate-900 tracking-tight">ÜYELİK REHBERİ & LİSANS DETAYLARI</h3>
+          </div>
+          <SubscriptionPanel />
         </motion.div>
       )}
 

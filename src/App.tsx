@@ -17,6 +17,8 @@ import { AnimatePresence } from 'motion/react';
 import { SettingsProvider } from './context/SettingsContext';
 import { FirebaseSyncProvider } from './context/FirebaseSyncContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { MembershipProvider } from './context/MembershipContext';
+import PremiumUpgradeModal from './components/premium/PremiumUpgradeModal';
 
 function LoginGuard({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
@@ -76,6 +78,7 @@ function ProtectedShell() {
         </AnimatePresence>
       </MainLayout>
       <IosMobileTabBar />
+      <PremiumUpgradeModal />
     </>
   );
 }
@@ -91,15 +94,17 @@ export default function App() {
     <SettingsProvider>
       <AuthProvider>
         <FirebaseSyncProvider>
-          <Routes>
-            {/* Public/Auth pages without global navigation wrappers */}
-            <Route path="/login" element={<LoginGuard><Login /></LoginGuard>} />
-            <Route path="/register" element={<LoginGuard><Register /></LoginGuard>} />
-            <Route path="/forgot-password" element={<LoginGuard><ForgotPassword /></LoginGuard>} />
-            
-            {/* All other routes are protected under the clinical shell wrap */}
-            <Route path="/*" element={<ProtectedShell />} />
-          </Routes>
+          <MembershipProvider>
+            <Routes>
+              {/* Public/Auth pages without global navigation wrappers */}
+              <Route path="/login" element={<LoginGuard><Login /></LoginGuard>} />
+              <Route path="/register" element={<LoginGuard><Register /></LoginGuard>} />
+              <Route path="/forgot-password" element={<LoginGuard><ForgotPassword /></LoginGuard>} />
+              
+              {/* All other routes are protected under the clinical shell wrap */}
+              <Route path="/*" element={<ProtectedShell />} />
+            </Routes>
+          </MembershipProvider>
         </FirebaseSyncProvider>
       </AuthProvider>
     </SettingsProvider>

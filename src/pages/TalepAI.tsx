@@ -224,6 +224,14 @@ export default function TalepAI() {
   ];
 
   const renderVisualsAndReports = (res: StructuredAiResponse, msgId: string) => {
+    if (res.isCasual) {
+      return (
+        <div className="prose prose-slate max-w-none text-slate-800 text-xs md:text-sm leading-relaxed p-4 bg-slate-50 border border-slate-100/50 rounded-2xl animate-fade-in whitespace-pre-wrap">
+          <p className="font-semibold text-slate-700">{res.rawText}</p>
+        </div>
+      );
+    }
+
     const currentTab = activeTab[msgId] || 'text';
 
     const setMsgTab = (tabValue: 'text' | 'probability' | 'progression' | 'riskRadar') => {

@@ -112,7 +112,7 @@ export default function Dashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center gap-6">
           <TalepLogo size="lg" variant="glass" />
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">TALEP Klinik Paneli</h2>
+            <h2 className="text-adaptive-3xl font-black tracking-tight text-slate-900 leading-tight">TALEP Klinik Paneli</h2>
             <p className="text-[10px] font-black tracking-wider text-cyan-600 uppercase mt-1">Toksikolojik Akıllı Laboratuvar Eşleştirme Platformu</p>
             <p className="text-[9.5px] text-slate-400 font-semibold uppercase tracking-widest mt-0.5">Mesleki Kimyasal Maruziyetlere Yönelik Klinik Karar Destek Sistemi</p>
           </div>

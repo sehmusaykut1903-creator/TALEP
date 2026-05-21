@@ -59,9 +59,9 @@ export default function ScientificIntelligence({ defaultTab = 'literature' }: Sc
                   </div>
                </div>
                
-               <h1 className="text-3xl md:text-4xl font-black tracking-tighter uppercase font-sans">
+               <h1 className="text-adaptive-3xl font-black tracking-tighter uppercase font-sans">
                   Bilimsel İstihbarat & Toksikoloji Akademik Platformu
-               </h1>
+                </h1>
                <p className="text-xs md:text-sm text-slate-300 font-medium max-w-2xl leading-relaxed">
                   İşçi sağlığı sürveyansı, çok-kriterli epidemiyolojik katsayı kütüphaneleri ve acil şelasyon algoritma konsolu.
                </p>

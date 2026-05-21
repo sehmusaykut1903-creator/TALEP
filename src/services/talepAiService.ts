@@ -23,6 +23,7 @@ export interface AiContext {
 // Complete Structured AI Response supporting graphs, progression, and radar charts
 export interface StructuredAiResponse {
   rawText: string;
+  isCasual?: boolean;
   riskLevel: "Düşük" | "Orta" | "Orta-Yüksek" | "Yüksek" | "Kritik";
   exposureSeverity: number;
   carcinogenicityGroup: string;
@@ -417,6 +418,101 @@ function getCacheKey(question: string, context: AiContext, mode: string): string
   return `key_${mode}_${cleanSector || "all"}_${cleanUnit || "all"}_${cleanQ.substring(0, 50)}`;
 }
 
+export function isCasualChat(question: string): boolean {
+  const q = question.trim().toLowerCase();
+  
+  // Exact or pattern matches for small greetings/confirmations
+  const casualWords = [
+    "selam", "merhaba", "hello", "hi", "hey", "nasılsın", "nasilsin", "teşekkür", "tesekkur", 
+    "sağol", "sagol", "tamam", "ok", "kısa soru", "kisa soru", "kimsin", "ne işe yararsın",
+    "mrb", "esbin", "merhabalar", "selamlar", "nasılsınız", "nasilsiniz", "eyvallah",
+    "thanks", "thank you", "okay", "tamamdır", "tamamdir", "anlaşıldı", "anlasildi", "olur"
+  ];
+
+  // If the query is basically just a greetings word or list of greetings
+  if (q.length < 35 && casualWords.some(word => q.includes(word))) {
+    // Ensure it's not actually asking a specific medical question with medical keywords
+    const medicalKeywords = ["kurşun", "benzen", "civa", "cıva", "arsenik", "formaldehit", "organofosfat", "semptom", "seviye", "oran", "test", "limit", "bll", "iarc", "osha", "niosh", "toksin", "zehirlenme", "karsinojen"];
+    const hasMedical = medicalKeywords.some(med => q.includes(med));
+    if (!hasMedical) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function getCasualResponse(question: string): StructuredAiResponse {
+  const q = question.toLowerCase().trim();
+  
+  // Array of varied responses to prevent repetition
+  const responses_greetings = [
+    "Merhabalar! Ben TALEP AI, mesleki sürveyans ve toksikoloji uzmanıyım. Bugün değerlendirmemizi istediğiniz bir vaka veya laboratuvar tahlili var mı?",
+    "Selamlar! Size ve ekibinize tıbbi karar destek süreçlerinde yardımcı olmak için buradayım. Hangi konuyu veya toksik ajanı incelemek istersiniz?",
+    "Merhaba! Klinik karar destek motorumuz aktif. Aklınızdaki toksikolojik soruyu veya şüpheli maruziyet tablosunu doğrudan paylaşabilirsiniz.",
+    "Esenlikler dilerim! Prof. Dr. Vugar Ali Türksoy rehberliğinde geliştirilen TALEP sistemiyle çalışmaktasınız. Size nasıl destek olabilirim?",
+    "Merhaba! Endüstriyel toksikolojide karar destek asistanınız olarak buradayım. Bugün hangi vaka üzerinde çalışıyoruz?"
+  ];
+  
+  const responses_how_are_you = [
+    "Harikayım, teşekkürler! Toksikoloji ekibimizle birlikte yeni vaka analizleri ve biyobelirteç izlemleri üzerinde çalışmaya devam ediyoruz. Sizin orada durumlar nasıl?",
+    "Çok iyiyim, sorması çok nazikçe! Sizlere endüstriyel toksisite ve klinik sürveyansta rehberlik etmek her zaman heyecan verici. Bugün hangi vakayı tartışıyoruz?",
+    "Teşekkür ederim, sistemim sorunsuz çalışıyor ve analizlere hazır! Umarım sizin gününüz de verimli geçiyordur. Hangi klinik bulguyla başlayalım?",
+    "Sistemim %100 kapasiteyle aktif ve güncel bilimsel yönergelerle donatılmış durumda, harikayım! Değerlendireceğimiz yeni bir numune veya vaka var mı?"
+  ];
+  
+  const responses_thanks = [
+    "Rica ederim, ne demek! Tıbbi karar süreçlerinizde her an yanınızdayım. Yeni bir analiz başlığı açmak isterseniz buradayım.",
+    "Rica ederim! Sağlıklı, güvenli ve korumalı bir çalışma ortamı dileğiyle. Akıllı sürveyans araçlarını dilediğiniz zaman kullanabilirsiniz.",
+    "Rica ederim, görevimiz! Bilimsel yaklaşımlarla vakaları netleştirmek benim ana motivasyonum. Başarılar dilerim.",
+    "Büyük bir memnuniyetle! Prof. Dr. Vugar Ali Türksoy metodolojisi ve TALEP altyapısı her zaman hizmetinizde."
+  ];
+  
+  const responses_ok = [
+    "Anlaşıldı, harika! İstediğiniz zaman yeni bir parametre ekleyebilir veya derinlemesine akademik bir analiz başlatabilirsiniz.",
+    "Tamamdır, not ettim. Bu konuyu takip ediyor olacağım. Hazır olduğunuzda yeni bir vaka veya kromatografi raporuyla devam edebiliriz.",
+    "Tamamdır, tıbbi karar destek motorumuz yeni girişler için hazırda bekliyor.",
+    "Anlaşıldı. Hastanın klinik sürveyansını bu doğrultuda koruma altında tutabilirsiniz."
+  ];
+
+  const responses_intro = [
+    "Ben TALEP AI; mesleki epidemiyoloji, kromatografik biyobelirteç analizleri, IARC ve ATSDR standartları doğrultusunda yapılandırılmış klinik karar destek asistanıyım. Sorumlu geliştiricim Şehmus AYKUT, klinik koordinasyon Fatma Nur AYKUT ve araştırma geliştirmede Aghajan MUSALI desteğiyle, Prof. Dr. Vugar Ali Türksoy rehberliğinde çalışmaktayım.",
+    "Ben TALEP Mesleki Toksikoloji Karar Destek Sistemiyim. Ağır metaller, solventler ve endüstriyel toksin maruziyetlerinde klinik analiz, akademik tez entegrasyonu, acil şelasyon protokolleri ve periyodik sürveyans takipleri yapabilen uzman bir AI modeliyim."
+  ];
+
+  let rawText = "";
+  
+  if (q.includes("nasılsın") || q.includes("nasilsin") || q.includes("how are you")) {
+    rawText = responses_how_are_you[Math.floor(Math.random() * responses_how_are_you.length)];
+  } else if (q.includes("teşekkür") || q.includes("tesekkur") || q.includes("sağol") || q.includes("sagol") || q.includes("thanks")) {
+    rawText = responses_thanks[Math.floor(Math.random() * responses_thanks.length)];
+  } else if (q.includes("tamam") || q.includes("ok") || q.includes("anlaşıldı") || q.includes("anlasildi") || q.includes("olur")) {
+    rawText = responses_ok[Math.floor(Math.random() * responses_ok.length)];
+  } else if (q.includes("kimsin") || q.includes("ne işe yararsın") || q.includes("nedir") || q.includes("help") || q.includes("yardım")) {
+    rawText = responses_intro[Math.floor(Math.random() * responses_intro.length)];
+  } else {
+    rawText = responses_greetings[Math.floor(Math.random() * responses_greetings.length)];
+  }
+
+  return {
+    rawText,
+    isCasual: true,
+    riskLevel: "Düşük",
+    exposureSeverity: 0,
+    carcinogenicityGroup: "Bulgu Yok",
+    confidenceScore: 100,
+    evidenceLevel: "Level IV",
+    targetOrgans: [],
+    biomarkerInterpretation: "",
+    recommendedNextTests: [],
+    ppeRecommendations: [],
+    surveillanceSuggestions: [],
+    probabilityGraph: [],
+    biomarkerProgression: [],
+    riskRadar: [],
+    riskHeatmap: []
+  };
+}
+
 /**
  * Triggers the full-stack scientific reasoning engine.
  * Contacts the server-side API endpoint secure pipeline or falls back to local database.
@@ -429,6 +525,11 @@ export async function generateScientificReasoning(
   history: any[] = [],
   advancedReasoning: boolean = false
 ): Promise<StructuredAiResponse> {
+  // Check for casual chat first
+  if (isCasualChat(question)) {
+    return getCasualResponse(question);
+  }
+
   const cacheKey = getCacheKey(question, context, mode);
 
   // 1. Local Memory Cache Tier (0-latency instant loading)
