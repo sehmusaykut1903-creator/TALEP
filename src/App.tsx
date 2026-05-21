@@ -8,61 +8,16 @@ import Chemicals from './pages/Chemicals';
 import Settings from './pages/Settings';
 import TalepAI from './pages/TalepAI';
 import ScientificIntelligence from './pages/ScientificIntelligence';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
 import MainLayout from './components/layout/MainLayout';
 import IosMobileTabBar from './components/navigation/IosMobileTabBar';
 import { AnimatePresence } from 'motion/react';
 import { SettingsProvider } from './context/SettingsContext';
 import { FirebaseSyncProvider } from './context/FirebaseSyncContext';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import { MembershipProvider } from './context/MembershipContext';
 import PremiumUpgradeModal from './components/premium/PremiumUpgradeModal';
 
-function LoginGuard({ children }: { children: React.ReactNode }) {
-  const { currentUser, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-brand-bg p-4 selection:bg-cyan-500/30 text-slate-900">
-        <div className="flex flex-col items-center gap-6 max-w-sm text-center p-8 bg-white/70 backdrop-blur-xl border border-slate-200/45 rounded-[2.5rem] shadow-xl">
-          <span className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-          <div className="space-y-1">
-            <p className="text-xs text-slate-800 font-bold tracking-tight uppercase">Kimlik Doğrulama Katmanı</p>
-            <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">Tıbbi anahtarlar ve kromatografi modülü kuruluyor.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  if (currentUser) {
-    return <Navigate to="/" replace />;
-  }
-  return <>{children}</>;
-}
-
-function ProtectedShell() {
-  const { currentUser, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-brand-bg p-4 selection:bg-cyan-500/30 text-slate-900">
-        <div className="flex flex-col items-center gap-6 max-w-sm text-center p-8 bg-white/70 backdrop-blur-xl border border-slate-200/45 rounded-[2.5rem] shadow-xl">
-          <span className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-          <div className="space-y-1">
-            <p className="text-xs text-slate-800 font-bold tracking-tight uppercase">Güvenli Oturum Başlatılıyor</p>
-            <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">C-DSS Klinik Karar Destek şebekesi yükleniyor.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return <Navigate to="/login" replace />;
-  }
-
+function PureAppShell() {
   return (
     <>
       <MainLayout>
@@ -93,14 +48,21 @@ function ProtectedShell() {
   );
 }
 
-export default function App() {
+function MainAppSelector() {
   const [showSplash, setShowSplash] = React.useState(true);
 
   React.useEffect(() => {
-    // Guarantees StartupLoader (Splash Screen) finishes inside a maximum of 3.2 seconds
+    // Save state as demo to avoid any server-side Firebase delay and activate the mock clinician immediately
+    try {
+      localStorage.setItem('talep_mode', 'demo');
+    } catch (e) {
+      console.warn('LocalStorage is unavailable in this sandbox environment:', e);
+    }
+
+    // Force splash completion within exactly 2 seconds (Requirement 4)
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 3200);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -108,20 +70,16 @@ export default function App() {
     return <Splash onFinish={() => setShowSplash(false)} />;
   }
 
+  return <PureAppShell />;
+}
+
+export default function App() {
   return (
     <SettingsProvider>
       <AuthProvider>
         <FirebaseSyncProvider>
           <MembershipProvider>
-            <Routes>
-              {/* Public/Auth pages without global navigation wrappers */}
-              <Route path="/login" element={<LoginGuard><Login /></LoginGuard>} />
-              <Route path="/register" element={<LoginGuard><Register /></LoginGuard>} />
-              <Route path="/forgot-password" element={<LoginGuard><ForgotPassword /></LoginGuard>} />
-              
-              {/* All other routes are protected under the clinical shell wrap */}
-              <Route path="/*" element={<ProtectedShell />} />
-            </Routes>
+            <MainAppSelector />
           </MembershipProvider>
         </FirebaseSyncProvider>
       </AuthProvider>
