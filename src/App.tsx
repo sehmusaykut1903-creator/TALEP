@@ -138,10 +138,18 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (showSplash) {
-    return <Splash onFinish={() => setShowSplash(false)} />;
+  export default {
+  async fetch(request, env, ctx) {
+    try {
+      return await env.ASSETS.fetch(request);
+    } catch (error) {
+      return new Response(
+        "TALEP v4.0 Premium - Asset loading error",
+        { status: 500 }
+      );
+    }
   }
-
+}
   return (
     <SettingsProvider>
       <AuthProvider>
