@@ -17,6 +17,28 @@ import { AuthProvider } from './context/AuthContext';
 import { MembershipProvider } from './context/MembershipContext';
 import PremiumUpgradeModal from './components/premium/PremiumUpgradeModal';
 
+// Pre-seed local storage immediately on module initialization to unlock physician session instantly
+try {
+  localStorage.setItem('talep_mode', 'demo');
+  localStorage.setItem('talep_demo_auth_user', JSON.stringify({
+    uid: 'demo-guest-uid',
+    email: 'guest@talep.org',
+    displayName: 'Dr. Şehmus Aykut',
+    emailVerified: true
+  }));
+  localStorage.setItem('talep_demo_auth_profile', JSON.stringify({
+    uid: 'demo-guest-uid',
+    email: 'guest@talep.org',
+    displayName: 'Dr. Şehmus Aykut',
+    role: 'physician',
+    institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
+    department: 'Halk Sağlığı Anabilim Dalı',
+    city: 'Yozgat, Turkey'
+  }));
+} catch (e) {
+  console.warn('Initial session self-seeding not completed:', e);
+}
+
 function PureAppShell() {
   return (
     <>
@@ -52,17 +74,32 @@ function MainAppSelector() {
   const [showSplash, setShowSplash] = React.useState(true);
 
   React.useEffect(() => {
-    // Save state as demo to avoid any server-side Firebase delay and activate the mock clinician immediately
+    // Keep ensuring demo mode is locked in context during hook cycles
     try {
       localStorage.setItem('talep_mode', 'demo');
+      localStorage.setItem('talep_demo_auth_user', JSON.stringify({
+        uid: 'demo-guest-uid',
+        email: 'guest@talep.org',
+        displayName: 'Dr. Şehmus Aykut',
+        emailVerified: true
+      }));
+      localStorage.setItem('talep_demo_auth_profile', JSON.stringify({
+        uid: 'demo-guest-uid',
+        email: 'guest@talep.org',
+        displayName: 'Dr. Şehmus Aykut',
+        role: 'physician',
+        institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
+        department: 'Halk Sağlığı Anabilim Dalı',
+        city: 'Yozgat, Turkey'
+      }));
     } catch (e) {
-      console.warn('LocalStorage is unavailable in this sandbox environment:', e);
+      console.warn('LocalStorage setup is unavailable:', e);
     }
 
-    // Force splash completion within exactly 2 seconds (Requirement 4)
+    // Force fluid splash timeout to exactly 1.5 seconds (Requirement 2)
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 2000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
 
