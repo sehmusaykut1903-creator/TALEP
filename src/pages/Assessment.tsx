@@ -18,9 +18,11 @@ import {
 import { symptoms, sectors, unitMap } from '../data/toxicology';
 import { calculateRisk, MatchingResult } from '../utils/matchingEngine';
 import { useSettings } from '../context/SettingsContext';
+import { useFirebaseSync } from '../context/FirebaseSyncContext';
 
 export default function Assessment() {
   const { t, isRTL } = useSettings();
+  const { addCase } = useFirebaseSync();
   const location = useLocation();
   const [currentStep, setCurrentStep] = React.useState(1);
   const [formData, setFormData] = React.useState({
@@ -49,7 +51,7 @@ export default function Assessment() {
 
   const [results, setResults] = React.useState<MatchingResult[]>([]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 3) {
       const calculationInput = {
         sector: formData.sector,
@@ -63,7 +65,43 @@ export default function Assessment() {
           xray: formData.labResults.xray
         }
       } as any;
-      setResults(calculateRisk(calculationInput));
+      
+      const matched = calculateRisk(calculationInput);
+      setResults(matched);
+
+      // Determine highest probability risk level
+      const highestMatch = matched[0];
+      const riskLevel = highestMatch ? (highestMatch.score > 70 ? 'Yüksek' : highestMatch.score > 40 ? 'Orta' : 'Düşük') : 'Düşük';
+
+      const patientCase = {
+        name: formData.name || 'İsimsiz Çalışan',
+        age: 38,
+        gender: 'Belirtilmemiş',
+        sector: formData.sector || 'Genel Sektör',
+        unit: formData.unit || 'Genel Birim',
+        duration: 'Belirtilmemiş',
+        ppeUsage: true,
+        symptoms: formData.symptoms,
+        risk: riskLevel,
+        notes: highestMatch ? `${highestMatch.chemical.name} maruziyeti şüphesi.` : undefined
+      };
+
+      const labData = {
+        caseId: '', 
+        testName: 'ALT/AST/Kolinesteraz/Kurşun/Arsenik/WBC',
+        value: JSON.stringify(formData.labResults),
+        isAbnormal: highestMatch ? highestMatch.score > 40 : false
+      };
+
+      const aiData = {
+        caseId: '', 
+        matchedChemicals: matched.slice(0, 3).map(m => m.chemical.name),
+        riskScore: highestMatch ? highestMatch.score : 0,
+        clinicalAdvice: highestMatch ? highestMatch.chemical.riskInfo : 'Belirgin risk saptanmadı.'
+      };
+
+      // Call synchronous Firestore atomic save logic (or fallback to local cache effortlessly)
+      await addCase(patientCase, labData, aiData);
     }
     setCurrentStep((prev) => Math.min(prev + 1, 4));
   };

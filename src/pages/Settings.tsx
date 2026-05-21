@@ -22,9 +22,11 @@ import {
   Trash2,
   Stethoscope,
   FlaskConical,
-  Shield
+  Shield,
+  LogOut
 } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 import { themes, ThemeId } from '../themes/themes';
 import { Language } from '../i18n/translations';
 
@@ -39,8 +41,16 @@ export default function Settings() {
     t 
   } = useSettings();
 
+  const { role, logout, updateProfileData, userProfile } = useAuth();
+
   const [tempProfile, setTempProfile] = useState(profile);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogout = async () => {
+    if (confirm('Oturumu kapatmak istediğinize emin misiniz?')) {
+      await logout();
+    }
+  };
 
   const categories = [
     { id: 'profile', title: t('profile'), icon: User },
@@ -116,10 +126,24 @@ export default function Settings() {
                  <RotateCcw size={18} />
                </button>
                <button 
-                onClick={() => setProfile(tempProfile)}
-                className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all"
+                onClick={async () => {
+                  setProfile(tempProfile);
+                  if (updateProfileData) {
+                    await updateProfileData({
+                      displayName: tempProfile.fullName,
+                      title: tempProfile.title,
+                      institution: tempProfile.institution,
+                      department: tempProfile.department,
+                      orcid: tempProfile.orcid,
+                      phone: tempProfile.phone,
+                      city: tempProfile.city,
+                      email: tempProfile.email
+                    });
+                  }
+                }}
+                className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-900/20 active:scale-95 transition-all cursor-pointer"
                >
-                {t('save')}
+                 {t('save')}
               </button>
             </div>
           </div>
@@ -154,6 +178,22 @@ export default function Settings() {
                      </div>
                      <h4 className="text-xl font-black text-slate-900 tracking-tight mb-1">{tempProfile.fullName}</h4>
                      <p className="text-sm font-bold text-slate-500 mb-4">{tempProfile.title}</p>
+                     
+                     {role && (
+                       <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider mb-4 ${
+                         role === 'admin' ? 'bg-amber-100/70 text-amber-800 border border-amber-200' :
+                         role === 'physician' ? 'bg-emerald-100/70 text-emerald-800 border border-emerald-200' :
+                         role === 'laboratory' ? 'bg-blue-100/70 text-blue-800 border border-blue-200' :
+                         'bg-slate-100/70 text-slate-800 border border-slate-200'
+                       }`}>
+                         🔑 {
+                           role === 'admin' ? 'Yönetici (Admin)' :
+                           role === 'physician' ? 'Uzman Hekim (Physician)' :
+                           role === 'laboratory' ? 'Laboratuvar Analisti' :
+                           'İzleyici (Observer)'
+                         }
+                       </span>
+                     )}
                      <div className="space-y-1 opacity-70">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{tempProfile.institution}</p>
                         <p className="text-xs font-medium text-slate-400">ORCID: {tempProfile.orcid}</p>
@@ -556,7 +596,7 @@ export default function Settings() {
         {/* Sidebar */}
         <div className="w-80 bg-white/50 backdrop-blur-3xl border border-white/60 rounded-[3rem] p-8 flex flex-col gap-2 overflow-y-auto shadow-2xl shadow-slate-200/20">
           <h2 className="text-2xl font-black px-4 mb-8 tracking-tight">{t('settings')}</h2>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 mb-6">
             {categories.map((cat) => (
               <button
                 key={cat.id}
@@ -574,6 +614,18 @@ export default function Settings() {
                 {desktopActiveCategory !== cat.id && <ChevronRight size={16} className="ml-auto opacity-0 group-hover:opacity-100 transition-all text-slate-300" />}
               </button>
             ))}
+          </div>
+          
+          <div className="mt-auto pt-6 border-t border-slate-100/85">
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-4 px-5 py-4 rounded-[1.25rem] transition-all font-bold text-rose-500 hover:bg-rose-50 hover:text-rose-600 group cursor-pointer"
+            >
+              <div className="p-2 rounded-xl bg-rose-50 text-rose-500 group-hover:bg-rose-100 transition-colors">
+                <LogOut size={20} />
+              </div>
+              <span className="text-[15px]">Oturumu Kapat</span>
+            </button>
           </div>
         </div>
 
@@ -616,6 +668,20 @@ export default function Settings() {
                     <ChevronRight size={20} className="ml-auto text-slate-300" />
                   </button>
                 ))}
+                
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-4 p-5 active:bg-rose-50 transition-colors group text-rose-500 cursor-pointer"
+                >
+                  <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 border border-white ring-4 ring-rose-50/10">
+                    <LogOut size={24} />
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <span className="font-bold text-lg text-rose-600">Oturumu Kapat</span>
+                    <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 mt-0.5">Güvenli Oturum Çıkışı</span>
+                  </div>
+                  <ChevronRight size={20} className="ml-auto text-rose-300" />
+                </button>
               </div>
 
               {/* Version Info */}

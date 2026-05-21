@@ -13,10 +13,18 @@ import {
   ChevronDown,
   FileText,
   Bot,
-  User
+  User,
+  LogOut,
+  BookOpen,
+  TrendingUp,
+  Database,
+  Sparkles,
+  Flame,
+  Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSettings } from '../../context/SettingsContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface NavItemProps {
   to: string;
@@ -54,10 +62,11 @@ const NavItem = ({ to, icon: Icon, label, active, onClick }: NavItemProps) => {
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { t, theme, isRTL, profile } = useSettings();
+  const { role, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const navigation = [
+  const coreNavigation = [
     { to: '/', icon: Home, label: t('dashboard') },
     { to: '/assessment', icon: PlusCircle, label: t('assessment') },
     { to: '/ai', icon: Bot, label: t('talep_ai') },
@@ -66,10 +75,19 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     { to: '/settings', icon: SettingsIcon, label: t('settings') },
   ];
 
+  const academicNavigation = [
+    { to: '/literature', icon: BookOpen, label: t('literature_intelligence') },
+    { to: '/epidemiology', icon: TrendingUp, label: t('epidemiology') },
+    { to: '/exposure-db', icon: Database, label: t('exposure_db') },
+    { to: '/case-archive', icon: FileText, label: t('case_archive') },
+    { to: '/ai-research-assistant', icon: Sparkles, label: t('ai_research_assistant') },
+    { to: '/emergency-mode', icon: Flame, label: t('emergency_mode') },
+  ];
+
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden font-sans" style={{ backgroundColor: theme.background }} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex flex-col w-72 bg-white/50 backdrop-blur-xl border-r border-slate-200/50 sticky top-0 h-screen z-40 overflow-y-auto shrink-0">
+      <aside className="hidden md:flex flex-col w-72 bg-white/50 backdrop-blur-xl border-r border-slate-200/50 sticky top-0 h-screen z-40 overflow-y-auto shrink-0 scrollbar-hide">
         <div className="p-8">
           <div className="flex items-center gap-4 mb-12">
             <div className="w-12 h-12 flex items-center justify-center text-white rounded-[1rem] shadow-2xl" style={{ backgroundColor: theme.primary, boxShadow: `0 15px 35px -5px ${theme.primary}50` }}>
@@ -83,28 +101,63 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
           <div className="mb-8 p-1 bg-slate-100/50 rounded-2xl flex">
              <div className="flex-1 flex items-center gap-2 px-4 py-2 text-slate-400">
-               <Search size={16} />
-               <input type="text" placeholder={t('fast_search')} className="bg-transparent border-none outline-none text-xs w-full" />
+                <Search size={16} />
+                <input type="text" placeholder={t('fast_search')} className="bg-transparent border-none outline-none text-xs w-full" />
              </div>
           </div>
 
-          <nav className="space-y-1">
-            {navigation.map((item) => {
-              const IconComp = item.icon;
-              return (
-                <NavItem
-                  key={item.to}
-                  to={item.to}
-                  icon={IconComp}
-                  label={item.label}
-                  active={location.pathname === item.to}
-                />
-              );
-            })}
-          </nav>
+          <div className="space-y-6">
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 px-4">KLİNİK ÇEKİRDEK</p>
+              <nav className="space-y-1">
+                {coreNavigation.map((item) => {
+                  const IconComp = item.icon;
+                  return (
+                    <NavItem
+                      key={item.to}
+                      to={item.to}
+                      icon={IconComp}
+                      label={item.label}
+                      active={location.pathname === item.to}
+                    />
+                  );
+                })}
+              </nav>
+            </div>
+
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 px-4">AKADEMİK KATMAN</p>
+              <nav className="space-y-1">
+                {academicNavigation.map((item) => {
+                  const IconComp = item.icon;
+                  return (
+                    <NavItem
+                      key={item.to}
+                      to={item.to}
+                      icon={IconComp}
+                      label={item.label}
+                      active={location.pathname === item.to}
+                    />
+                  );
+                })}
+              </nav>
+            </div>
+          </div>
 
           <div className="mt-12 p-6 rounded-3xl bg-slate-50 border border-slate-100">
-             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3">{t('profile').toUpperCase()}</p>
+             <div className="flex justify-between items-center mb-3 text-slate-400">
+               <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{t('profile').toUpperCase()}</p>
+               {role && (
+                 <span className={`inline-block px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider ${
+                   role === 'admin' ? 'bg-amber-100/70 text-amber-800' :
+                   role === 'physician' ? 'bg-emerald-100/70 text-emerald-800' :
+                   role === 'laboratory' ? 'bg-blue-100/70 text-blue-800' :
+                   'bg-slate-250/70 text-slate-600'
+                 }`}>
+                   {role}
+                 </span>
+               )}
+             </div>
              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden">
                    {profile.avatarType === 'custom' && profile.avatarImage ? (

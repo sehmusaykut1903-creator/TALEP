@@ -32,16 +32,25 @@ import {
   Cell 
 } from 'recharts';
 import { useSettings } from '../context/SettingsContext';
+import { useFirebaseSync } from '../context/FirebaseSyncContext';
 import { updates } from '../data/updates';
 import { generateTalepAIResponse } from '../services/talepAiService';
 
 export default function Dashboard() {
   const { t, theme, profile } = useSettings();
+  const { cases } = useFirebaseSync();
+
+  // Dynamic calculations from the synchronized Firestore/Offline state
+  const totalPatients = cases.length;
+  const highRiskCount = cases.filter(c => {
+    const r = c.risk?.toLowerCase() || '';
+    return r === 'high' || r === 'yüksek';
+  }).length;
 
   const stats = [
-    { label: t('patients'), value: '1,284', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50' },
+    { label: t('patients'), value: totalPatients.toString(), icon: Users, color: 'text-blue-500', bg: 'bg-blue-50' },
     { label: t('active_system'), value: '856', icon: Zap, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-    { label: t('high') + ' ' + t('risk_level'), value: '42', icon: AlertTriangle, color: 'text-rose-500', bg: 'bg-rose-50' },
+    { label: t('high') + ' ' + t('risk_level'), value: highRiskCount.toString(), icon: AlertTriangle, color: 'text-rose-500', bg: 'bg-rose-50' },
     { label: t('exposure_detection'), value: '128', icon: Target, color: 'text-amber-500', bg: 'bg-amber-50' },
   ];
 
@@ -237,15 +246,25 @@ export default function Dashboard() {
              <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-xl shadow-slate-900/20 flex flex-col justify-between">
                 <div>
                    <h3 className="text-lg font-black mb-2 uppercase tracking-tight">Son Raporlar</h3>
-                   <p className="text-xs text-slate-500 font-medium mb-6">En son tamamlanan 3 vaka analizi</p>
+                   <p className="text-xs text-slate-500 font-medium mb-6">En son tamamlanan vaka analizleri</p>
                 </div>
                 <div className="space-y-3">
-                   {['Boya Atölyesi', 'Metal İşleme', 'Yapıştırıcı Üretimi'].map((vaka, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                         <span className="text-xs font-bold">{vaka}</span>
-                         <ArrowUpRight size={14} className="text-slate-500" />
-                      </div>
+                   {cases.slice(0, 3).map((vaka, i) => (
+                      <Link 
+                        key={vaka.id || i} 
+                        to="/patients"
+                        className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group/item"
+                      >
+                         <div className="flex flex-col">
+                            <span className="text-xs font-bold text-white group-hover/item:text-brand-blue transition-colors">{vaka.name}</span>
+                            <span className="text-[10px] text-slate-400 font-medium mt-0.5">{vaka.sector} • {vaka.risk} Risk</span>
+                         </div>
+                         <ArrowUpRight size={14} className="text-slate-500 group-hover/item:text-white transition-all transform group-hover/item:translate-x-0.5 group-hover/item:-translate-y-0.5" />
+                      </Link>
                    ))}
+                   {cases.length === 0 && (
+                      <p className="text-xs text-slate-500 font-medium italic py-2">Henüz kayıtlı rapor bulunmuyor.</p>
+                   )}
                 </div>
              </div>
           </div>

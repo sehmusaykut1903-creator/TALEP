@@ -1,48 +1,124 @@
 {
   "entities": {
-    "patient": {
-      "title": "Patient",
-      "description": "Patient information and history",
+    "user": {
+      "title": "User",
+      "description": "System users and clinical staff",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Auth UID of the user" },
+        "email": { "type": "string", "description": "Email address" },
+        "displayName": { "type": "string", "description": "Full name" },
+        "role": { "type": "string", "description": "Access tier role" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "displayName"]
+    },
+    "toxicology_case": {
+      "title": "ToxicologyCase",
+      "description": "Patient file details containing demographic and exposure data",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string" },
-        "age": { "type": "number" },
-        "gender": { "type": "string" },
-        "occupation": { "type": "string" },
-        "sector": { "type": "string" },
-        "workDuration": { "type": "string" },
-        "ppeUsage": { "type": "boolean" },
-        "smoking": { "type": "boolean" },
-        "comorbidities": { "type": "string" },
+        "name": { "type": "string", "description": "Patient's name" },
+        "age": { "type": "number", "description": "Patient's age" },
+        "gender": { "type": "string", "description": "Patient's gender" },
+        "sector": { "type": "string", "description": "Industry sector of the patient" },
+        "unit": { "type": "string", "description": "Workplace unit" },
+        "duration": { "type": "string", "description": "Work duration" },
+        "ppeUsage": { "type": "boolean", "description": "If PPE is used regularly" },
+        "symptoms": { "type": "array", "description": "List of observed symptoms" },
+        "risk": { "type": "string", "description": "Assessed risk category" },
+        "notes": { "type": "string", "description": "Clinical assessment notes" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "sector"]
     },
-    "assessment": {
-      "title": "Assessment",
-      "description": "Toxicological matching assessment",
+    "laboratory_result": {
+      "title": "LaboratoryResult",
+      "description": "Laboratory measurements and biochemistry test values",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "patientId": { "type": "string" },
-        "symptoms": { "type": "array" },
-        "labResults": { "type": "object" },
-        "matchedChemicals": { "type": "array" },
-        "riskScore": { "type": "number" },
-        "riskLevel": { "type": "string" },
+        "caseId": { "type": "string", "description": "Reference to the toxicology case ID" },
+        "testName": { "type": "string", "description": "Name of the laboratory test" },
+        "value": { "type": "string", "description": "Result value with units" },
+        "isAbnormal": { "type": "boolean", "description": "Flag for out-of-range results" },
         "createdAt": { "type": "string", "format": "date-time" }
-      }
+      },
+      "required": ["caseId", "testName", "value"]
+    },
+    "ai_assessment": {
+      "title": "AIAssessment",
+      "description": "AI-generated hazard analysis and matching results",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "caseId": { "type": "string", "description": "Toxicology case reference" },
+        "matchedChemicals": { "type": "array", "description": "List of matched industrial chemicals" },
+        "riskScore": { "type": "number", "description": "Computed hazard score" },
+        "clinicalAdvice": { "type": "string", "description": "AI clinical guidance" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["caseId"]
+    },
+    "chemical": {
+      "title": "Chemical",
+      "description": "Hazardous chemicals database entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "description": "Name of the chemical" },
+        "cas": { "type": "string", "description": "CAS registry number" },
+        "sectors": { "type": "array" },
+        "exposureRoutes": { "type": "array" },
+        "acuteSymptoms": { "type": "array" },
+        "chronicSymptoms": { "type": "array" },
+        "labs": { "type": "array" },
+        "organs": { "type": "array" },
+        "riskInfo": { "type": "string" },
+        "riskLevelBase": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "notification": {
+      "title": "Notification",
+      "description": "System alerts or patient risk state changes",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "description": "Alert priority/type" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "message"]
     }
   },
   "firestore": {
-    "patients": {
-      "schema": "patient",
-      "description": "Collection of patient profiles"
+    "users": {
+      "schema": "user",
+      "description": "Collection of system users and managers"
     },
-    "assessments": {
-      "schema": "assessment",
-      "description": "Collection of toxicological assessments"
+    "toxicology_cases": {
+      "schema": "toxicology_case",
+      "description": "Collection of case dossiers and exposures"
+    },
+    "laboratory_results": {
+      "schema": "laboratory_result",
+      "description": "Collection of clinical lab metrics"
+    },
+    "ai_assessments": {
+      "schema": "ai_assessment",
+      "description": "Collection of toxicological analytical results"
+    },
+    "chemicals": {
+      "schema": "chemical",
+      "description": "Reference database of chemical toxicities"
+    },
+    "notifications": {
+      "schema": "notification",
+      "description": "Collection of system-level alerts and indicators"
     }
   }
 }

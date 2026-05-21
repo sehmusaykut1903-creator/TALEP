@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Core Reusable Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Users Collection Rules ---
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId) 
+        && incoming().email is string 
+        && incoming().displayName is string;
+      allow update: if isOwner(userId)
+        && incoming().displayName is string;
+      allow delete: if isOwner(userId);
+    }
+
+    // --- Toxicology Cases Rules ---
+    match /toxicology_cases/{caseId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 100
+        && incoming().sector is string && incoming().sector.size() <= 50;
+      allow update: if isSignedIn()
+        && incoming().name is string
+        && incoming().sector is string;
+      allow delete: if isSignedIn();
+    }
+
+    // --- Laboratory Results Rules ---
+    match /laboratory_results/{resultId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && incoming().caseId is string
+        && incoming().testName is string
+        && incoming().value is string;
+      allow update: if isSignedIn()
+        && incoming().caseId is string
+        && incoming().testName is string;
+      allow delete: if isSignedIn();
+    }
+
+    // --- AI Assessments Rules ---
+    match /ai_assessments/{assessmentId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && incoming().caseId is string
+        && incoming().matchedChemicals is list
+        && incoming().riskScore is number;
+      allow update: if isSignedIn()
+        && incoming().caseId is string;
+      allow delete: if isSignedIn();
+    }
+
+    // --- Chemicals Rules (Publicly readable database reference) ---
+    match /chemicals/{chemicalId} {
+      allow read: if true;
+      allow write: if isSignedIn()
+        && incoming().name is string;
+    }
+
+    // --- Notifications Rules ---
+    match /notifications/{notifId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && incoming().title is string
+        && incoming().message is string;
+      allow update: if isSignedIn()
+        && incoming().read is bool;
+      allow delete: if isSignedIn();
+    }
+  }
+}
