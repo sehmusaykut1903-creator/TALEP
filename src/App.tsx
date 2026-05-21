@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Splash from './pages/Splash';
 import MainLayout from './components/layout/MainLayout';
@@ -9,16 +9,16 @@ import { FirebaseSyncProvider } from './context/FirebaseSyncContext';
 import { AuthProvider } from './context/AuthContext';
 import { MembershipProvider } from './context/MembershipContext';
 import PremiumUpgradeModal from './components/premium/PremiumUpgradeModal';
-import ErrorBoundary from './components/ErrorBoundary';
+import { RuntimeErrorBoundary, SafeRenderWrapper, EmergencyDashboardFallback, safeLazy } from './components/RuntimeErrorManager';
 
-// Lazy load large medical dashboard modules for production bundle optimization
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Patients = lazy(() => import('./pages/Patients'));
-const Assessment = lazy(() => import('./pages/Assessment'));
-const Chemicals = lazy(() => import('./pages/Chemicals'));
-const Settings = lazy(() => import('./pages/Settings'));
-const TalepAI = lazy(() => import('./pages/TalepAI'));
-const ScientificIntelligence = lazy(() => import('./pages/ScientificIntelligence'));
+// Safe lazy loading of medical dashboard modules to avoid raw chunk load abort white screens
+const Dashboard = safeLazy(() => import('./pages/Dashboard'), 'Ana Panel');
+const Patients = safeLazy(() => import('./pages/Patients'), 'Sürveyans');
+const Assessment = safeLazy(() => import('./pages/Assessment'), 'Kriter Analiz');
+const Chemicals = safeLazy(() => import('./pages/Chemicals'), 'Toksikoloji DB');
+const Settings = safeLazy(() => import('./pages/Settings'), 'Sistem Ayarları');
+const TalepAI = safeLazy(() => import('./pages/TalepAI'), 'TALEP Klinik AI');
+const ScientificIntelligence = safeLazy(() => import('./pages/ScientificIntelligence'), 'Akademik Port');
 
 // Custom medical-themed suspense loader
 function MainPageLoader() {
@@ -78,21 +78,21 @@ function PureAppShell() {
         <AnimatePresence mode="wait">
           <Suspense fallback={<MainPageLoader />}>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/patients" element={<Patients />} />
-              <Route path="/assessment" element={<Assessment />} />
-              <Route path="/chemicals" element={<Chemicals />} />
-              <Route path="/ai" element={<TalepAI />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/literature" element={<ScientificIntelligence defaultTab="literature" />} />
-              <Route path="/epidemiology" element={<ScientificIntelligence defaultTab="epidemiology" />} />
-              <Route path="/exposure-db" element={<ScientificIntelligence defaultTab="exposure_db" />} />
-              <Route path="/case-archive" element={<ScientificIntelligence defaultTab="case_archive" />} />
-              <Route path="/reports-center" element={<ScientificIntelligence defaultTab="case_archive" />} />
-              <Route path="/ai-research-assistant" element={<ScientificIntelligence defaultTab="ai_research" />} />
-              <Route path="/team-collaboration" element={<ScientificIntelligence defaultTab="ai_research" />} />
-              <Route path="/audit-logs" element={<ScientificIntelligence defaultTab="case_archive" />} />
-              <Route path="/emergency-mode" element={<ScientificIntelligence defaultTab="emergency" />} />
+              <Route path="/" element={<SafeRenderWrapper><Dashboard /></SafeRenderWrapper>} />
+              <Route path="/patients" element={<SafeRenderWrapper><Patients /></SafeRenderWrapper>} />
+              <Route path="/assessment" element={<SafeRenderWrapper><Assessment /></SafeRenderWrapper>} />
+              <Route path="/chemicals" element={<SafeRenderWrapper><Chemicals /></SafeRenderWrapper>} />
+              <Route path="/ai" element={<SafeRenderWrapper><TalepAI /></SafeRenderWrapper>} />
+              <Route path="/settings" element={<SafeRenderWrapper><Settings /></SafeRenderWrapper>} />
+              <Route path="/literature" element={<SafeRenderWrapper><ScientificIntelligence defaultTab="literature" /></SafeRenderWrapper>} />
+              <Route path="/epidemiology" element={<SafeRenderWrapper><ScientificIntelligence defaultTab="epidemiology" /></SafeRenderWrapper>} />
+              <Route path="/exposure-db" element={<SafeRenderWrapper><ScientificIntelligence defaultTab="exposure_db" /></SafeRenderWrapper>} />
+              <Route path="/case-archive" element={<SafeRenderWrapper><ScientificIntelligence defaultTab="case_archive" /></SafeRenderWrapper>} />
+              <Route path="/reports-center" element={<SafeRenderWrapper><ScientificIntelligence defaultTab="case_archive" /></SafeRenderWrapper>} />
+              <Route path="/ai-research-assistant" element={<SafeRenderWrapper><ScientificIntelligence defaultTab="ai_research" /></SafeRenderWrapper>} />
+              <Route path="/team-collaboration" element={<SafeRenderWrapper><ScientificIntelligence defaultTab="ai_research" /></SafeRenderWrapper>} />
+              <Route path="/audit-logs" element={<SafeRenderWrapper><ScientificIntelligence defaultTab="case_archive" /></SafeRenderWrapper>} />
+              <Route path="/emergency-mode" element={<SafeRenderWrapper><ScientificIntelligence defaultTab="emergency" /></SafeRenderWrapper>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
@@ -134,7 +134,7 @@ function MainAppSelector() {
 
 export default function App() {
   return (
-    <ErrorBoundary>
+    <RuntimeErrorBoundary fallback={<EmergencyDashboardFallback />}>
       <SettingsProvider>
         <AuthProvider>
           <FirebaseSyncProvider>
@@ -144,6 +144,6 @@ export default function App() {
           </FirebaseSyncProvider>
         </AuthProvider>
       </SettingsProvider>
-    </ErrorBoundary>
+    </RuntimeErrorBoundary>
   );
 }
