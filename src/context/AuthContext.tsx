@@ -98,12 +98,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Firebase mode active subscription
     setLoading(true);
+    console.log('[TALEP DEBUG] Initializing Firebase Auth and Services...');
+    
+    // Failsafe timeout to prevent infinite loader if auth listener or Firestore profile fetching hangs
+    const failsafeTimeout = setTimeout(() => {
+      setLoading((currLoading) => {
+        if (currLoading) {
+          console.warn('[TALEP DEBUG] Failsafe Auth Timeout triggered (2.5s). Forcing loading screen resolution for smooth startup.');
+          return false;
+        }
+        return currLoading;
+      });
+    }, 2500);
     
     // Set Persistence explicitly to local
     setPersistence(auth, browserLocalPersistence)
       .catch((err) => console.warn('Persistence config issue:', err));
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('[TALEP DEBUG] Firebase Auth listener resolved. User state:', user ? `Logged In (${user.email})` : 'Guest / Observer');
+      
       if (user) {
         setCurrentUser(user);
         
@@ -123,7 +137,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               city: parsed.city || 'Yozgat, Turkey'
             });
             // Resolve visual loading gate early
+            console.log('[TALEP DEBUG] Loaded user profile from local cache successfully.');
             setLoading(false);
+            clearTimeout(failsafeTimeout);
           }
         } catch (e) {}
 
@@ -150,6 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
               localStorage.setItem(cacheKey, JSON.stringify(fullProfile));
             } catch (e) {}
+            console.log('[TALEP DEBUG] User profile successfully fetched from Firestore and cached locally.');
           } else {
             // Profile entry doesn't exist yet, construct a placeholder entry safely
             const placeholder: UserProfile = {
@@ -187,6 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               department: placeholder.department,
               city: placeholder.city
             });
+            console.log('[TALEP DEBUG] No profile document found in Firestore, created fallback profile placeholder.');
           }
         } catch (error) {
           console.warn('Could not retrieve Firestore user profile, using authenticated user metadata fallback.', error);
@@ -204,15 +222,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCurrentUser(null);
         setUserProfile(null);
         setRole(null);
+        console.log('[TALEP DEBUG] Cleared user session details (Guest mode).');
       }
       setLoading(false);
+      clearTimeout(failsafeTimeout);
+      console.log('[TALEP DEBUG] Startup sequence complete. Releasing loading screen gate.');
     }, (error) => {
       console.error('Firebase Auth listener error: ', error);
       showToast('Bağlantı Hatası: Güvenli oturum doğrulanamadı.');
       setLoading(false);
+      clearTimeout(failsafeTimeout);
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(failsafeTimeout);
+      unsubscribe();
+    };
   }, [mode]);
 
   // Login handler
