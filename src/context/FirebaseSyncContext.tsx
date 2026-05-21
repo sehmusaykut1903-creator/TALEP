@@ -73,74 +73,94 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
     setIsLoading(true);
     setSyncError(null);
 
+    let unsubscribeCases = () => {};
+    let unsubscribeChemicals = () => {};
+    let unsubscribeNotifs = () => {};
+
     // 1. Subscribe to Toxicology Cases
-    const casesQuery = query(collection(db, 'toxicology_cases'), orderBy('createdAt', 'desc'));
-    const unsubscribeCases = onSnapshot(casesQuery, 
-      (snapshot) => {
-        const list: ToxicologyCase[] = [];
-        snapshot.forEach((docSnap) => {
-          const item = docSnap.data();
-          list.push({
-            id: docSnap.id,
-            ...item,
-            createdAt: item.createdAt ? (item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt)) : new Date()
-          } as ToxicologyCase);
-        });
-        setCases(list.length > 0 ? list : STATIC_MOCK_CASES);
-        setIsLoading(false);
-      }, 
-      (err) => {
-        setIsLoading(false);
-        setSyncError(err.message);
-        console.warn('Toxicology Cases subscription error. Active Local Cache is being used.', err);
-        try {
-          handleFirestoreError(err, OperationType.LIST, 'toxicology_cases');
-        } catch (e) {}
-      }
-    );
+    try {
+      const casesQuery = query(collection(db, 'toxicology_cases'), orderBy('createdAt', 'desc'));
+      unsubscribeCases = onSnapshot(casesQuery, 
+        (snapshot) => {
+          const list: ToxicologyCase[] = [];
+          snapshot.forEach((docSnap) => {
+            const item = docSnap.data();
+            list.push({
+              id: docSnap.id,
+              ...item,
+              createdAt: item.createdAt ? (item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt)) : new Date()
+            } as ToxicologyCase);
+          });
+          setCases(list.length > 0 ? list : STATIC_MOCK_CASES);
+          setIsLoading(false);
+        }, 
+        (err) => {
+          setIsLoading(false);
+          setSyncError(err.message);
+          console.warn('Toxicology Cases subscription error. Active Local Cache is being used.', err);
+          try {
+            handleFirestoreError(err, OperationType.LIST, 'toxicology_cases');
+          } catch (e) {}
+        }
+      );
+    } catch (e) {
+      console.warn('Failed to subscribe to toxicology_cases. Using static fallback data.', e);
+      setCases(STATIC_MOCK_CASES);
+      setIsLoading(false);
+    }
 
     // 2. Subscribe to Chemicals DB
-    const chemicalsCol = collection(db, 'chemicals');
-    const unsubscribeChemicals = onSnapshot(chemicalsCol,
-      (snapshot) => {
-        const list: DatabaseChemical[] = [];
-        snapshot.forEach((docSnap) => {
-          list.push({ id: docSnap.id, ...docSnap.data() } as DatabaseChemical);
-        });
-        if (list.length > 0) {
-          setChemicals(list);
+    try {
+      const chemicalsCol = collection(db, 'chemicals');
+      unsubscribeChemicals = onSnapshot(chemicalsCol,
+        (snapshot) => {
+          const list: DatabaseChemical[] = [];
+          snapshot.forEach((docSnap) => {
+            list.push({ id: docSnap.id, ...docSnap.data() } as DatabaseChemical);
+          });
+          if (list.length > 0) {
+            setChemicals(list);
+          }
+        },
+        (err) => {
+          console.warn('Chemicals DB subscription error:', err);
+          try {
+            handleFirestoreError(err, OperationType.LIST, 'chemicals');
+          } catch (e) {}
         }
-      },
-      (err) => {
-        console.warn('Chemicals DB subscription error:', err);
-        try {
-          handleFirestoreError(err, OperationType.LIST, 'chemicals');
-        } catch (e) {}
-      }
-    );
+      );
+    } catch (e) {
+      console.warn('Failed to subscribe to chemicals collection. Using static fallback.', e);
+      setChemicals(STATIC_MOCK_CHEMICALS);
+    }
 
     // 3. Subscribe to Notifications
-    const notifQuery = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
-    const unsubscribeNotifs = onSnapshot(notifQuery,
-      (snapshot) => {
-        const list: SystemNotification[] = [];
-        snapshot.forEach((docSnap) => {
-          const item = docSnap.data();
-          list.push({
-            id: docSnap.id,
-            ...item,
-            createdAt: item.createdAt ? (item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt)) : new Date()
-          } as SystemNotification);
-        });
-        setNotifications(list.length > 0 ? list : STATIC_MOCK_NOTIFICATIONS);
-      },
-      (err) => {
-        console.warn('Notifications subscription error:', err);
-        try {
-          handleFirestoreError(err, OperationType.LIST, 'notifications');
-        } catch (e) {}
-      }
-    );
+    try {
+      const notifQuery = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
+      unsubscribeNotifs = onSnapshot(notifQuery,
+        (snapshot) => {
+          const list: SystemNotification[] = [];
+          snapshot.forEach((docSnap) => {
+            const item = docSnap.data();
+            list.push({
+              id: docSnap.id,
+              ...item,
+              createdAt: item.createdAt ? (item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt)) : new Date()
+            } as SystemNotification);
+          });
+          setNotifications(list.length > 0 ? list : STATIC_MOCK_NOTIFICATIONS);
+        },
+        (err) => {
+          console.warn('Notifications subscription error:', err);
+          try {
+            handleFirestoreError(err, OperationType.LIST, 'notifications');
+          } catch (e) {}
+        }
+      );
+    } catch (e) {
+      console.warn('Failed to subscribe to notifications collection. Using static fallback.', e);
+      setNotifications(STATIC_MOCK_NOTIFICATIONS);
+    }
 
     return () => {
       unsubscribeCases();
