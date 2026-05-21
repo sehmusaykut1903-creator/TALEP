@@ -27,7 +27,7 @@ import { ProjectCredits } from '../components/academic/ProjectCredits';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, loginWithGoogle, loading } = useAuth();
+  const { login, loginWithGoogle, loading, startOfflineMode } = useAuth();
   const { theme } = useSettings();
   
   const [email, setEmail] = useState('');
@@ -58,6 +58,11 @@ export default function Login() {
     } catch (err: any) {
       setErrorMsg('Google ile oturum açılamadı.');
     }
+  };
+
+  const handleOfflineMode = () => {
+    startOfflineMode();
+    navigate('/');
   };
 
   return (
@@ -263,6 +268,16 @@ export default function Login() {
               >
                 <Chrome size={15} className="text-red-500" />
                 <span>Google ile Güvenli Giriş</span>
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={handleOfflineMode}
+                className="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-850 py-3 rounded-2xl font-bold text-xs text-white shadow-md shadow-slate-950/10 transition-all cursor-pointer border border-slate-800"
+              >
+                <Lock size={15} className="text-cyan-400" />
+                <span>Çevrimdışı Güvenli Modda Başlat</span>
               </motion.button>
 
               <div className="text-center pt-2">

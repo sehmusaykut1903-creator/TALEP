@@ -48,6 +48,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   updateProfileData: (data: Partial<UserProfile>) => Promise<void>;
+  startOfflineMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,11 +58,53 @@ const DEMO_USER_KEY = 'talep_demo_auth_user';
 const DEMO_PROFILE_KEY = 'talep_demo_auth_profile';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { mode, showToast, setProfile } = useSettings();
+  const { mode, setMode, showToast, setProfile } = useSettings();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Fallback / Offline Mod Activator
+  const startOfflineMode = () => {
+    localStorage.setItem('talep_mode', 'demo');
+    
+    const mockUid = 'demo-guest-uid';
+    const mockUser = {
+      uid: mockUid,
+      email: 'guest@talep.org',
+      displayName: 'Konuk Hekim (Offline)',
+      emailVerified: true
+    } as any;
+
+    const mockProfile: UserProfile = {
+      uid: mockUid,
+      email: 'guest@talep.org',
+      displayName: 'Konuk Hekim (Offline)',
+      role: 'admin',
+      institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
+      department: 'Halk Sağlığı Anabilim Dalı',
+      city: 'Yozgat, Turkey'
+    };
+
+    localStorage.setItem(DEMO_USER_KEY, JSON.stringify(mockUser));
+    localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(mockProfile));
+
+    setCurrentUser(mockUser);
+    setUserProfile(mockProfile);
+    setRole('admin');
+    
+    setProfile({
+      fullName: mockProfile.displayName,
+      email: mockProfile.email,
+      institution: mockProfile.institution,
+      department: mockProfile.department,
+      city: mockProfile.city
+    });
+
+    setMode('demo');
+    setLoading(false);
+    showToast('Çevrimdışı Güvenli Mod Akıcı Olarak Başlatıldı.');
+  };
 
   // Initialize Auth listeners & persistence support
   useEffect(() => {
@@ -87,10 +130,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.warn('Could not parse persisted static offline demo state.', e);
         }
       } else {
-        // Set standard guest observer mode
-        setCurrentUser(null);
-        setUserProfile(null);
-        setRole(null);
+        // Automatically create high-fidelity guest session to satisfy requirement 7
+        const mockUid = 'demo-guest-uid';
+        const mockUser = {
+          uid: mockUid,
+          email: 'guest@talep.org',
+          displayName: 'Konuk Hekim (Offline)',
+          emailVerified: true
+        } as any;
+
+        const mockProfile: UserProfile = {
+          uid: mockUid,
+          email: 'guest@talep.org',
+          displayName: 'Konuk Hekim (Offline)',
+          role: 'admin',
+          institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
+          department: 'Halk Sağlığı Anabilim Dalı',
+          city: 'Yozgat, Turkey'
+        };
+
+        try {
+          localStorage.setItem(DEMO_USER_KEY, JSON.stringify(mockUser));
+          localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(mockProfile));
+        } catch (e) {}
+
+        setCurrentUser(mockUser);
+        setUserProfile(mockProfile);
+        setRole('admin');
+        setProfile({
+          fullName: 'Konuk Hekim (Offline)',
+          email: 'guest@talep.org',
+          institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
+          department: 'Halk Sağlığı Anabilim Dalı',
+          city: 'Yozgat, Turkey'
+        });
       }
       setLoading(false);
       return;
@@ -525,7 +598,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       resetPassword,
       loginWithGoogle,
-      updateProfileData
+      updateProfileData,
+      startOfflineMode
     }}>
       {children}
     </AuthContext.Provider>
