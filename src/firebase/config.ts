@@ -16,16 +16,25 @@ const firebaseConfig = {
   appId: "1:554079661226:web:3fad281c73559a4d5874d3",
 };
 
-let app: any;
+let app: any = null;
 try {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 } catch (e) {
   console.error("Firebase initializeApp failed:", e);
 }
 
-let db: any;
+// Fallback/Mock app if initialization failed or returned null/undefined
+if (!app) {
+  app = {
+    name: "[DEFAULT]",
+    options: firebaseConfig
+  };
+}
+
+let db: any = null;
 try {
   if (app) {
+    // Attempt Firestore persistence with high-fidelity IndexedDB isolation guards
     db = initializeFirestore(app, {
       localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager(),
@@ -43,7 +52,7 @@ try {
   }
 }
 
-// If db is still not initialized, we can define a proxy or mock object to avoid crashes
+// Guarantee Firestore DB is never undefined/null to prevent crash and preserve render flow
 if (!db) {
   console.warn("Firebase DB couldn't be initialized. Falling back to an in-memory/mock DB Proxy.");
   db = new Proxy({}, {
@@ -54,7 +63,7 @@ if (!db) {
   });
 }
 
-let auth: any;
+let auth: any = null;
 try {
   if (app) {
     auth = getAuth(app);
@@ -63,6 +72,7 @@ try {
   console.error("Firebase getAuth failed:", e);
 }
 
+// Guarantee Auth is never undefined/null to prevent crash and preserve render flow
 if (!auth) {
   console.warn("Firebase Auth couldn't be initialized. Falling back to an empty mock auth proxy.");
   auth = new Proxy({}, {
@@ -83,5 +93,3 @@ if (!auth) {
 }
 
 export { app, db, auth };
-
-

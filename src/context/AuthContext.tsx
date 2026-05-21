@@ -72,15 +72,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const mockUser = {
       uid: mockUid,
       email: 'guest@talep.org',
-      displayName: 'Konuk Hekim (Offline)',
+      displayName: 'Dr. Şehmus Aykut',
       emailVerified: true
     } as any;
 
     const mockProfile: UserProfile = {
       uid: mockUid,
       email: 'guest@talep.org',
-      displayName: 'Konuk Hekim (Offline)',
-      role: 'admin',
+      displayName: 'Dr. Şehmus Aykut',
+      role: 'physician',
       institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
       department: 'Halk Sağlığı Anabilim Dalı',
       city: 'Yozgat, Turkey'
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setCurrentUser(mockUser);
     setUserProfile(mockProfile);
-    setRole('admin');
+    setRole('physician');
     
     setProfile({
       fullName: mockProfile.displayName,
@@ -135,15 +135,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const mockUser = {
           uid: mockUid,
           email: 'guest@talep.org',
-          displayName: 'Konuk Hekim (Offline)',
+          displayName: 'Dr. Şehmus Aykut',
           emailVerified: true
         } as any;
 
         const mockProfile: UserProfile = {
           uid: mockUid,
           email: 'guest@talep.org',
-          displayName: 'Konuk Hekim (Offline)',
-          role: 'admin',
+          displayName: 'Dr. Şehmus Aykut',
+          role: 'physician',
           institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
           department: 'Halk Sağlığı Anabilim Dalı',
           city: 'Yozgat, Turkey'
@@ -156,9 +156,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setCurrentUser(mockUser);
         setUserProfile(mockProfile);
-        setRole('admin');
+        setRole('physician');
         setProfile({
-          fullName: 'Konuk Hekim (Offline)',
+          fullName: 'Dr. Şehmus Aykut',
           email: 'guest@talep.org',
           institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
           department: 'Halk Sağlığı Anabilim Dalı',

@@ -27,12 +27,17 @@ function LoginGuard({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (loading) {
       const timer = setTimeout(() => {
-        console.warn('[TALEP Failsafe] LoginGuard loading timeout. Forcing resolution.');
+        console.warn('[TALEP Failsafe] LoginGuard loading timeout. Auto-triggering Offline Mode.');
         setTimedOut(true);
-      }, 3000);
+        try {
+          startOfflineMode();
+        } catch (e) {
+          console.error("Autotrigger offline mode failed", e);
+        }
+      }, 3500);
       return () => clearTimeout(timer);
     }
-  }, [loading]);
+  }, [loading, startOfflineMode]);
 
   if (loading && !timedOut) {
     return (
@@ -66,12 +71,17 @@ function ProtectedShell() {
   React.useEffect(() => {
     if (loading) {
       const timer = setTimeout(() => {
-        console.warn('[TALEP Failsafe] ProtectedShell loading timeout. Forcing resolution.');
+        console.warn('[TALEP Failsafe] ProtectedShell loading timeout. Auto-triggering Offline Mode.');
         setTimedOut(true);
-      }, 3000);
+        try {
+          startOfflineMode();
+        } catch (e) {
+          console.error("Autotrigger offline mode failsafe failed", e);
+        }
+      }, 3500);
       return () => clearTimeout(timer);
     }
-  }, [loading]);
+  }, [loading, startOfflineMode]);
   
   if (loading && !timedOut) {
     return (
@@ -131,10 +141,10 @@ export default function App() {
   const [showSplash, setShowSplash] = React.useState(true);
 
   React.useEffect(() => {
-    // Guarantees StartupLoader (Splash Screen) finishes inside a maximum of 3.8s
+    // Guarantees StartupLoader (Splash Screen) finishes inside a maximum of 3.2 seconds
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 3800);
+    }, 3200);
     return () => clearTimeout(timer);
   }, []);
 
