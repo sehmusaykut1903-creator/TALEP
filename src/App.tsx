@@ -137,36 +137,22 @@ export default function App() {
     }, 3800);
     return () => clearTimeout(timer);
   }, []);
-
-  export default {
-  async fetch(request, env, ctx) {
-    try {
-      return await env.ASSETS.fetch(request);
-    } catch (error) {
-      return new Response(
-        "TALEP v4.0 Premium - Asset loading error",
-        { status: 500 }
-      );
-    }
-  }
-}
+  if (showSplash) {
   return (
-    <SettingsProvider>
-      <AuthProvider>
-        <FirebaseSyncProvider>
-          <MembershipProvider>
-            <Routes>
-              {/* Public/Auth pages without global navigation wrappers */}
-              <Route path="/login" element={<LoginGuard><Login /></LoginGuard>} />
-              <Route path="/register" element={<LoginGuard><Register /></LoginGuard>} />
-              <Route path="/forgot-password" element={<LoginGuard><ForgotPassword /></LoginGuard>} />
-              
-              {/* All other routes are protected under the clinical shell wrap */}
-              <Route path="/*" element={<ProtectedShell />} />
-            </Routes>
-          </MembershipProvider>
-        </FirebaseSyncProvider>
-      </AuthProvider>
-    </SettingsProvider>
+    <Splash
+      onFinish={() => {
+        setShowSplash(false);
+
+        // FAILSAFE OFFLINE START
+        setTimeout(() => {
+          try {
+            localStorage.setItem('talep_offline_mode', 'true');
+            window.location.reload();
+          } catch (e) {
+            console.error(e);
+          }
+        }, 4500);
+      }}
+    />
   );
 }
