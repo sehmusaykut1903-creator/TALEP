@@ -1,0 +1,22 @@
+{
+  "short_name": "TALEP v4.0",
+  "name": "TALEP - Toksikolojik Akıllı Laboratuvar Eşleştirme Platformu",
+  "description": "Mesleki toksik maruziyet takibi, klinik karar destek ve yapay zeka destekli laboratuvar eşleştirme platformu.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/sf-regular/128/06b6d4/test-tube.png",
+      "type": "image/png",
+      "sizes": "128x128"
+    },
+    {
+      "src": "https://img.icons8.com/sf-regular-filled/512/06b6d4/test-tube.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

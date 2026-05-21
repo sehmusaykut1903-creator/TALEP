@@ -104,15 +104,15 @@ export const TalepLogo: React.FC<TalepLogoProps> = ({
             TALEP
           </h1>
           {showSubtitle ? (
-            <div className="mt-1 space-y-0.5">
-              <p className="text-[9px] font-black text-cyan-600 tracking-wider leading-none uppercase">
-                V4.0 PREMIUM
+            <div className="mt-1.5 space-y-1">
+              <p className="text-[10px] font-black text-cyan-600 tracking-wider leading-none uppercase">
+                v4.0 PREMIUM
               </p>
               <p className="text-[9.5px] font-black tracking-tight text-slate-800 leading-tight uppercase">
-                TOKSİKOLOJİK AKILLI LABORATUVAR<br />EŞLEŞTİRME PLATFORMU
+                Toksikolojik Akıllı Laboratuvar Eşleştirme Platformu
               </p>
-              <p className="text-[7.5px] font-semibold text-slate-400 leading-none mt-0.5">
-                2026 • Şehmus Aykut tarafından geliştirilmiştir
+              <p className="text-[8px] font-bold text-slate-400 leading-none mt-1 shrink-0 whitespace-nowrap">
+                “2026 Şehmus Aykut tarafından geliştirilmiştir.”
               </p>
             </div>
           ) : (

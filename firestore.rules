@@ -28,7 +28,7 @@ service cloud.firestore {
       return resource.data;
     }
 
-    // --- Users Collection Rules ---
+    // --- 1. Users Collection ---
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if isOwner(userId) 
@@ -39,19 +39,105 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
-    // --- Toxicology Cases Rules ---
-    match /toxicology_cases/{caseId} {
+    // --- 2. Cases & Backward Compatibility ---
+    match /cases/{caseId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn()
-        && incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 100
-        && incoming().sector is string && incoming().sector.size() <= 50;
+        && incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 128
+        && incoming().sector is string && incoming().sector.size() <= 64;
       allow update: if isSignedIn()
         && incoming().name is string
         && incoming().sector is string;
       allow delete: if isSignedIn();
     }
 
-    // --- Laboratory Results Rules ---
+    match /toxicology_cases/{caseId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 128
+        && incoming().sector is string && incoming().sector.size() <= 64;
+      allow update: if isSignedIn()
+        && incoming().name is string
+        && incoming().sector is string;
+      allow delete: if isSignedIn();
+    }
+
+    // --- 3. Analyses / Assessments ---
+    match /analyses/{analysisId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && incoming().caseId is string
+        && incoming().riskScore is number;
+      allow update: if isSignedIn()
+        && incoming().caseId is string;
+      allow delete: if isSignedIn();
+    }
+
+    match /ai_assessments/{assessmentId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && incoming().caseId is string
+        && incoming().matchedChemicals is list
+        && incoming().riskScore is number;
+      allow update: if isSignedIn()
+        && incoming().caseId is string;
+      allow delete: if isSignedIn();
+    }
+
+    // --- 4. Literature Reference Collection ---
+    match /literature/{docId} {
+      allow read: if true;
+      allow write: if isSignedIn()
+        && incoming().title is string;
+    }
+
+    // --- 5. Chemicals Reference Collection ---
+    match /chemicals/{chemicalId} {
+      allow read: if true;
+      allow write: if isSignedIn()
+        && incoming().name is string;
+    }
+
+    // --- 6. Biomarkers Reference tables ---
+    match /biomarkers/{biomarkerId} {
+      allow read: if true;
+      allow write: if isSignedIn()
+        && incoming().markerName is string;
+    }
+
+    // --- 7. Epidemiology Dataset Mappings ---
+    match /epidemiology/{epiId} {
+      allow read: if true;
+      allow write: if isSignedIn()
+        && incoming().sector is string;
+    }
+
+    // --- 8. AI Responses Cache ---
+    match /ai_cache/{cacheId} {
+      allow read: if true;
+      allow write: if isSignedIn()
+        && incoming().prompt is string;
+    }
+
+    // --- 9. Generated Medical Reports ---
+    match /reports/{reportId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && incoming().caseId is string
+        && incoming().title is string;
+      allow update: if isSignedIn()
+        && incoming().caseId is string;
+      allow delete: if isSignedIn();
+    }
+
+    // --- 10. Cooperating Institutions ---
+    match /institutions/{instId} {
+      allow read: if true;
+      allow write: if isSignedIn()
+        && incoming().name is string;
+    }
+
+    // --- System / Back-compat Tables ---
     match /laboratory_results/{resultId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn()
@@ -64,26 +150,6 @@ service cloud.firestore {
       allow delete: if isSignedIn();
     }
 
-    // --- AI Assessments Rules ---
-    match /ai_assessments/{assessmentId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && incoming().caseId is string
-        && incoming().matchedChemicals is list
-        && incoming().riskScore is number;
-      allow update: if isSignedIn()
-        && incoming().caseId is string;
-      allow delete: if isSignedIn();
-    }
-
-    // --- Chemicals Rules (Publicly readable database reference) ---
-    match /chemicals/{chemicalId} {
-      allow read: if true;
-      allow write: if isSignedIn()
-        && incoming().name is string;
-    }
-
-    // --- Notifications Rules ---
     match /notifications/{notifId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn()
@@ -94,7 +160,6 @@ service cloud.firestore {
       allow delete: if isSignedIn();
     }
 
-    // --- AI Chat Memories Rules ---
     match /ai_chat_memories/{memoryId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn()

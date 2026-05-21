@@ -407,6 +407,21 @@ Toksikodinamik maruziyet katsayılarındaki artış, maruz kalınan süre ile do
  * Triggers the full-stack scientific reasoning engine.
  * Contacts the server-side API endpoint secure pipeline or falls back to local database.
  */
+/**
+ * Generate a unique and clean string key based on parameters for persistent caching.
+ */
+function getCacheKey(question: string, context: AiContext, mode: string): string {
+  const cleanQ = question.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  const cleanSector = (context?.sector || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  const cleanUnit = (context?.unit || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  return `key_${mode}_${cleanSector || "all"}_${cleanUnit || "all"}_${cleanQ.substring(0, 50)}`;
+}
+
+/**
+ * Triggers the full-stack scientific reasoning engine.
+ * Contacts the server-side API endpoint secure pipeline or falls back to local database.
+ * Supercharged with double-tier caching: LocalStorage (instant/offline) & Firestore ai_cache (persistent).
+ */
 export async function generateScientificReasoning(
   question: string,
   context: AiContext,
@@ -414,11 +429,49 @@ export async function generateScientificReasoning(
   history: any[] = [],
   advancedReasoning: boolean = false
 ): Promise<StructuredAiResponse> {
+  const cacheKey = getCacheKey(question, context, mode);
+
+  // 1. Local Memory Cache Tier (0-latency instant loading)
+  try {
+    const localCached = localStorage.getItem(`talep_ai_cache_${cacheKey}`);
+    if (localCached) {
+      console.log(`[TALEP CACHE] Hit Core (LocalStorage): ${cacheKey}`);
+      return JSON.parse(localCached);
+    }
+  } catch (e) {
+    console.warn("LocalStorage caching disabled / corrupt:", e);
+  }
+
+  // 2. Firestore Schema Cache Tier (Free-Tier API protection & shared enterprise sync)
+  if (advancedReasoning) {
+    try {
+      const { doc, getDoc } = await import("firebase/firestore");
+      const cacheRef = doc(db, "ai_cache", cacheKey);
+      const cacheSnap = await getDoc(cacheRef);
+      if (cacheSnap.exists()) {
+        const cachedPayload = cacheSnap.data().response as StructuredAiResponse;
+        console.log(`[TALEP CACHE] Hit Database (Firestore /ai_cache): ${cacheKey}`);
+        try {
+          localStorage.setItem(`talep_ai_cache_${cacheKey}`, JSON.stringify(cachedPayload));
+        } catch (e) {}
+        return cachedPayload;
+      }
+    } catch (e) {
+      console.warn("Could not retrieve Firestore /ai_cache (Offline/Unauthenticated):", e);
+    }
+  }
+
   // If advanced reasoning is NOT requested, solve instantly via local database matching! Saves API cost & loads instantly.
   if (!advancedReasoning) {
     const localMatch = findLocalToxinMatch(question, context);
     console.log("Local database analysis selected. Matched toxin:", localMatch?.name);
-    return generateLocalStructuredResponse(question, context, mode, localMatch);
+    const mockRes = generateLocalStructuredResponse(question, context, mode, localMatch);
+    
+    // Save generated local match to LocalStorage to avoid re-generating
+    try {
+      localStorage.setItem(`talep_ai_cache_${cacheKey}`, JSON.stringify(mockRes));
+    } catch (e) {}
+    return mockRes;
   }
 
   try {
@@ -440,11 +493,32 @@ export async function generateScientificReasoning(
     }
 
     const json = await res.json();
-    return json.response;
+    const serverResponse = json.response as StructuredAiResponse;
+
+    // Save newly rendered response into both cache tiers
+    try {
+      localStorage.setItem(`talep_ai_cache_${cacheKey}`, JSON.stringify(serverResponse));
+    } catch (e) {}
+
+    try {
+      const { doc, setDoc } = await import("firebase/firestore");
+      const cacheRef = doc(db, "ai_cache", cacheKey);
+      setDoc(cacheRef, {
+        prompt: { question, sector: context.sector, unit: context.unit, mode },
+        response: serverResponse,
+        createdAt: new Date().toISOString()
+      }).catch((dbErr) => console.warn("Failed saving cache to Firestore:", dbErr));
+    } catch (e) {}
+
+    return serverResponse;
   } catch (error) {
     console.warn("Full-stack scientific engine endpoint was unreachable. Falling back to structured local database scanner:", error);
     const localMatchBackup = findLocalToxinMatch(question, context);
-    return generateLocalStructuredResponse(question, context, mode, localMatchBackup);
+    const backupRes = generateLocalStructuredResponse(question, context, mode, localMatchBackup);
+    try {
+      localStorage.setItem(`talep_ai_cache_${cacheKey}`, JSON.stringify(backupRes));
+    } catch (e) {}
+    return backupRes;
   }
 }
 

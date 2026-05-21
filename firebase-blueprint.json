@@ -2,142 +2,199 @@
   "entities": {
     "user": {
       "title": "User",
-      "description": "System users and clinical staff",
+      "description": "System users, physicians, and academic researchers",
       "type": "object",
       "properties": {
-        "uid": { "type": "string", "description": "Auth UID of the user" },
+        "uid": { "type": "string", "description": "Authentication ID of the user" },
         "email": { "type": "string", "description": "Email address" },
-        "displayName": { "type": "string", "description": "Full name" },
-        "role": { "type": "string", "description": "Access tier role" },
+        "displayName": { "type": "string", "description": "Physician or Scholar's full name" },
+        "role": { "type": "string", "description": "Security and access role (e.g., administrator, researcher, physician)" },
+        "institution": { "type": "string", "description": "Associated hospital or research university" },
+        "department": { "type": "string", "description": "Academic department" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["email", "displayName"]
     },
-    "toxicology_case": {
-      "title": "ToxicologyCase",
-      "description": "Patient file details containing demographic and exposure data",
+    "case": {
+      "title": "Case",
+      "description": "Patient files containing professional diagnostic and toxic exposure profiles",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string", "description": "Patient's name" },
-        "age": { "type": "number", "description": "Patient's age" },
-        "gender": { "type": "string", "description": "Patient's gender" },
-        "sector": { "type": "string", "description": "Industry sector of the patient" },
-        "unit": { "type": "string", "description": "Workplace unit" },
-        "duration": { "type": "string", "description": "Work duration" },
-        "ppeUsage": { "type": "boolean", "description": "If PPE is used regularly" },
-        "symptoms": { "type": "array", "description": "List of observed symptoms" },
-        "risk": { "type": "string", "description": "Assessed risk category" },
-        "notes": { "type": "string", "description": "Clinical assessment notes" },
+        "name": { "type": "string", "description": "Anonymized or official patient name" },
+        "age": { "type": "number", "description": "Patient current age in years" },
+        "gender": { "type": "string", "description": "Anatomical gender of the patient" },
+        "sector": { "type": "string", "description": "Specific employment industry sector" },
+        "unit": { "type": "string", "description": "Workplace workstation division" },
+        "duration": { "type": "string", "description": "Total length of occupational exposure" },
+        "ppeUsage": { "type": "boolean", "description": "Indicates active use of Kişisel Koruyucu Donanım (KKD)" },
+        "symptoms": { "type": "array", "description": "Array of clinical symptoms at admission" },
+        "risk": { "type": "string", "description": "Computed risk index category" },
+        "notes": { "type": "string", "description": "Freeform clinical physician notes" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "sector"]
     },
-    "laboratory_result": {
-      "title": "LaboratoryResult",
-      "description": "Laboratory measurements and biochemistry test values",
+    "analysis": {
+      "title": "Analysis",
+      "description": "Detailed clinical toxicological analyses and hazard diagnostics",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "caseId": { "type": "string", "description": "Reference to the toxicology case ID" },
-        "testName": { "type": "string", "description": "Name of the laboratory test" },
-        "value": { "type": "string", "description": "Result value with units" },
-        "isAbnormal": { "type": "boolean", "description": "Flag for out-of-range results" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["caseId", "testName", "value"]
-    },
-    "ai_assessment": {
-      "title": "AIAssessment",
-      "description": "AI-generated hazard analysis and matching results",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "caseId": { "type": "string", "description": "Toxicology case reference" },
-        "matchedChemicals": { "type": "array", "description": "List of matched industrial chemicals" },
-        "riskScore": { "type": "number", "description": "Computed hazard score" },
-        "clinicalAdvice": { "type": "string", "description": "AI clinical guidance" },
+        "caseId": { "type": "string", "description": "Associated unique case reference" },
+        "matchedChemicals": { "type": "array", "description": "Assigned toxic chemicals and agents" },
+        "riskScore": { "type": "number", "description": "Aggregated scientific score from 0 to 100" },
+        "clinicalAdvice": { "type": "string", "description": "Physician treatment and diagnostic advice" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["caseId"]
     },
-    "chemical": {
-      "title": "Chemical",
-      "description": "Hazardous chemicals database entity",
+    "literature": {
+      "title": "Literature",
+      "description": "Scientific papers, academic publications, and clinical toxicology literature entries",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string", "description": "Name of the chemical" },
-        "cas": { "type": "string", "description": "CAS registry number" },
-        "sectors": { "type": "array" },
-        "exposureRoutes": { "type": "array" },
-        "acuteSymptoms": { "type": "array" },
-        "chronicSymptoms": { "type": "array" },
-        "labs": { "type": "array" },
-        "organs": { "type": "array" },
-        "riskInfo": { "type": "string" },
-        "riskLevelBase": { "type": "string" }
+        "title": { "type": "string", "description": "Title of the research paper" },
+        "authors": { "type": "array", "description": "List of contributing researchers" },
+        "journal": { "type": "string", "description": "Publishing academic journal name" },
+        "year": { "type": "number", "description": "Year of publication" },
+        "pubmedId": { "type": "string", "description": "National Library of Medicine PubMed ID reference" },
+        "exposureCategory": { "type": "string", "description": "Exposure toxin category analyzed" },
+        "evidenceLevel": { "type": "string", "description": "LOE scientific rank" },
+        "summary": { "type": "string", "description": "Comprehensive summary of findings" }
+      },
+      "required": ["title", "journal", "year"]
+    },
+    "chemical": {
+      "title": "Chemical",
+      "description": "Industrial chemicals, toxic compounds and physical/chemical properties",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "description": "Compound name" },
+        "cas": { "type": "string", "description": "Chemical Abstracts Service registration index" },
+        "iarcClassification": { "type": "string", "description": "IARC cancer evaluation (Grup 1, 2A, 2B, etc.)" },
+        "oshaPel": { "type": "string", "description": "OSHA Permissible Exposure Limit thresholds" },
+        "nioshRel": { "type": "string", "description": "NIOSH Recommended Exposure Limits" },
+        "targetOrgans": { "type": "array", "description": "Primary organs matching systemic toxicity" },
+        "biologicalBiomarkers": { "type": "array", "description": "Biological biomonitoring parameters" },
+        "ppeRequirements": { "type": "array", "description": "Necessary personal protective equipment standards" }
       },
       "required": ["name"]
     },
-    "notification": {
-      "title": "Notification",
-      "description": "System alerts or patient risk state changes",
+    "biomarker": {
+      "title": "Biomarker",
+      "description": "Biological biomarkers and biological exposure indicator range metrics",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "title": { "type": "string" },
-        "message": { "type": "string" },
-        "type": { "type": "string", "description": "Alert priority/type" },
-        "read": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "chemicalId": { "type": "string", "description": "Referenced physical chemical ID" },
+        "markerName": { "type": "string", "description": "Name of metabolite or biomarker target" },
+        "biologicalMedia": { "type": "string", "description": "Matrix used (e.g., idrar, kan, nefes)" },
+        "samplingTime": { "type": "string", "description": "Recommended period of collection" },
+        "limitValue": { "type": "string", "description": "Biological Exposure Index (BEI) limits" },
+        "interpretation": { "type": "string", "description": "Pathophysiological interpretation of deviations" }
       },
-      "required": ["title", "message"]
+      "required": ["markerName", "limitValue"]
     },
-    "ai_chat_memory": {
-      "title": "AiChatMemory",
-      "description": "Persistent record of scientific and toxicological AI analyses for professional memory",
+    "epidemiology": {
+      "title": "Epidemiology",
+      "description": "Aggregated stats, cohorts, and sector-based toxicological incidences",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "userId": { "type": "string", "description": "ID of the user who requested the analysis" },
-        "sessionId": { "type": "string", "description": "Unique session identifier" },
-        "mode": { "type": "string", "description": "The active scientific reasoning mode" },
-        "question": { "type": "string", "description": "User's scientific inquiry or case details" },
-        "response": { "type": "object", "description": "The complete structured scientific response including visualizations, organ maps and parameters" },
+        "sector": { "type": "string", "description": "Commercial industrial sector" },
+        "unit": { "type": "string", "description": "Specific shopfloor or process unit" },
+        "primaryToxin": { "type": "string", "description": "Dominant risk analyte matching this sector" },
+        "frequencyRate": { "type": "number", "description": "Incidence rate statistical index" },
+        "cohortCount": { "type": "number", "description": "Active members in tracked cohort" }
+      },
+      "required": ["sector", "primaryToxin"]
+    },
+    "ai_cache_entry": {
+      "title": "AiCacheEntry",
+      "description": "Local cached inputs and response schemas to bypass unnecessary server-side network calls",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Base64 or MD5 hash of the prompt query context" },
+        "prompt": { "type": "string", "description": "Prompt context provided to AI" },
+        "response": { "type": "object", "description": "Structured AI response matching StructuredAiResponse profile" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "sessionId", "question", "response"]
+      "required": ["prompt", "response"]
+    },
+    "report": {
+      "title": "Report",
+      "description": "Generated case reports, medical syntheses, and executive findings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "caseId": { "type": "string", "description": "Target case record dossier" },
+        "title": { "type": "string", "description": "Professional report title" },
+        "contentMarkdown": { "type": "string", "description": "Full synthesis content" },
+        "generatingUser": { "type": "string", "description": "Author user ID matching user collection" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["caseId", "title", "contentMarkdown"]
+    },
+    "institution": {
+      "title": "Institution",
+      "description": "Medical centers, universities, and cooperating toxicological laboratories",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "description": "Official name of university or clinical center" },
+        "city": { "type": "string" },
+        "associatedClinics": { "type": "array" }
+      },
+      "required": ["name"]
     }
   },
   "firestore": {
     "users": {
       "schema": "user",
-      "description": "Collection of system users and managers"
+      "description": "Admin, Physician, and Researcher profile indices"
+    },
+    "cases": {
+      "schema": "case",
+      "description": "Patient folders containing clinical history data"
     },
     "toxicology_cases": {
-      "schema": "toxicology_case",
-      "description": "Collection of case dossiers and exposures"
+      "schema": "case",
+      "description": "Backward-compatible patient folder collection"
     },
-    "laboratory_results": {
-      "schema": "laboratory_result",
-      "description": "Collection of clinical lab metrics"
+    "analyses": {
+      "schema": "analysis",
+      "description": "Diagnostic and toxic risk analytics database"
     },
-    "ai_assessments": {
-      "schema": "ai_assessment",
-      "description": "Collection of toxicological analytical results"
+    "literature": {
+      "schema": "literature",
+      "description": "IARC, WHO, and PubMed peer-reviewed reference papers"
     },
     "chemicals": {
       "schema": "chemical",
-      "description": "Reference database of chemical toxicities"
+      "description": "Chemical databases holding OELs, PELs and physical toxins details"
     },
-    "notifications": {
-      "schema": "notification",
-      "description": "Collection of system-level alerts and indicators"
+    "biomarkers": {
+      "schema": "biomarker",
+      "description": "Exposure index database mapped to chemical agents"
     },
-    "ai_chat_memories": {
-      "schema": "ai_chat_memory",
-      "description": "Collection of historical AI scientific analyses and biomarkers for clinical memory"
+    "epidemiology": {
+      "schema": "epidemiology",
+      "description": "Industrial and regional occupational cohort incidence mapping"
+    },
+    "ai_cache": {
+      "schema": "ai_cache_entry",
+      "description": "High-efficiency semantic and deterministic cache database for zero-cost routing"
+    },
+    "reports": {
+      "schema": "report",
+      "description": "Synthesized academic and research report database"
+    },
+    "institutions": {
+      "schema": "institution",
+      "description": "Partners, clinics and medical schools"
     }
   }
 }
