@@ -69,7 +69,7 @@ export default function ScientificIntelligence({ defaultTab = 'literature' }: Sc
             <div className="px-5 py-3 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 text-center shrink-0">
                <div className="text-[9px] text-indigo-300 font-black uppercase tracking-widest font-mono">Platform Seviyesi</div>
                <div className="text-md font-black text-white mt-1 uppercase">Klinik Akademik Araştırma</div>
-               <div className="text-[9px] text-slate-400 italic mt-0.5">TALEP v3.0 Premium</div>
+               <div className="text-[9px] text-slate-400 italic mt-0.5">TALEP v4.0 Premium</div>
             </div>
          </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   TrendingUp, 
   Sliders, 
@@ -10,7 +10,13 @@ import {
   Calendar, 
   RefreshCw, 
   SlidersHorizontal,
-  Info 
+  Info,
+  Brain,
+  Bell,
+  UserCheck,
+  Zap,
+  Flame,
+  Gauge
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -137,19 +143,44 @@ export default function OccupationalEpidemiology() {
 
   const projections = getProjections();
 
+  // Dynamic epidemiology recommendations from AI Core
+  const getAiEpidemiologyReport = () => {
+    if (ambientPpm > 15 && ppeUsagePercent < 60) {
+      return {
+        warning: "KRİTİK MARUZİYET ALARMI",
+        message: "Aşırı yüksek gaz sızıntısı ve yetersiz koruma nedeniyle akut nörotoksik veya miyelodisplastik salgın tehlikesi. İvedi olarak saha havalandırma debisini artırın ve vardiyaları yarıya indirin.",
+        color: "text-rose-600 bg-rose-50 border-rose-200"
+      };
+    } else if (ambientPpm > 8 || ppeUsagePercent < 80) {
+      return {
+        warning: "MODERAT RİSK REJİMİ",
+        message: "Genotoksik birikim tavan eşiğe yaklaşıyor. Periyodik idrar tt-MA veya kazein takipleri 3 aylık periyotlara çekilmeli, rotasyonel çalışma takvimi devreye alınmalıdır.",
+        color: "text-amber-700 bg-amber-50 border-amber-200"
+      };
+    } else {
+      return {
+        warning: "STABİL VE GÜVENLİ REGÜLASYON",
+        message: "Halk sağlığı limitleri güvenli aralıkta. Mevcut koruyucu önlemler ve yıllık sağlık taramaları (biyobelirteç sürveyansı) mevcut düzende kesintisiz sürdürülebilir.",
+        color: "text-emerald-700 bg-emerald-50 border-emerald-200"
+      };
+    }
+  };
+
+  const aiReport = getAiEpidemiologyReport();
+
   return (
     <div className="space-y-8">
       {/* HEADER HERO */}
-      <div className="bg-gradient-to-r from-blue-950 via-indigo-950 to-slate-900 text-white rounded-[2.2rem] p-8 border border-indigo-800/40 relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl opacity-40 animate-pulse" />
-        <div className="relative z-10 space-y-2">
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-[2.2rem] p-8 border border-indigo-800/40 relative overflow-hidden shadow-2xl">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none opacity-40 animate-pulse" />
+        <div className="relative z-10 space-y-3">
           <div className="flex items-center gap-2">
-            <TrendingUp className="text-blue-400" size={18} />
-            <span className="text-[10px] font-black tracking-[0.25em] text-blue-400 uppercase font-mono">EPİDEMİYOLOJİK TAKİP MODÜLÜ</span>
+            <TrendingUp className="text-indigo-400 animate-pulse" size={18} />
+            <span className="text-[10px] font-black tracking-[0.25em] text-indigo-400 uppercase font-mono">EPİDEMİYOLOJİK BİLGİ VE ANALİTİK SİSTEMİ</span>
           </div>
-          <h2 className="text-2xl font-black tracking-tight uppercase leading-none">Halk Sağlığı ve Mesleki Epidemiyoloji Çalışmaları</h2>
-          <p className="text-xs text-indigo-200 max-w-2xl leading-relaxed">
-            Hastalık insidansları, kohort katsayıları, odds analizleri ve sektörel maruziyet dağılımlarının yapay zeka tarafından ölçeklenmiş matematiksel simülatörü.
+          <h2 className="text-3xl font-black tracking-tight uppercase leading-none">Halk Sağlığı ve Mesleki Epidemiyoloji İzleme Platformu</h2>
+          <p className="text-xs text-slate-350 max-w-3xl leading-relaxed">
+            Hastalık sıklıkları, kohort katsayıları, Odds Oranı (OR) hesaplayıcıları, sektörel toksitite dağılımları ve coğrafi kümelenme modellerinden oluşan gelişmiş epidemiyoloji konsolu.
           </p>
         </div>
       </div>
@@ -158,21 +189,26 @@ export default function OccupationalEpidemiology() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Trend graph */}
         <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
-          <div>
-            <span className="text-[9px] font-black text-blue-700 uppercase tracking-widest font-mono">Surveillance Sinyalleri</span>
-            <h3 className="text-sm font-black text-slate-900 mt-0.5">Sektörel Haftalık İnsidans Dağılımları (Trend Analizi)</h3>
+          <div className="flex justify-between items-start flex-wrap gap-2">
+            <div>
+              <span className="text-[9px] font-black text-[#0ea5e9] uppercase tracking-widest font-mono">Surveillance Sinyalleri</span>
+              <h3 className="text-sm font-black text-slate-900 mt-0.5">Haftalık Sektörel İnsidans Trendleri (6 Haftalık İzlem)</h3>
+            </div>
+            <div className="flex items-center gap-1.5 text-[9.5px] font-black text-slate-500 bg-slate-50 border border-slate-100 px-3 py-1 rounded-xl">
+              <Calendar size={12} /> Canlı Veri Akışı
+            </div>
           </div>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendTimelineData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="week" stroke="#94a3b8" fontSize={10} fontWeight="bold" />
-                <YAxis stroke="#94a3b8" fontSize={10} fontWeight="bold" />
-                <Tooltip contentStyle={{ borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }} />
+                <XAxis dataKey="week" stroke="#94a3b8" fontSize={9} fontWeight="bold" />
+                <YAxis stroke="#94a3b8" fontSize={9} fontWeight="bold" />
+                <Tooltip contentStyle={{ borderRadius: '16px', fontSize: '11px', fontWeight: 'bold', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }} />
                 <Legend iconSize={8} wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />
-                <Line type="monotone" dataKey="benzen" stroke="#3b82f6" strokeWidth={3} name="Solventler (% Hücre İnhibisyonu)" />
-                <Line type="monotone" dataKey="lead" stroke="#f43f5e" strokeWidth={3} name="Ağır Metal (BLL μg/dL Ortalama)" />
-                <Line type="monotone" dataKey="organo" stroke="#10b981" strokeWidth={3} name="Pestisit (Psödokolinesteraz Baskı)" />
+                <Line type="monotone" dataKey="benzen" stroke="#3b82f6" strokeWidth={3} name="Solventler (% Hücre İnhibisyonu)" activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="lead" stroke="#f43f5e" strokeWidth={3} name="Ağır Metal (BLL μg/dL Ortalama)" activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="organo" stroke="#10b981" strokeWidth={3} name="Pestisit (Psödokolinesteraz Baskı)" activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -196,8 +232,8 @@ export default function OccupationalEpidemiology() {
                 <PolarGrid stroke="#f1f5f9" />
                 <PolarAngleAxis dataKey="subject" fontSize={9} fontWeight="bold" tick={{ fill: '#475569' }} />
                 <PolarRadiusAxis angle={30} domain={[0, 150]} fontSize={8} />
-                <Radar name="Kimyasal Boyalar" dataKey="A" stroke="#2563eb" fill="#3b82f6" fillOpacity={0.25} />
-                <Radar name="Sanayi Gazları" dataKey="B" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.25} />
+                <Radar name="Kimyasal Boyalar" dataKey="A" stroke="#2563eb" fill="#3b82f6" fillOpacity={0.2} />
+                <Radar name="Sanayi Gazları" dataKey="B" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} />
                 <Legend iconSize={8} wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />
               </RadarChart>
             </ResponsiveContainer>
@@ -207,9 +243,14 @@ export default function OccupationalEpidemiology() {
 
       {/* CLUSTERING FACTORY MAP / SURVEILLANCE STATUS */}
       <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
-        <div>
-          <span className="text-[9px] font-black text-teal-700 uppercase tracking-widest font-mono">Ulusal Maruziyet İzsürücü (Surveillance Engine)</span>
-          <h3 className="text-sm font-black text-slate-900 mt-0.5">Aktif Coğrafi Toksikoloji Kümelenme ve İzleme Matrisi</h3>
+        <div className="flex justify-between items-start flex-wrap gap-2">
+          <div>
+            <span className="text-[9px] font-black text-teal-700 uppercase tracking-widest font-mono">Coğrafi Epidemiyoloji Takip Matrisi</span>
+            <h3 className="text-sm font-black text-slate-900 mt-0.5">Aktif Coğrafi Toksikoloji Kümelenme ve Akıllı Alarm Merkezleri</h3>
+          </div>
+          <div className="flex items-center gap-1.5 text-[9px] font-black text-amber-600 bg-amber-50 px-2.5 py-1 rounded-xl uppercase">
+            <Bell size={11} /> 3 Aktif Kritik Bölge
+          </div>
         </div>
         
         <div className="overflow-x-auto">
@@ -229,11 +270,11 @@ export default function OccupationalEpidemiology() {
               {localClusters.map((cl) => (
                 <tr key={cl.id} className="hover:bg-slate-50/70 transition-colors">
                   <td className="py-3 font-black text-slate-800 flex items-center gap-2">
-                    <Map size={13} className="text-indigo-500 shrink-0" />
+                    <Map size={13} className="text-[#0ea5e9] shrink-0" />
                     {cl.region}
                   </td>
                   <td className="py-3">{cl.industry}</td>
-                  <td className="py-3 font-mono font-bold text-slate-500">{cl.activeChem}</td>
+                  <td className="py-3 font-mono font-bold text-[#4f46e5]">{cl.activeChem}</td>
                   <td className="py-3 text-center font-bold font-mono text-slate-600">{cl.monitoredStaff}</td>
                   <td className="py-3 text-center font-mono">
                     <span className={cl.concentrationPpm > cl.criticalLimit ? 'text-rose-600 font-bold' : 'text-slate-600'}>
@@ -247,7 +288,7 @@ export default function OccupationalEpidemiology() {
                       cl.status === 'İzleme_Gerekli' ? 'bg-amber-500 text-white shadow-sm' :
                       'bg-emerald-500 text-white'
                     }`}>
-                      {cl.status === 'Tehlike_Kapsamı' ? 'ÖNLETLİ DURUM' : cl.status === 'İzleme_Gerekli' ? 'TAKİPLİ' : 'OK / NORMAL'}
+                      {cl.status === 'Tehlike_Kapsamı' ? 'KRİTİK ALARM' : cl.status === 'İzleme_Gerekli' ? 'ŞÜPHELİ TAKİP' : 'DURUM STABİL'}
                     </span>
                   </td>
                 </tr>
@@ -257,52 +298,52 @@ export default function OccupationalEpidemiology() {
         </div>
       </div>
 
-      {/* CALCULATORS HUB (OR/RR CALCULATOR + SPREAD SIMULATION) */}
+      {/* CALCULATORS HUB (OR/RR CALCULATOR + SPREAD SIMULATION + AI FORECASTING) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* SCIENTIFIC ODDS RATIO CALCULATOR */}
         <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-[2.3rem] p-8 border border-slate-800 shadow-xl space-y-6">
           <div className="space-y-1">
             <span className="text-[9px] font-black text-indigo-300 uppercase tracking-widest font-mono">Epidemiyolojik Karar Destek Aracı</span>
-            <h3 className="text-md font-black">Kohort Odds Oranı (OR) & Rölatif Risk (RR) Analiz Modülü</h3>
+            <h3 className="text-md font-black">2x2 Klinik Kohort Odds Oranı (OR) & Rölatif Risk (RR) Analizör</h3>
             <p className="text-[10px] text-slate-300">
-              Gerçekleştirilen laboratuvar ve periyodik klinik takip çalışma alt gruplarının, doğrusal risk ilişkilendirmelerini kanıt katsayılarıyla analiz edin.
+              Periyodik klinik takip veya tarama alt gruplarının maruziyet-hastalık bağıntısını istatistiksel analizle doğrulayın.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-[8.5px] font-black text-indigo-200 uppercase tracking-widest">Maruz Kalan / Hasta Vaka</label>
+            <div className="space-y-1 bg-white/5 p-3.5 rounded-2xl border border-white/10">
+              <label className="text-[8.5px] font-black text-indigo-200 uppercase tracking-widest block mb-1">Maruz Kalan / Hasta Vaka</label>
               <input 
                 type="number" 
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-xs font-bold font-mono focus:border-indigo-400 outline-none"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold font-mono focus:border-indigo-400 outline-none text-white text-center"
                 value={expSick}
                 onChange={e => setExpSick(Math.max(0, Number(e.target.value)))}
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-[8.5px] font-black text-indigo-200 uppercase tracking-widest">Maruz Kalan / Sağlıklı</label>
+            <div className="space-y-1 bg-white/5 p-3.5 rounded-2xl border border-white/10">
+              <label className="text-[8.5px] font-black text-indigo-200 uppercase tracking-widest block mb-1">Maruz Kalan / Sağlıklı</label>
               <input 
                 type="number" 
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-xs font-bold font-mono focus:border-indigo-400 outline-none"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold font-mono focus:border-indigo-400 outline-none text-white text-center"
                 value={expHealthy}
                 onChange={e => setExpHealthy(Math.max(0, Number(e.target.value)))}
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-[8.5px] font-black text-indigo-200 uppercase tracking-widest">Kontrol Grubu / Hasta</label>
+            <div className="space-y-1 bg-white/5 p-3.5 rounded-2xl border border-white/10">
+              <label className="text-[8.5px] font-black text-indigo-200 uppercase tracking-widest block mb-1">Kontrol Grubu / Hasta</label>
               <input 
                 type="number" 
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-xs font-bold font-mono focus:border-indigo-400 outline-none"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold font-mono focus:border-indigo-400 outline-none text-white text-center"
                 value={unexpSick}
                 onChange={e => setUnexpSick(Math.max(0, Number(e.target.value)))}
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-[8.5px] font-black text-indigo-200 uppercase tracking-widest">Kontrol Grubu / Sağlıklı</label>
+            <div className="space-y-1 bg-white/5 p-3.5 rounded-2xl border border-white/10">
+              <label className="text-[8.5px] font-black text-indigo-200 uppercase tracking-widest block mb-1">Kontrol Grubu / Sağlıklı</label>
               <input 
                 type="number" 
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-xs font-bold font-mono focus:border-indigo-400 outline-none"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold font-mono focus:border-indigo-400 outline-none text-white text-center"
                 value={unexpHealthy}
                 onChange={e => setUnexpHealthy(Math.max(0, Number(e.target.value)))}
               />
@@ -310,96 +351,100 @@ export default function OccupationalEpidemiology() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-            <div className="bg-white/5 p-3 rounded-2xl flex flex-col justify-between">
-              <span className="text-[8.5px] font-black text-indigo-300 uppercase">Odds Ratio (OR) 95% CI</span>
+            <div className="bg-white/5 p-3 rounded-2xl flex flex-col justify-between border border-white/5">
+              <span className="text-[8.5px] font-black text-indigo-300 uppercase font-mono">Odds Oranı (OR) & 95% CI</span>
               <p className="text-xl font-black font-mono mt-1 text-emerald-400">{econResults.oddsRatio}</p>
-              <span className="text-[8.5px] text-slate-400 font-black mt-0.5">{econResults.ci}</span>
+              <span className="text-[8.5px] text-slate-400 font-extrabold mt-0.5 font-mono">{econResults.ci}</span>
             </div>
             
-            <div className="bg-white/5 p-3 rounded-2xl flex flex-col justify-between">
-              <span className="text-[8.5px] font-black text-indigo-300 uppercase">Rölatif Risk (RR) / P-Value</span>
+            <div className="bg-white/5 p-3 rounded-2xl flex flex-col justify-between border border-white/5">
+              <span className="text-[8.5px] font-black text-indigo-300 uppercase font-mono">Rölatif Risk (RR) & Güven Seviyesi</span>
               <p className="text-xl font-black font-mono mt-1 text-cyan-400">{econResults.relativeRisk}x</p>
               <span className="text-[8.5px] text-slate-400 font-bold mt-0.5">{econResults.pVal}</span>
             </div>
           </div>
 
-          <div className="p-3 bg-white/5 border border-white/10 rounded-2xl flex gap-3 items-center text-[10px] text-slate-300">
+          <div className="p-3 bg-white/5 border border-white/10 rounded-2xl flex gap-3 items-center text-[10px] text-slate-350">
             <Info size={14} className="text-indigo-400 shrink-0" />
             <p>
-              Analiz Sonucu: <span className="font-extrabold text-white">{econResults.strength}</span>. Bulgular karsinojenez gelişim teorisinde istatistiksel geçerlilik taşımaktadır.
+              Yorum Değerlendirmesi: <span className="font-extrabold text-white">{econResults.strength}</span>. Bulgular karsinojenez gelişim teorisinde istatistiksel geçerlilik taşımaktadır.
             </p>
           </div>
         </div>
 
-        {/* HAZARD SPREAD SIMULATION */}
-        <div className="bg-white rounded-[2.3rem] p-8 border border-slate-100 shadow-xl space-y-6">
-          <div className="space-y-1">
-            <span className="text-[9px] font-black text-rose-700 uppercase tracking-widest font-mono">Risk Projeksiyon Modeli</span>
-            <h3 className="text-md font-black text-slate-900 mt-0.5">Etkileşimli Maruziyet Yayılım & Projeksiyon Simülatörü</h3>
-            <p className="text-[10px] text-slate-400 font-medium">
-              Çalışma ortamı kimyasal gaz yoğunluk parametreleri ve kişisel koruyucu maske (PPE) bütününe göre vaka sayısındaki teorik kronik gelişimi simüle edin.
-            </p>
-          </div>
+        {/* HAZARD SPREAD SIMULATION with integrated AI forecasting engine */}
+        <div className="bg-white rounded-[2.3rem] p-8 border border-slate-100 shadow-xl space-y-6 flex flex-col justify-between">
+          <div>
+            <div className="space-y-1 mb-5">
+              <span className="text-[9px] font-black text-rose-700 uppercase tracking-widest font-mono">Dinamik Simülasyon Paneli</span>
+              <h3 className="text-md font-black text-slate-900 mt-0.5">Etkileşimli Maruziyet Yayılım & Projeksiyon Simülatörü</h3>
+              <p className="text-[10px] text-slate-400 font-medium">
+                Saha gaz yoğunluğu ve kişisel koruyucu ekipman (PPE) penetrasyon parametrelerine göre vaka sayısının teorik projeksiyon eğrilerini analiz edin.
+              </p>
+            </div>
 
-          {/* Controls */}
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-bold text-slate-600">
-                <span>Ortam Gaz Konsantrasyonu (Ortalama)</span>
-                <span className="font-mono text-rose-600">{ambientPpm} ppm</span>
+            {/* Controls */}
+            <div className="space-y-5">
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-bold text-slate-600">
+                  <span>Ortam Gaz Konsantrasyonu (Ortalama)</span>
+                  <span className="font-mono text-rose-600 font-bold">{ambientPpm} ppm</span>
+                </div>
+                <input 
+                  type="range"
+                  min="0.5"
+                  max="25.0"
+                  step="0.5"
+                  className="w-full accent-rose-500 cursor-pointer h-1.5 bg-slate-100 rounded-lg appearance-none"
+                  value={ambientPpm}
+                  onChange={e => setAmbientPpm(Number(e.target.value))}
+                />
               </div>
-              <input 
-                type="range"
-                min="0.5"
-                max="25.0"
-                step="0.5"
-                className="w-full accent-rose-500 cursor-pointer h-1.5 bg-slate-100 rounded-lg appearance-none"
-                value={ambientPpm}
-                onChange={e => setAmbientPpm(Number(e.target.value))}
-              />
-            </div>
 
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-bold text-slate-600">
-                <span>Koruyucu Ekipman (PPE) Uyum Oranı</span>
-                <span className="font-mono text-emerald-600">{ppeUsagePercent}%</span>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-bold text-slate-600">
+                  <span>Koruyucu Ekipman (PPE) Uyum Katsayısı</span>
+                  <span className="font-mono text-emerald-600 font-bold">{ppeUsagePercent}%</span>
+                </div>
+                <input 
+                  type="range"
+                  min="10"
+                  max="100"
+                  step="5"
+                  className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-100 rounded-lg appearance-none"
+                  value={ppeUsagePercent}
+                  onChange={e => setPpeUsagePercent(Number(e.target.value))}
+                />
               </div>
-              <input 
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-100 rounded-lg appearance-none"
-                value={ppeUsagePercent}
-                onChange={e => setPpeUsagePercent(Number(e.target.value))}
-              />
             </div>
-          </div>
 
-          {/* Results graph preview representation */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
-              <span className="text-[8.5px] font-black text-slate-400 uppercase">6 Ay Sonra</span>
-              <p className="text-xl font-black font-mono text-slate-800 mt-1">+{projections[6]}</p>
-              <span className="text-[8.5px] text-rose-500 font-bold block mt-0.5">Potansiyel Vaka</span>
-            </div>
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center ring-1 ring-rose-300">
-              <span className="text-[8.5px] font-black text-slate-400 uppercase">12 Ay Sonra</span>
-              <p className="text-xl font-black font-mono text-rose-700 mt-1">+{projections[12]}</p>
-              <span className="text-[8.5px] text-rose-500 font-bold block mt-0.5">Potansiyel Vaka</span>
-            </div>
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
-              <span className="text-[8.5px] font-black text-slate-400 uppercase">24 Ay Sonra</span>
-              <p className="text-xl font-black font-mono text-slate-800 mt-1">+{projections[24]}</p>
-              <span className="text-[8.5px] text-rose-500 font-bold block mt-0.5">Potansiyel Vaka</span>
+            {/* Results graph preview representation */}
+            <div className="grid grid-cols-3 gap-3 mt-6">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                <span className="text-[8.5px] font-black text-slate-400 uppercase font-mono">6 Ay Sonra</span>
+                <p className="text-xl font-black font-mono text-slate-800 mt-1">+{projections[6]}</p>
+                <span className="text-[8.5px] text-rose-500 font-bold block mt-0.5">Potansiyel Vaka</span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-150 text-center ring-1 ring-rose-300">
+                <span className="text-[8.5px] font-black text-slate-400 uppercase font-mono">12 Ay Sonra</span>
+                <p className="text-xl font-black font-mono text-rose-700 mt-1">+{projections[12]}</p>
+                <span className="text-[8.5px] text-rose-500 font-bold block mt-0.5">Potansiyel Vaka</span>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                <span className="text-[8.5px] font-black text-slate-400 uppercase font-mono">24 Ay Sonra</span>
+                <p className="text-xl font-black font-mono text-slate-800 mt-1">+{projections[24]}</p>
+                <span className="text-[8.5px] text-rose-500 font-bold block mt-0.5">Potansiyel Vaka</span>
+              </div>
             </div>
           </div>
           
-          <div className="p-3 bg-rose-50/70 border border-rose-100 rounded-2xl flex gap-2.5 text-[10px] text-rose-800 font-semibold leading-relaxed">
-            <ShieldAlert size={14} className="text-rose-600 shrink-0 mt-0.5" />
-            <p>
-              Olası İkaz: ppm yoğunluğu artarken, koruyucu ekipman kullanımı %85 limit seviyesinin altına indiği takdirde, 12 ay sonunda kronik hematopoetik hasarlar katlanarak artma trendine geçmektedir.
-            </p>
+          {/* AI Core Proactive Advice Section */}
+          <div className={`p-4 border rounded-2xl flex gap-2.5 text-[10px] font-semibold leading-relaxed transition-colors duration-300 mt-4 ${aiReport.color}`}>
+            <Brain size={16} className="shrink-0 mt-0.5 animate-pulse" />
+            <div>
+              <span className="font-black uppercase tracking-wider block mb-0.5">AI EPİDEMİYOLOJİ ASİSTANI - {aiReport.warning}</span>
+              <p>{aiReport.message}</p>
+            </div>
           </div>
         </div>
 

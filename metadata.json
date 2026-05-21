@@ -2,5 +2,5 @@
   "name": "TALEP v3.0 Premium",
   "description": "TALEP (Toksikoloji Analiz ve Laboratuvar Entegrasyon Platformu) - Mesleki Maruziyet Takip ve Analiz Sistemi. Geliştiren: Şehmus Aykut",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

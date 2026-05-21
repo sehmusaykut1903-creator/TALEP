@@ -17,10 +17,42 @@ import {
   CheckCircle2,
   Info,
   FileText,
-  Save
+  Save,
+  BarChart2,
+  TrendingUp,
+  Sliders,
+  Award,
+  Database,
+  RefreshCw,
+  FolderLock
 } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
-import { generateTalepAIResponse, AiContext, StructuredAiResponse } from '../services/talepAiService';
+import { useAuth } from '../context/AuthContext';
+import { 
+  generateScientificReasoning, 
+  saveAiChatMemory, 
+  getAiChatHistory, 
+  StructuredAiResponse,
+  AiContext 
+} from '../services/talepAiService';
+
+import { 
+  ResponsiveContainer, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  Tooltip as ChartTooltip, 
+  LineChart, 
+  Line, 
+  RadarChart, 
+  PolarGrid, 
+  PolarAngleAxis, 
+  PolarRadiusAxis, 
+  Radar,
+  CartesianGrid,
+  Legend
+} from 'recharts';
 
 interface Message {
   id: string;
@@ -28,445 +60,668 @@ interface Message {
   text?: string;
   structured?: StructuredAiResponse;
   timestamp: Date;
+  modeUsed?: string;
 }
 
 export default function TalepAI() {
   const { theme, t } = useSettings();
+  const { currentUser } = useAuth();
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'ai',
-      text: "TALEP AI AKTİF. Sektör, semptom ve laboratuvar verilerine göre toksikolojik risk analizi hazır. Klinik değerlendirme için veri girişi bekleniyor.",
+      text: "TALEP v4.0 Bilimsel Muhakeme ve Karar Destek Sistemi aktif. Semptom, endüstriyel sektör, laboratuvar tahlilleri ve maruziyet sürelerine dayalı literatür ve toksikogenetik analizler hazır. Lütfen analiz edilmek istenen vaka parametrelerini veya sorularınızı girin.",
       timestamp: new Date(),
     }
   ]);
+  
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastResponseSummary, setLastResponseSummary] = useState<string | null>(null);
+  
+  // Response Mode Selection
+  const [selectedMode, setSelectedMode] = useState<'clinical' | 'academic' | 'emergency' | 'surveillance' | 'research'>('clinical');
   const [sessionId, setSessionId] = useState('');
+  const [historyList, setHistoryList] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [advancedAi, setAdvancedAi] = useState<boolean>(false);
+  
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Demographics / Static context state to inform AI reasoning
+  const [context, setContext] = useState<AiContext>({
+    sector: "Metal & Akü Geri Dönüşüm",
+    unit: "Dökümhane & Kurşun Eritme Kazanı",
+    symptoms: ["Bilişsel Yavaşlama", "Mikrositer Anemi Beyaz Değişimi", "El Titremesi (İnce Tremor)"],
+    riskLevel: 'high'
+  });
+
+  const [activeTab, setActiveTab] = useState<Record<string, 'text' | 'probability' | 'progression' | 'riskRadar'>>({});
+
   useEffect(() => {
-    setSessionId(`session-${Math.random().toString(36).substring(2, 9)}`);
+    setSessionId(`sess-${Math.random().toString(36).substring(2, 9)}`);
   }, []);
 
-  const [recentAnalyses] = useState([
-    { title: "Solvent Maruziyeti", date: "2 saat önce", risk: "Yüksek" },
-    { title: "SFT Değerlendirmesi", date: "Dün", risk: "Orta" },
-  ]);
+  // Fetch Firestore histories for persistent memories
+  const loadHistory = async () => {
+    if (currentUser?.uid) {
+      setHistoryLoading(true);
+      try {
+        const hist = await getAiChatHistory(currentUser.uid);
+        setHistoryList(hist);
+      } catch (e) {
+        console.error("Failed to load AI history:", e);
+      } finally {
+        setHistoryLoading(false);
+      }
+    }
+  };
 
-  // Mock context for demo
-  const [context, setContext] = useState<AiContext>({
-    sector: "Boya / Kimya",
-    unit: "Üretim Hattı - Solvent Tankları",
-    symptoms: ["Laboratuvar: ALT Yüksekliği", "Klinik: Hafif Tremor"],
-    riskLevel: 'medium'
-  });
+  useEffect(() => {
+    loadHistory();
+  }, [currentUser]);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(scrollToBottom, [messages]);
+  useEffect(scrollToBottom, [messages, isTyping]);
 
-  const handleSend = (overrideInput?: string) => {
+  const handleSend = async (overrideInput?: string) => {
     const textToSend = overrideInput || input;
     if (!textToSend.trim()) return;
-    
+
     setError(null);
+    const userId = currentUser ? currentUser.uid : "fallback-anonymous-user";
+
     const userMsg: Message = {
       id: `u-${Date.now()}-${sessionId}`,
       type: 'user',
       text: textToSend,
       timestamp: new Date(),
     };
-    
+
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      try {
-        // Simulating random error for demonstration if needed, 
-        // but generally we want to catch actual service failures
-        if (Math.random() < 0.05) { // 5% chance to fail for demo purposes
-           throw new Error("AI servis bağlantısı geçici olarak kesildi. Lütfen tekrar deneyin.");
-        }
+    try {
+      const response = await generateScientificReasoning(
+        textToSend,
+        context,
+        selectedMode,
+        messages.slice(-6).map(m => ({
+          type: m.type,
+          text: m.text,
+          response: m.structured
+        })),
+        advancedAi
+      );
 
-        let response = generateTalepAIResponse(textToSend, context);
-        
-        // Anti-repeat logic
-        if (typeof response !== 'string' && response.summary === lastResponseSummary) {
-          // Try to get another one if it's the same summary
-          response = generateTalepAIResponse(textToSend + " variation", context);
-        }
+      const aiMsg: Message = {
+        id: `ai-${Date.now()}-${sessionId}`,
+        type: 'ai',
+        structured: response,
+        timestamp: new Date(),
+        modeUsed: selectedMode
+      };
 
-        const aiMsg: Message = {
-          id: `ai-${Date.now()}-${sessionId}`,
-          type: 'ai',
-          timestamp: new Date(),
-        };
+      setMessages(prev => [...prev, aiMsg]);
 
-        if (typeof response === 'string') {
-          aiMsg.text = response;
-        } else {
-          aiMsg.structured = response;
-          setLastResponseSummary(response.summary);
-        }
-
-        setMessages(prev => [...prev, aiMsg]);
-        setError(null);
-      } catch (err) {
-        console.error("Talep AI Error:", err);
-        setError(err instanceof Error ? err.message : "Beklenmeyen bir hata oluştu.");
-        
-        const errorMsg: Message = {
-          id: `err-${Date.now()}`,
-          type: 'ai',
-          text: err instanceof Error ? err.message : "Analiz motoru şu an yanıt veremiyor. Sistem yöneticisine bildirildi.",
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, errorMsg]);
-      } finally {
-        setIsTyping(false);
+      // Automatically persist to Firebase Firestore for session memory
+      if (currentUser?.uid) {
+        await saveAiChatMemory(currentUser.uid, sessionId, selectedMode, textToSend, response);
+        // Reload list to synchronize with dashboard sidebar
+        loadHistory();
       }
-    }, 1000 + Math.random() * 500); 
+
+    } catch (err: any) {
+      console.error("AI Core routing failure:", err);
+      setError(err?.message || "Hizmete erişilemedi.");
+      
+      const errorMsg: Message = {
+        id: `err-${Date.now()}`,
+        type: 'ai',
+        text: "Toksikoloji motorundan geçerli bir analiz paketi alınamadı. Lütfen API bağlantınızı kontrol edin veya internet hattınızı yineleyin.",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
+  // Restore historical memory record when clicked on the sidebar list
+  const handleRestoreHistory = (historyItem: any) => {
+    if (!historyItem?.response) return;
+    
+    const userMsg: Message = {
+      id: `u-restored-${Date.now()}`,
+      type: 'user',
+      text: historyItem.question || "Kayıtlı Analiz Sürveyansı",
+      timestamp: new Date()
+    };
+
+    const aiMsg: Message = {
+      id: `ai-restored-${Date.now()}`,
+      type: 'ai',
+      structured: historyItem.response,
+      timestamp: new Date(),
+      modeUsed: historyItem.mode || 'clinical'
+    };
+
+    setMessages(prev => [...prev, userMsg, aiMsg]);
+  };
 
   const quickActions = [
-    { label: "Solvent Analizi", icon: FlaskConical, query: "Solvent maruziyet analizi başlat" },
-    { label: "Ağır Metal Analizi", icon: Activity, query: "Ağır metal riski değerlendir" },
-    { label: "SFT Yorumu", icon: Zap, query: "SFT sonuçlarını yorumla" },
-    { label: "ALT/AST Değerlendir", icon: Brain, query: "Karaciğer enzimlerini analiz et" },
-    { label: "İş Kazası Riski", icon: AlertTriangle, query: "İş kazası risk faktörleri" },
-    { label: "PPE Uygunluğu", icon: ShieldCheck, query: "KKE ekipman kontrolü" },
-    { label: "MSDS Özeti", icon: ClipboardList, query: "MSDS verilerini özetle" },
-    { label: "Klinik Öneri Oluştur", icon: CheckCircle2, query: "Klinik yönetim önerisi oluştur" },
+    { label: "Kurşun Zehirlenmesi", query: "Vaka: Kan Kurşun Seviyesi (BLL) > 40 µg/dL, mikrositer anemi, karın koliği takibi", icon: FlaskConical },
+    { label: "Benzen & AML Riski", query: "Boya işçisinde lökopeni (WBC 3.2), idrar tt-MA yükselişi, IARC Grup 1 yorumu", icon: Activity },
+    { label: "Organofosfat Kriz", query: "Tarım işçisinde muskarinik miyozis, yoğun salivasyon (SLUDGE kriliş) acil yaklaşım", icon: Zap },
+    { label: "ALAD Mutasyonu Araştır", query: "Kurşun duyarılılığında ALAD2 gen polimorfizmleri ve toksikodinamik katsayılar", icon: Brain },
+    { label: "Nöro-Solvent İzlem", query: "Ayakkabı yapıştırıcı hattında el titremesi (tremor) ve aksonal nöropati analizi", icon: Sliders },
+    { label: "Karaciğer Enzimi", query: "Karmatik solvent maruziyeti olan boyacıda ALT/AST transaminaz seviyeleri", icon: Stethoscope },
   ];
 
-  const renderAiMessage = (msg: Message) => {
-    if (msg.structured) {
-      const res = msg.structured;
-      return (
-        <div className="space-y-4 max-w-full">
-          <div className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-slate-400 mb-1">
-             <Info size={12} />
-             KLİNİK ANALİZ RAPORU
-          </div>
-          
-          <div className="bg-white/90 backdrop-blur-xl border border-white rounded-[2rem] p-6 shadow-2xl shadow-slate-200/50">
-             <div className="flex justify-between items-start mb-5">
-                <div>
-                   <h4 className="text-sm md:text-base font-black text-slate-900 leading-tight pr-4">{res.summary}</h4>
-                   <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">Klinik Analiz Bulgusu</p>
-                </div>
-                <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                  res.riskLevel === 'Kritik' ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/30' :
-                  res.riskLevel === 'Yüksek' ? 'bg-orange-500 text-white' :
-                  res.riskLevel === 'Orta-Yüksek' ? 'bg-amber-500 text-white' :
-                  res.riskLevel === 'Orta' ? 'bg-blue-500 text-white' :
-                  'bg-emerald-500 text-white'
-                }`}>
-                  {res.riskLevel} RİSK
-                </div>
-             </div>
+  const renderVisualsAndReports = (res: StructuredAiResponse, msgId: string) => {
+    const currentTab = activeTab[msgId] || 'text';
 
-             {res.alert && (
-               <div className="mb-5 p-4 bg-rose-50/80 backdrop-blur-sm border border-rose-100 rounded-2xl flex gap-3 items-start">
-                  <div className="p-1.5 bg-rose-500 rounded-lg text-white">
-                    <AlertTriangle size={14} />
-                  </div>
-                  <p className="text-xs font-bold text-rose-700 leading-relaxed">{res.alert}</p>
-               </div>
-             )}
-
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5">
-                <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                      Olası Etkenler
-                   </p>
-                   <ul className="space-y-2">
-                      {res.factors.map((f, i) => (
-                        <li key={i} className="text-xs font-bold text-slate-600 flex items-center gap-2">
-                           <div className="w-1 h-1 rounded-full bg-slate-300" />
-                           {f}
-                        </li>
-                      ))}
-                   </ul>
-                </div>
-                <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-300" />
-                      Önerilen İncelemeler
-                   </p>
-                   <ul className="space-y-2">
-                      {res.recommendations.map((r, i) => (
-                        <li key={i} className="text-xs font-bold text-slate-600 flex items-center gap-2">
-                           <CheckCircle2 size={14} className="text-blue-500 shrink-0" />
-                           <span className="leading-snug">{r}</span>
-                        </li>
-                      ))}
-                   </ul>
-                </div>
-             </div>
-
-             <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                <div className="flex gap-2">
-                   <button className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 transition-colors rounded-lg text-[10px] font-bold text-slate-600">
-                      <FileText size={14} />
-                      Raporla
-                   </button>
-                   <button className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 transition-colors rounded-lg text-[10px] font-bold text-slate-600">
-                      <Save size={14} />
-                      Kaydet
-                   </button>
-                </div>
-                <p className="text-[10px] font-black italic text-slate-300">CDSSv3.0.4</p>
-             </div>
-          </div>
-        </div>
-      );
-    }
+    const setMsgTab = (tabValue: 'text' | 'probability' | 'progression' | 'riskRadar') => {
+      setActiveTab(prev => ({ ...prev, [msgId]: tabValue }));
+    };
 
     return (
-      <div className="whitespace-pre-wrap">
-        {msg.text}
+      <div className="space-y-4 max-w-full">
+        {/* PREMIUM HORIZONTAL SUB-NAV FOR CHARTS AND REPORT TEXT */}
+        <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl overflow-x-auto scrollbar-hide shrink-0 mb-4 border border-slate-200/50">
+          <button 
+            onClick={() => setMsgTab('text')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+              currentTab === 'text' ? 'bg-white text-slate-900 shadow-sm font-black' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <FileText size={13} /> Analiz Raporu
+          </button>
+          <button 
+            onClick={() => setMsgTab('probability')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+              currentTab === 'probability' ? 'bg-white text-slate-900 shadow-sm font-black' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <BarChart2 size={13} /> Etken Olasılık Dağılımı ({res.probabilityGraph?.length || 0})
+          </button>
+          <button 
+            onClick={() => setMsgTab('progression')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+              currentTab === 'progression' ? 'bg-white text-slate-900 shadow-sm font-black' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <TrendingUp size={13} /> Biyobelirteç İlerlemesi (Line)
+          </button>
+          <button 
+            onClick={() => setMsgTab('riskRadar')}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+              currentTab === 'riskRadar' ? 'bg-white text-slate-900 shadow-sm font-black' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Brain size={13} /> Sistemsel Risk Radarı
+          </button>
+        </div>
+
+        {/* COMPONENT BODY */}
+        <div className="min-h-[220px]">
+          {currentTab === 'text' && (
+            <div className="space-y-4">
+              {/* MAIN MARKDOWN CONTAINER WITH WHITESPACE LOGIC */}
+              <div className="text-xs md:text-[13.5px] text-slate-800 leading-relaxed font-semibold whitespace-pre-wrap font-sans dark-report-layer">
+                {res.rawText}
+              </div>
+
+              {/* OUTCOMES SUMMARY / BIOMARKERS ASSESSMENT */}
+              {res.biomarkerInterpretation && (
+                <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 mt-4">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-indigo-800 block mb-1">Moleküler & Biyokimyasal Yorum</span>
+                  <p className="text-xs text-indigo-900 leading-relaxed font-black font-sans">{res.biomarkerInterpretation}</p>
+                </div>
+              )}
+
+              {/* DYNAMIC METRICS BENTO GRID */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4">
+                
+                {/* 1. SEVERITY SLIDER METER */}
+                <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                  <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block mb-2">Maruziyet Derecesi</span>
+                  <div className="relative pt-1">
+                    <div className="flex mb-1 items-center justify-between">
+                      <span className="text-[11px] font-bold text-slate-700">Seviye İndeksi</span>
+                      <span className="text-xs font-mono font-black text-rose-600">% {res.exposureSeverity}</span>
+                    </div>
+                    <div className="overflow-hidden h-2.5 text-xs flex rounded-full bg-slate-200">
+                      <div 
+                        style={{ width: `${res.exposureSeverity}%` }} 
+                        className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
+                          res.exposureSeverity > 75 ? 'bg-rose-500' :
+                          res.exposureSeverity > 45 ? 'bg-amber-500' :
+                          'bg-emerald-500'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. CONFIDENCE SCORE CIRCLE */}
+                <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-center justify-between">
+                  <div>
+                    <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block mb-1">Teşhis Güven</span>
+                    <span className="text-md font-black text-slate-800 font-mono">% {res.confidenceScore}</span>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-indigo-50 border-2 border-indigo-600 flex items-center justify-center text-xs font-black text-indigo-700">
+                    {res.confidenceScore}
+                  </div>
+                </div>
+
+                {/* 3. EVIDENCE LEVEL BADGE */}
+                <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                  <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block mb-1">Kanıtsal Derece</span>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Award className="text-amber-500" size={16} />
+                    <span className="text-xs font-black text-slate-800">{res.evidenceLevel || 'Level Ia'}</span>
+                  </div>
+                </div>
+
+                {/* 4. CARCINOGENICITY BADGE */}
+                <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl sm:col-span-2 md:col-span-1">
+                  <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block mb-1">IARC Karsinojen Sınıfı</span>
+                  <span className="inline-block mt-1 px-3 py-1 bg-red-50 text-red-700 text-[11px] font-black rounded-lg border border-red-100">
+                    {res.carcinogenicityGroup || 'Grup Sınıflandırılmamış'}
+                  </span>
+                </div>
+
+                {/* 5. TARGET ORGANS TARGETED CHIPS */}
+                <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl sm:col-span-2">
+                  <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block mb-2">Hedef Toksisite Organları</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {res.targetOrgans?.map((org, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-slate-200/50 border border-slate-250 rounded-xl text-[10px] font-black text-slate-700">
+                        {org}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* MEDICAL REMEDIAL PROTOCOLS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
+                <div className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl">
+                  <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block mb-2 font-mono">Tavsiye Tahlil / Tetkikler</span>
+                  <ul className="space-y-1.5">
+                    {res.recommendedNextTests?.map((test, i) => (
+                      <li key={i} className="text-xs text-slate-700 font-bold flex items-start gap-1.5">
+                        <span className="text-blue-500 mt-0.5 shrink-0">•</span>
+                        <span>{test}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl">
+                  <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block mb-2 font-mono">Endüstriyel KKE Tedbirleri</span>
+                  <ul className="space-y-1.5">
+                    {res.ppeRecommendations?.map((ppe, i) => (
+                      <li key={i} className="text-xs text-slate-700 font-bold flex items-start gap-1.5">
+                        <span className="text-purple-500 mt-0.5 shrink-0">•</span>
+                        <span>{ppe}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl">
+                  <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block mb-2 font-mono">Mesleki Sürveyans & Takip</span>
+                  <ul className="space-y-1.5">
+                    {res.surveillanceSuggestions?.map((srv, i) => (
+                      <li key={i} className="text-xs text-slate-700 font-bold flex items-start gap-1.5">
+                        <span className="text-amber-500 mt-0.5 shrink-0">•</span>
+                        <span>{srv}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* OCUPATIONAL RISK HEATMAP EXPLAINED */}
+              {res.riskHeatmap && res.riskHeatmap.length > 0 && (
+                <div className="pt-4 border-t border-slate-100">
+                  <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block mb-3 font-mono">Faktör Seviyeli Mesleki Sağlık Isı Matrisi</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {res.riskHeatmap.map((item, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`p-3 rounded-xl border text-center transition-all ${
+                          item.riskPercent > 75 ? 'bg-red-50 border-red-200 text-red-900' :
+                          item.riskPercent > 50 ? 'bg-amber-50 border-amber-250 text-amber-900' :
+                          'bg-emerald-50 border-emerald-200 text-emerald-900'
+                        }`}
+                      >
+                        <span className="text-[14.5px] font-black font-mono block">% {item.riskPercent}</span>
+                        <span className="text-[8.5px] font-black uppercase tracking-wider block mt-1">{item.field}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentTab === 'probability' && res.probabilityGraph && (
+            <div className="h-64 mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={res.probabilityGraph} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={9} fontStyle="bold" />
+                  <YAxis stroke="#94a3b8" fontSize={9} unit="%" />
+                  <ChartTooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', background: '#0f172a', color: '#fff', fontSize: '10px' }}
+                  />
+                  <Bar dataKey="probability" name="Causative Agent %" fill="#4f46e5" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+              <p className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider text-center mt-2">
+                Bilimsel veri ve korelasyon olasılık dağılım matrisi.
+              </p>
+            </div>
+          )}
+
+          {currentTab === 'progression' && res.biomarkerProgression && (
+            <div className="h-64 mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={res.biomarkerProgression} margin={{ top: 15, right: 10, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="period" stroke="#94a3b8" fontSize={9} fontStyle="bold" />
+                  <YAxis stroke="#94a3b8" fontSize={9} />
+                  <ChartTooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', background: '#0f172a', color: '#fff', fontSize: '10px' }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '9px', fontWeight: 'bold' }} />
+                  <Line type="monotone" dataKey="value" name="Vaka Ölçümleri (Biyobelirteç)" stroke="#dc2626" strokeWidth={3.5} dot={{ r: 6 }} activeDot={{ r: 8 }} />
+                  <Line type="step" dataKey="limit" name="Yasal Sınır Limiti (OEL/OEP)" stroke="#16a34a" strokeDasharray="5 5" strokeWidth={2.5} />
+                </LineChart>
+              </ResponsiveContainer>
+              <p className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider text-center mt-2">
+                Maruziyet seyrindeki kritik biyokimyasal aşınma eğrisi.
+              </p>
+            </div>
+          )}
+
+          {currentTab === 'riskRadar' && res.riskRadar && (
+            <div className="h-[240px] flex justify-center items-center mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={res.riskRadar}>
+                  <PolarGrid stroke="#e2e8f0" />
+                  <PolarAngleAxis dataKey="subject" stroke="#64748b" fontSize={9} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#cbd5e1" fontSize={8} />
+                  <Radar name="Systemic Risk" dataKey="value" stroke="#7c3aed" fill="#7c3aed" fillOpacity={0.35} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="talep-ai-page talep-ai-mobile flex flex-col lg:flex-row min-h-dvh lg:h-[calc(100vh-140px)] gap-6 lg:gap-8 lg:overflow-hidden pt-[env(safe-area-inset-top)] overflow-y-auto lg:overflow-y-visible">
-      {/* Left Chat Area (Main) */}
-      <div className="flex-1 flex flex-col min-w-0 bg-slate-50/50 rounded-[2.5rem] lg:rounded-[3rem] p-1 border border-white shadow-inner lg:overflow-hidden">
-        {/* Header - Clinical Breadcrumbs (Desktop Only) */}
-        <div className="hidden lg:flex items-center gap-4 p-6 border-b border-white/50">
-           <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-lg relative">
-              <Sparkles size={18} />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
-           </div>
-           <div>
-              <div className="flex items-center gap-2">
-                 <h2 className="text-lg font-black text-slate-900 tracking-tight">TALEP AI</h2>
-                 <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[8px] font-black rounded-lg uppercase tracking-widest">v3.2 CDSS ENGINE</span>
-              </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
-                    <Activity size={10} /> Aktif Tarama Modu
-                 </div>
-                 <span className="w-1 h-1 rounded-full bg-slate-300" />
-                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
-                    <Stethoscope size={10} /> Klinik Karar Destek
-                 </div>
-              </div>
-           </div>
-        </div>
-
-        {/* Chat Area */}
-        <div className="talep-ai-messages flex-1 p-4 md:p-10 space-y-6 md:space-y-8 lg:overflow-y-auto scrollbar-hide">
-          <AnimatePresence>
-            {messages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 15, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+    <div className="talep-ai-page flex flex-col lg:flex-row min-h-dvh lg:h-[calc(100vh-140px)] gap-6 lg:gap-8 lg:overflow-hidden pt-[env(safe-area-inset-top)] overflow-y-auto lg:overflow-y-visible">
+      
+      {/* 2. Side Panel FOR PAST ANALYSES (AI persistent memories) */}
+      <div className="hidden lg:flex flex-col w-72 shrink-0 space-y-6 overflow-y-auto pr-1 scrollbar-hide">
+        
+        {/* RECENT RECORDS BOX CONVERTED TO A TRUE PERSISTED LIST */}
+        <div className="bg-white rounded-[2rem] p-6 border border-slate-200/50 shadow-sm relative overflow-hidden flex flex-col h-[320px]">
+           <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">AKADEMİK HAFIZA TAKİBİ</h3>
+              <button 
+                onClick={loadHistory} 
+                className="text-indigo-600 hover:text-indigo-800 transition-colors p-1 rounded-lg"
+                title="Hafızayı Yenile"
               >
-                <div className={`flex gap-3 md:gap-4 max-w-[95%] md:max-w-[80%] ${msg.type === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg transition-transform hover:scale-110 ${
-                    msg.type === 'ai' ? 'bg-slate-900 text-white' : 'bg-white text-slate-400'
-                  }`}>
-                    {msg.type === 'ai' ? <Sparkles size={16} /> : <User size={16} />}
-                  </div>
-                  <div className={`p-4 md:p-5 rounded-[1.5rem] md:rounded-3xl shadow-sm leading-relaxed relative break-words overflow-hidden ${
-                    msg.type === 'ai' 
-                      ? msg.id.startsWith('err-') 
-                        ? 'bg-rose-50 border border-rose-100 text-rose-800'
-                        : 'bg-white/70 backdrop-blur-md text-slate-800 border border-white' 
-                      : 'bg-slate-900 text-white shadow-xl shadow-slate-900/10'
-                  }`}
-                  style={msg.type === 'user' ? { borderTopRightRadius: '4px' } : { borderTopLeftRadius: '4px' }}
-                  >
-                    {msg.id.startsWith('err-') && (
-                      <div className="flex items-center gap-2 text-[10px] font-black tracking-widest text-rose-500 mb-2 uppercase">
-                        <AlertTriangle size={12} />
-                        Sistem Hatası
-                      </div>
-                    )}
-                    <div className={msg.type === 'ai' ? 'text-[13px] md:text-sm font-semibold' : 'text-[13px] md:text-sm font-medium'}>
-                      {renderAiMessage(msg)}
-                    </div>
-                    {msg.id.startsWith('err-') && (
-                      <button 
-                        onClick={() => {
-                          // Find last user message to retry
-                          const userMessages = messages.filter(m => m.type === 'user');
-                          if (userMessages.length > 0) {
-                            handleSend(userMessages[userMessages.length - 1].text);
-                          }
-                        }}
-                        className="mt-4 px-4 py-2 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/20 active:scale-95"
-                      >
-                        Yeniden Dene
-                      </button>
-                    )}
-                    <div className={`text-[9px] opacity-40 mt-3 font-black uppercase tracking-widest ${msg.type === 'user' ? 'text-white/60' : 'text-slate-400'}`}>
-                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-            {isTyping && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start gap-4">
-                 <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400">
-                    <Sparkles size={16} />
-                 </div>
-                 <div className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl flex gap-3 items-center">
-                    <div className="flex gap-1">
-                      <div className="w-1 h-1 rounded-full bg-slate-400 animate-bounce" />
-                      <div className="w-1 h-1 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.15s]" />
-                      <div className="w-1 h-1 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.3s]" />
-                    </div>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Analiz hazırlanıyor...</span>
-                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <div ref={chatEndRef} />
-        </div>
+                <RefreshCw size={12} className={historyLoading ? "animate-spin" : ""} />
+              </button>
+           </div>
 
-        {/* Input & Quick Actions Panel */}
-        <div className="p-4 md:p-8 bg-white/60 backdrop-blur-2xl border-t border-white/50 sticky bottom-0 z-30 lg:relative">
-          {/* Quick Actions Grid / Carousel */}
-          <div className="mb-4 md:mb-6">
-             <div className="flex items-center gap-2 mb-3">
-                <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">HIZLI ANALİZ MODÜLLERİ</p>
-                <div className="flex-1 h-px bg-slate-100 shadow-sm" />
+           {historyLoading ? (
+             <div className="flex-1 flex flex-col items-center justify-center text-[10px] text-slate-400 font-bold uppercase tracking-widest gap-2">
+                <RefreshCw size={14} className="animate-spin text-slate-300" /> Hafıza yükleniyor...
              </div>
-             <div className="quick-actions-carousel flex lg:grid lg:grid-cols-4 gap-3 overflow-x-auto lg:overflow-x-visible pb-4 lg:pb-0 scrollbar-hide snap-x snap-mandatory px-1 -mx-1">
-                {quickActions.map((action, i) => (
-                  <button 
+           ) : historyList.length === 0 ? (
+             <div className="flex-1 flex flex-col items-center justify-center text-center p-3 text-slate-400">
+                <FolderLock size={20} className="text-slate-300 mb-2" />
+                <p className="text-[10px] font-bold uppercase tracking-wider">Geçmiş Bulgu Yok</p>
+                <p className="text-[9px] opacity-70 mt-1">Giriş yapıp ilk analiz paketinizi kayıt altına alın.</p>
+             </div>
+           ) : (
+             <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 scrollbar-hide">
+                {historyList.map((item, i) => (
+                  <button
                     key={i}
-                    onClick={() => handleSend(action.query)}
-                    className="quick-action-card flex-shrink-0 lg:flex-shrink flex items-center gap-3 p-4 lg:p-3 bg-white hover:bg-slate-900 rounded-2xl border border-slate-100 transition-all active:scale-95 shadow-sm hover:shadow-xl hover:shadow-slate-900/10 min-w-[200px] lg:min-w-0 snap-start"
+                    onClick={() => handleRestoreHistory(item)}
+                    className="w-full text-left p-3 bg-slate-50/50 hover:bg-slate-900 border border-slate-150 rounded-xl hover:text-white transition-all duration-200 cursor-pointer text-xs space-y-1 block group relative"
                   >
-                    <div className="p-2 lg:p-1.5 bg-slate-50 rounded-xl group-hover:bg-white/10 transition-colors">
-                       <action.icon size={16} className="text-slate-500 group-hover:text-white lg:size-[12px]" />
+                    <div className="flex justify-between items-start">
+                      <p className="font-extrabold text-slate-800 group-hover:text-white truncate max-w-[130px]" title={item.question}>
+                        {item.question}
+                      </p>
+                      <span className="text-[8px] font-mono font-black uppercase text-indigo-500 bg-indigo-50 px-1 py-0.5 rounded group-hover:bg-white/10 group-hover:text-indigo-200 shrink-0">
+                        {item.mode || 'clinical'}
+                      </span>
                     </div>
-                    <span className="text-[10px] md:text-[10px] font-black uppercase tracking-tight text-slate-600 group-hover:text-white whitespace-nowrap">{action.label}</span>
+                    <div className="flex justify-between items-center text-[8.5px] text-slate-400 font-bold">
+                      <span>{item.response?.riskLevel} Risk</span>
+                      <span className="font-mono text-[8px] opacity-70">
+                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' }) : "Mevcut"}
+                      </span>
+                    </div>
                   </button>
                 ))}
              </div>
-          </div>
-
-          <div className="flex gap-3 md:gap-4 items-center">
-            <div className="flex-1 relative">
-              <input 
-                type="text" 
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Veri girişi..."
-                className="w-full bg-white border-2 border-slate-50 rounded-2xl md:rounded-[2rem] px-5 md:px-8 py-3.5 md:py-5 text-sm font-bold shadow-2xl shadow-slate-200/20 focus:outline-none focus:ring-4 focus:ring-slate-900/5 transition-all text-slate-900 placeholder:text-slate-300"
-              />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-300">
-                 <span className="text-[10px] font-black uppercase tracking-widest hidden lg:block">ENTER İLE GÖNDER</span>
-              </div>
-            </div>
-            <button 
-              onClick={() => handleSend()}
-              className="w-12 h-12 md:w-16 md:h-16 bg-slate-900 text-white rounded-2xl md:rounded-[2rem] flex items-center justify-center shadow-2xl shadow-slate-900/30 active:scale-90 transition-all hover:bg-slate-800 group shrink-0"
-            >
-              <Send size={24} className="md:size-[28px] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-            </button>
-          </div>
+           )}
         </div>
-      </div>
 
-      {/* Right Sidebar (Context & Quick Cards) - Desktop Only */}
-      <div className="hidden lg:flex flex-col w-80 shrink-0 space-y-6 overflow-y-auto pr-2 scrollbar-hide">
-        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/10 relative overflow-hidden group">
-           <div className="absolute -top-10 -right-10 w-24 h-24 bg-blue-50 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity" />
-           <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest mb-6">SON ANALİZLER</h3>
-           <div className="space-y-3 mb-8">
-              {recentAnalyses.map((ana, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-xl border border-transparent hover:border-slate-100 transition-all cursor-pointer">
-                   <div>
-                      <p className="text-xs font-bold text-slate-700">{ana.title}</p>
-                      <p className="text-[9px] text-slate-400 font-medium">{ana.date}</p>
-                   </div>
-                   <div className={`text-[8px] font-black px-2 py-0.5 rounded-md ${
-                      ana.risk === 'Yüksek' ? 'bg-rose-50 text-rose-500' : 'bg-blue-50 text-blue-500'
-                   }`}>
-                      {ana.risk.toUpperCase()}
-                   </div>
-                </div>
-              ))}
-           </div>
-
-           <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest mb-6">BAĞLAM ÖZETİ</h3>
-           <div className="space-y-4">
-              {[
-                { label: 'Aktif Sektör', value: context.sector, color: 'text-blue-500', icon: FlaskConical },
-                { label: 'Çalışma Birimi', value: context.unit, color: 'text-slate-400', icon: ClipboardList },
-                { label: 'Risk Düzeyi', value: 'Orta-Yüksek', color: 'text-amber-500', icon: AlertTriangle, badge: true },
-              ].map((item, i) => (
-                <div key={i} className="p-4 bg-slate-50/50 rounded-2xl border border-white hover:border-slate-100 transition-colors">
-                   <div className="flex items-center gap-2 mb-1.5">
-                      <item.icon size={10} className={item.color} />
-                      <p className={`text-[9px] font-black uppercase tracking-widest ${item.color}`}>{item.label}</p>
-                   </div>
-                   <div className="flex items-center gap-2">
-                      <p className="text-sm font-black text-slate-900">{item.value}</p>
-                      {item.badge && <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
-                   </div>
-                </div>
-              ))}
-              <div className="p-4 bg-slate-50/50 rounded-2xl border border-white">
-                 <p className={`text-[9px] font-black uppercase tracking-widest text-rose-500 mb-2`}>ELEŞTİREL BULGULAR</p>
-                 <div className="flex flex-wrap gap-1.5">
-                    {context.symptoms?.map((s, i) => (
-                      <span key={i} className="px-2 py-1 bg-white border border-slate-100 rounded-lg text-[10px] font-bold text-slate-600">{s}</span>
+        {/* CLINICAL METRICS BENTO IN THE SIDEBAR */}
+        <div className="bg-white rounded-[2rem] p-6 border border-slate-200/50 shadow-sm space-y-4">
+           <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest">ÇALIŞMA BAĞLAMI</h3>
+           
+           <div className="space-y-3">
+              <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                 <span className="text-[8.5px] font-black uppercase tracking-widest text-slate-400 block mb-0.5">Sektör / Çalışma Segmenti</span>
+                 <p className="text-xs font-extrabold text-slate-800 block">{context.sector}</p>
+              </div>
+              <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                 <span className="text-[8.5px] font-black uppercase tracking-widest text-slate-400 block mb-0.5">Sürveyans Hücresi</span>
+                 <p className="text-xs font-extrabold text-slate-800 block">{context.unit}</p>
+              </div>
+              <div className="p-3.5 bg-slate-50/50 border border-slate-100 rounded-xl">
+                 <span className="text-[8.5px] font-black uppercase tracking-widest text-rose-500 block mb-1.5">Mevcut Analiz Belirtileri</span>
+                 <div className="flex flex-wrap gap-1">
+                    {context.symptoms?.map((s, idx) => (
+                      <span key={idx} className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[8px] font-black text-slate-600">
+                        {s}
+                      </span>
                     ))}
                  </div>
               </div>
            </div>
         </div>
 
-        <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl shadow-slate-900/30 relative overflow-hidden">
-           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-50" />
-           <h3 className="text-xs font-black opacity-40 uppercase tracking-widest mb-6 relative z-10">ANALİZ ARAÇLARI</h3>
-           <div className="space-y-3 relative z-10">
-              {[
-                { label: 'Klinik Özet Raporu', icon: ChevronRight },
-                { label: 'Vaka Karşılaştırma', icon: ChevronRight },
-                { label: 'Literatür Taraması', icon: ChevronRight },
-                { label: 'MSDS Detaylarını Al', icon: ChevronRight }
-              ].map((item, i) => (
-                <button key={i} className="w-full flex items-center justify-between p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-transparent hover:border-white/10 group">
-                   <span className="text-[11px] font-bold text-slate-300 group-hover:text-white transition-colors">{item.label}</span>
-                   <item.icon size={12} className="text-slate-600 group-hover:text-white transition-colors translate-x-0 group-hover:translate-x-1" />
-                </button>
-              ))}
-           </div>
+        {/* CAVEAT LEGIT SEAL */}
+        <div className="p-6 bg-gradient-to-br from-indigo-950 to-slate-900 border border-indigo-900/40 rounded-[2rem] text-white">
+          <p className="text-[10px] opacity-70 font-semibold leading-relaxed italic">
+            "TALEP v4.0 CDSS bir kromatografi ve biyoanalitik karar destek aracıdır. Elde edilen tüm veriler nitelikli tıbbi konsültasyon esasında değerlendirilmelidir."
+          </p>
         </div>
 
-        <div className="p-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] text-white flex flex-col gap-4 shadow-xl shadow-blue-600/30">
-           <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/10">
-                 <ShieldCheck size={20} />
-              </div>
-              <div>
-                 <p className="text-sm font-black tracking-tight leading-tight">Antalya Kongresi</p>
-                 <p className="text-[9px] opacity-60 font-black uppercase tracking-widest">CDSS ENGINE v3.2</p>
+      </div>
+
+      {/* 3. Main Chat Screen Area */}
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-50/50 rounded-[2rem] lg:rounded-[3rem] p-1.5 border border-white shadow-inner lg:overflow-hidden relative">
+         
+         {/* MODE SELECTION CONTROL LINE BAR */}
+         <div className="grid grid-cols-5 gap-1.5 p-3 rounded-[2.2rem] bg-white border border-slate-200/40 shadow-sm mx-3 mt-3 relative z-20 overflow-x-auto scrollbar-hide shrink-0">
+           {[
+             { id: 'clinical', label: 'KLİNİK', sub: 'YOL / TANI', icon: Stethoscope },
+             { id: 'academic', label: 'AKADEMİK', sub: 'GENETİK', icon: Brain },
+             { id: 'emergency', label: 'ACİL', sub: 'ŞELASYON', icon: Zap },
+             { id: 'surveillance', label: 'SÜRVEYANS', sub: 'TAKİP/LİMİT', icon: ClipboardList },
+             { id: 'research', label: 'YAZI / TEZ', sub: 'BİLDİRİ', icon: FileText }
+           ].map(m => {
+             const Icon = m.icon;
+             const isSelected = selectedMode === m.id;
+             return (
+               <button
+                 key={m.id}
+                 onClick={() => setSelectedMode(m.id as any)}
+                 className={`flex flex-col items-center justify-center p-2 rounded-2xl cursor-pointer transition-all duration-200 whitespace-nowrap active:scale-95 ${
+                   isSelected 
+                     ? 'bg-slate-900 text-white shadow-lg font-black' 
+                     : 'bg-slate-50 hover:bg-slate-100 text-slate-500 font-bold border border-slate-100'
+                 }`}
+               >
+                 <Icon size={14} className={isSelected ? 'text-amber-400' : 'text-slate-400'} />
+                 <span className="text-[9.5px] uppercase tracking-wider block mt-1 leading-none">{m.label}</span>
+                 <span className="text-[7px] block opacity-40 uppercase font-mono tracking-widest mt-0.5">{m.sub}</span>
+               </button>
+             );
+           })}
+         </div>
+
+         {/* HYBRID CORE SELECTOR BANNER */}
+         <div className="flex flex-col sm:flex-row justify-between items-center px-4 py-3 bg-white border-b border-slate-100 shrink-0 gap-2 mx-3 mt-2 rounded-[1.5rem] shadow-sm">
+           <div className="flex items-center gap-2">
+             <div className="w-2 h-2 rounded-full animate-pulse bg-emerald-500 shrink-0" />
+             <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+               Hibrid AI Kontrolü:
+             </span>
+             <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-widest border ${
+               advancedAi 
+                 ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+                 : 'bg-emerald-50 text-emerald-700 border-emerald-250'
+             }`}>
+               {advancedAi ? "Gelişmiş Yapay Zeka (Gemini AI)" : "Yerel Bilimsel Veritabanı (Karar Destek)"}
+             </span>
+           </div>
+           
+           <label className="relative inline-flex items-center cursor-pointer select-none">
+             <input 
+               type="checkbox" 
+               checked={advancedAi}
+               onChange={(e) => setAdvancedAi(e.target.checked)}
+               className="sr-only peer" 
+             />
+             <div className="w-9 h-5 bg-slate-200 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900"></div>
+             <span className="ml-2 text-[10px] font-extrabold uppercase tracking-wider text-slate-700">
+               Gelişmiş Analiz Motoru (Gemini) Aktif
+             </span>
+           </label>
+         </div>
+
+         {/* Chat Message Scrollable Wall */}
+         <div className="flex-1 p-4 md:p-8 space-y-6 md:space-y-8 lg:overflow-y-auto scrollbar-hide">
+           <AnimatePresence>
+             {messages.map((msg) => (
+               <motion.div
+                 key={msg.id}
+                 initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                 animate={{ opacity: 1, y: 0, scale: 1 }}
+                 className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+               >
+                 <div className={`flex gap-3 md:gap-4 max-w-[95%] md:max-w-[85%] ${msg.type === 'user' ? 'flex-row-reverse' : ''}`}>
+                   <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg transition-transform hover:scale-110 ${
+                     msg.type === 'ai' ? 'bg-slate-900 text-white' : 'bg-white text-slate-400'
+                   }`}>
+                     {msg.type === 'ai' ? <Brain size={16} /> : <User size={16} />}
+                   </div>
+                   <div className={`p-4 md:p-6 rounded-[1.5rem] md:rounded-3xl shadow-sm leading-relaxed relative break-words overflow-hidden ${
+                     msg.type === 'ai' 
+                       ? msg.id.startsWith('err-') 
+                         ? 'bg-rose-50 border border-rose-100 text-rose-800 font-bold'
+                         : 'bg-white text-slate-800 border border-slate-200/60' 
+                       : 'bg-slate-950 text-white shadow-xl shadow-slate-900/10 font-bold'
+                   }`}
+                   style={msg.type === 'user' ? { borderTopRightRadius: '4px' } : { borderTopLeftRadius: '4px' }}
+                   >
+                     {msg.type === 'ai' && msg.modeUsed && (
+                       <div className="flex items-center gap-1 text-[8.5px] font-black tracking-widest text-indigo-600 uppercase mb-3 font-mono">
+                         <Info size={10} />
+                         Aktif Model: {msg.modeUsed.toUpperCase()} MODU
+                       </div>
+                     )}
+                     
+                     <div className="text-[13px] md:text-sm font-semibold">
+                       {msg.structured ? renderVisualsAndReports(msg.structured, msg.id) : (
+                         <div className="whitespace-pre-wrap leading-relaxed">{msg.text}</div>
+                       )}
+                     </div>
+
+                     <div className={`text-[9px] opacity-40 mt-3 font-black uppercase tracking-widest ${msg.type === 'user' ? 'text-white/60' : 'text-slate-400'}`}>
+                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                     </div>
+                   </div>
+                 </div>
+               </motion.div>
+             ))}
+             {isTyping && (
+               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start gap-4">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400">
+                     <Brain size={16} className="animate-pulse" />
+                  </div>
+                  <div className="p-4 bg-slate-100/50 border border-slate-150 rounded-2xl flex gap-3 items-center">
+                     <span className="w-3.5 h-3.5 border-2 border-indigo-650 border-t-slate-900 rounded-full animate-spin shrink-0" />
+                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">
+                       Prof. Dr. Vugar Ali Türksoy Akademik Laboratuvarı Muhakeme Yapıyor...
+                     </span>
+                  </div>
+               </motion.div>
+             )}
+           </AnimatePresence>
+           <div ref={chatEndRef} />
+         </div>
+
+         {/* Bottom Control Send Section */}
+         <div className="p-4 md:p-6 bg-white border-t border-slate-150 sticky bottom-0 z-10 rounded-b-[2rem] lg:rounded-b-[3rem]">
+           
+           {/* Slider Actions Chips Carousel */}
+           <div className="mb-4">
+              <div className="flex lg:grid lg:grid-cols-6 gap-2 overflow-x-auto lg:overflow-x-visible pb-2.5 lg:pb-0 scrollbar-hide snap-x">
+                 {quickActions.map((action, i) => (
+                   <button 
+                     key={i}
+                     onClick={() => handleSend(action.query)}
+                     className="flex-shrink-0 lg:flex-shrink flex items-center justify-center gap-2 px-3 py-2 bg-slate-50 hover:bg-slate-900 hover:text-white rounded-xl border border-slate-150 transition-all active:scale-95 text-slate-600 truncate snap-start min-w-[155px] lg:min-w-0 font-extrabold text-[10px] uppercase cursor-pointer"
+                   >
+                     <span>{action.label}</span>
+                   </button>
+                 ))}
               </div>
            </div>
-           <p className="text-[10px] font-medium opacity-80 leading-relaxed italic">"Klinik karar destek verileri tıbbi tavsiye yerine geçmez, uzman hekim görüşü esastır."</p>
-        </div>
+
+           <div className="flex gap-3 items-center">
+             <input 
+               type="text" 
+               value={input}
+               onChange={(e) => setInput(e.target.value)}
+               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+               placeholder={`"${selectedMode.toUpperCase()}" modeline vaka semptomu, laboratuvar verisi, toksik etken veya soru girin...`}
+               className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-xs md:text-xs font-bold outline-none ring-0 placeholder:text-slate-300"
+             />
+             <button 
+               onClick={() => handleSend()}
+               disabled={isTyping}
+               className="w-12 h-12 md:w-14 md:h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-90 hover:bg-slate-800 transition-all shrink-0 cursor-pointer disabled:opacity-50"
+             >
+               <Send size={18} />
+             </button>
+           </div>
+         </div>
+
       </div>
     </div>
   );

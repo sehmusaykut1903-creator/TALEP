@@ -93,6 +93,21 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "message"]
+    },
+    "ai_chat_memory": {
+      "title": "AiChatMemory",
+      "description": "Persistent record of scientific and toxicological AI analyses for professional memory",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string", "description": "ID of the user who requested the analysis" },
+        "sessionId": { "type": "string", "description": "Unique session identifier" },
+        "mode": { "type": "string", "description": "The active scientific reasoning mode" },
+        "question": { "type": "string", "description": "User's scientific inquiry or case details" },
+        "response": { "type": "object", "description": "The complete structured scientific response including visualizations, organ maps and parameters" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "sessionId", "question", "response"]
     }
   },
   "firestore": {
@@ -119,6 +134,10 @@
     "notifications": {
       "schema": "notification",
       "description": "Collection of system-level alerts and indicators"
+    },
+    "ai_chat_memories": {
+      "schema": "ai_chat_memory",
+      "description": "Collection of historical AI scientific analyses and biomarkers for clinical memory"
     }
   }
 }

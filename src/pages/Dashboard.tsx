@@ -35,6 +35,8 @@ import { useSettings } from '../context/SettingsContext';
 import { useFirebaseSync } from '../context/FirebaseSyncContext';
 import { updates } from '../data/updates';
 import { generateTalepAIResponse } from '../services/talepAiService';
+import { TalepLogo } from '../components/TalepLogo';
+import { ProjectCredits } from '../components/academic/ProjectCredits';
 
 export default function Dashboard() {
   const { t, theme, profile } = useSettings();
@@ -107,9 +109,13 @@ export default function Dashboard() {
       className="dashboard-page space-y-10"
     >
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/50 backdrop-blur-xl p-10 rounded-[3rem] border border-white shadow-2xl shadow-slate-200/20">
-        <div>
-          <h2 className="text-4xl font-black tracking-tight text-slate-900">{t('welcome')}</h2>
-          <p className="text-slate-500 mt-2 font-medium text-lg uppercase tracking-widest text-xs opacity-60">TALEP Premium Edition</p>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+          <TalepLogo size="lg" variant="glass" />
+          <div>
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">TALEP Klinik Paneli</h2>
+            <p className="text-[10px] font-black tracking-wider text-cyan-600 uppercase mt-1">Toksikolojik Akıllı Laboratuvar Eşleştirme Platformu</p>
+            <p className="text-[9.5px] text-slate-400 font-semibold uppercase tracking-widest mt-0.5">Mesleki Kimyasal Maruziyetlere Yönelik Klinik Karar Destek Sistemi</p>
+          </div>
         </div>
         <div className="flex items-center gap-6">
           <div className="text-right">
@@ -369,6 +375,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Elegant academic project credits section */}
+      <ProjectCredits variant="card" className="w-full mt-10 bg-white/40" />
     </motion.div>
   );
 }

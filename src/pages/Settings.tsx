@@ -29,6 +29,8 @@ import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
 import { themes, ThemeId } from '../themes/themes';
 import { Language } from '../i18n/translations';
+import { TalepLogo } from '../components/TalepLogo';
+import { ProjectCredits } from '../components/academic/ProjectCredits';
 
 export default function Settings() {
   const { 
@@ -528,18 +530,19 @@ export default function Settings() {
       {catId === 'about' && (
         <motion.div key="about" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-slate-900 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl shadow-slate-900/40">
-              <Activity size={40} />
-            </div>
+            <TalepLogo size="lg" variant="glass" />
             <div>
               <h3 className="text-4xl font-black text-slate-900 mb-1 leading-none tracking-tighter">TALEP</h3>
-              <p className="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em]">{t('version')}</p>
+              <p className="text-[11px] font-black text-cyan-600 uppercase tracking-[0.2em]">{t('version')}</p>
             </div>
           </div>
           
           <div className="space-y-10">
             <div className="space-y-4">
                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{t('purpose_title')}</h4>
+               <p className="text-sm font-medium text-slate-600 leading-relaxed uppercase tracking-wide opacity-80">
+                  “Toksikolojik Akıllı Laboratuvar Eşleştirme Platformu: Mesleki Kimyasal Maruziyetlere Yönelik Klinik Karar Destek Sistemi”
+               </p>
                <p className="text-sm font-medium text-slate-600 leading-relaxed">{t('purpose_text')}</p>
             </div>
             
@@ -553,34 +556,17 @@ export default function Settings() {
                <p className="text-sm font-medium text-slate-600 leading-relaxed">{t('value_text')}</p>
             </div>
 
-            <div className="p-8 bg-blue-600 rounded-[3rem] text-white shadow-xl shadow-blue-600/20">
-               <h4 className="text-[10px] font-black text-white/60 uppercase tracking-[0.3em] mb-4">{t('ai_title')}</h4>
+            <div className="p-8 bg-slate-900 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl" />
+               <h4 className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.3em] mb-4">{t('ai_title')}</h4>
                <p className="text-sm font-bold leading-relaxed">{t('ai_text')}</p>
             </div>
 
             <div className="space-y-6 pt-10 border-t border-slate-100">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{t('project_info')}</h4>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                     <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">PROJE LİDERİ</p>
-                     <p className="text-sm font-black text-slate-900">Şehmus Aykut</p>
-                  </div>
-                  <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                     <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">PROJE ORTAĞI</p>
-                     <p className="text-sm font-black text-slate-900">Fatma Nur Aykut</p>
-                  </div>
-                  <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                     <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">ARAŞTIRMA EKİBİ</p>
-                     <p className="text-sm font-black text-slate-900">Aghajan Musalı</p>
-                  </div>
-                  <div className="p-6 bg-slate-900 rounded-[2rem] text-white">
-                     <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">AKADEMİK DANIŞMAN</p>
-                     <p className="text-sm font-black">Prof. Dr. Vugar Ali Türksoy</p>
-                  </div>
-               </div>
+               <ProjectCredits variant="card" />
             </div>
 
-            <div className="text-center opacity-30 pt-10">
+            <div className="text-center opacity-35 pt-4">
                <p className="text-[11px] font-black tracking-widest">{t('copyright')}</p>
             </div>
           </div>

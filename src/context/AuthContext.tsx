@@ -106,6 +106,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
+        
+        // Caching Optimization: Try loading cached user profile from localStorage first
+        const cacheKey = `talep_profile_cache_${user.uid}`;
+        try {
+          const cachedProfile = localStorage.getItem(cacheKey);
+          if (cachedProfile) {
+            const parsed = JSON.parse(cachedProfile) as UserProfile;
+            setUserProfile(parsed);
+            setRole(parsed.role);
+            setProfile({
+              fullName: parsed.displayName,
+              email: parsed.email,
+              institution: parsed.institution || 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
+              department: parsed.department || 'Halk Sağlığı Anabilim Dalı',
+              city: parsed.city || 'Yozgat, Turkey'
+            });
+            // Resolve visual loading gate early
+            setLoading(false);
+          }
+        } catch (e) {}
+
         try {
           // Fetch the user's role and database info
           const userDocRef = doc(db, 'users', user.uid);
@@ -126,6 +147,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               department: fullProfile.department || 'Halk Sağlığı Anabilim Dalı',
               city: fullProfile.city || 'Yozgat, Turkey'
             });
+            try {
+              localStorage.setItem(cacheKey, JSON.stringify(fullProfile));
+            } catch (e) {}
           } else {
             // Profile entry doesn't exist yet, construct a placeholder entry safely
             const placeholder: UserProfile = {

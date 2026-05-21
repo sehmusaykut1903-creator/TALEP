@@ -25,6 +25,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useSettings } from '../../context/SettingsContext';
 import { useAuth } from '../../context/AuthContext';
+import { TalepLogo } from '../TalepLogo';
 
 interface NavItemProps {
   to: string;
@@ -89,14 +90,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex flex-col w-72 bg-white/50 backdrop-blur-xl border-r border-slate-200/50 sticky top-0 h-screen z-40 overflow-y-auto shrink-0 scrollbar-hide">
         <div className="p-8">
-          <div className="flex items-center gap-4 mb-12">
-            <div className="w-12 h-12 flex items-center justify-center text-white rounded-[1rem] shadow-2xl" style={{ backgroundColor: theme.primary, boxShadow: `0 15px 35px -5px ${theme.primary}50` }}>
-              <Activity size={26} />
-            </div>
-            <div>
-              <h1 className="font-black text-2xl tracking-tighter leading-none">TALEP</h1>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{t('version')}</p>
-            </div>
+          <div className="mb-12">
+            <TalepLogo size="md" showText={true} showSubtitle={true} variant="glass" />
           </div>
 
           <div className="mb-8 p-1 bg-slate-100/50 rounded-2xl flex">
@@ -195,10 +190,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         {/* Mobile Top Bar */}
         <div className="md:hidden flex items-center justify-between p-4 bg-white/80 backdrop-blur-xl border-b border-slate-100 shrink-0 z-50 pt-[calc(1rem+env(safe-area-inset-top))]">
           <div className="flex items-center gap-4">
-            <div className="w-9 h-9 flex items-center justify-center text-white rounded-xl shadow-lg" style={{ backgroundColor: theme.primary }}>
-              <FlaskConical size={20} />
-            </div>
-            <span className="font-black text-xl tracking-tight">TALEP</span>
+            <TalepLogo size="sm" showText={true} showSubtitle={false} variant="glass" />
           </div>
           <div className="flex items-center gap-2">
              <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-slate-400"><Bell size={22}/></button>

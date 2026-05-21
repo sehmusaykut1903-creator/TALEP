@@ -5,9 +5,7 @@ import {
   Lock, 
   Mail, 
   User, 
-  ShieldCheck, 
   ArrowRight, 
-  Activity, 
   ShieldAlert, 
   Eye, 
   EyeOff,
@@ -18,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth, UserRole } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
+import { TalepLogo } from '../components/TalepLogo';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -54,30 +53,37 @@ export default function Register() {
   ];
 
   return (
-    <div className="min-h-[100vh] flex items-center justify-center p-4 py-12">
+    <div className="min-h-[100vh] flex items-center justify-center p-4 py-12 selection:bg-cyan-500/30">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="w-full max-w-2xl bg-white/70 backdrop-blur-2xl border border-slate-200/50 p-8 md:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden"
+        className="w-full max-w-2xl bg-white/75 backdrop-blur-2xl border border-slate-200/50 p-8 md:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden"
       >
-        <div className="absolute -top-24 -left-24 w-48 h-48 bg-brand-blue/10 rounded-full blur-3xl -z-10" />
-        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-brand-secondary/10 rounded-full blur-3xl -z-10" />
+        <div className="absolute -top-24 -left-24 w-48 h-48 bg-cyan-400/10 rounded-full blur-3xl -z-10" />
+        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl -z-10" />
 
         <div className="flex flex-col items-center text-center mb-8">
           <motion.div
-            className="w-14 h-14 flex items-center justify-center text-white rounded-[1rem] mb-4 shadow-xl"
-            style={{ backgroundColor: theme.primary }}
+            initial={{ scale: 0.8, rotate: -5 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
+            className="mb-4"
           >
-            <ShieldCheck size={28} />
+            <TalepLogo size="lg" variant="glass" />
           </motion.div>
           
-          <h2 className="text-3xl font-black text-brand-navy tracking-tight leading-tight">
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight uppercase font-sans">
             Klinik Kayıt Olun
           </h2>
-          <p className="text-sm text-brand-navy/60 font-medium mt-2">
-            TALEP Mesleki Toksikoloji platformunda klinik hesabınızı oluşturun
-          </p>
+          <div className="mt-2 text-center">
+            <p className="text-[10px] font-black tracking-widest text-cyan-600 uppercase">
+              TALEP Toksikolojik Akıllı Laboratuvar Eşleştirme Platformu
+            </p>
+            <p className="text-[9px] text-slate-500 font-medium mt-1 leading-normal max-w-sm mx-auto">
+              Mesleki Kimyasal Maruziyetlere Yönelik Klinik Karar Destek Sistemi
+            </p>
+          </div>
         </div>
 
         {errorMsg && (

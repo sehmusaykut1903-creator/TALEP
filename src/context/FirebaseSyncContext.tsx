@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useSettings } from './SettingsContext';
+import { useAuth } from './AuthContext';
 import { 
   ToxicologyCase, 
   DatabaseChemical, 
@@ -52,18 +53,49 @@ const STATIC_MOCK_NOTIFICATIONS: SystemNotification[] = [
 
 export function FirebaseSyncProvider({ children }: { children: React.ReactNode }) {
   const { mode, showToast } = useSettings();
-  const [cases, setCases] = useState<ToxicologyCase[]>(STATIC_MOCK_CASES);
-  const [chemicals, setChemicals] = useState<DatabaseChemical[]>(STATIC_MOCK_CHEMICALS);
-  const [notifications, setNotifications] = useState<SystemNotification[]>(STATIC_MOCK_NOTIFICATIONS);
+  const { currentUser } = useAuth();
+  
+  // Lazy initialize states from localStorage caches for instant rendering and failsafe offline loads
+  const [cases, setCases] = useState<ToxicologyCase[]>(() => {
+    try {
+      const cached = localStorage.getItem('talep_cached_cases');
+      return cached ? JSON.parse(cached) : STATIC_MOCK_CASES;
+    } catch (e) {
+      return STATIC_MOCK_CASES;
+    }
+  });
+
+  const [chemicals, setChemicals] = useState<DatabaseChemical[]>(() => {
+    try {
+      const cached = localStorage.getItem('talep_cached_chemicals');
+      return cached ? JSON.parse(cached) : STATIC_MOCK_CHEMICALS;
+    } catch (e) {
+      return STATIC_MOCK_CHEMICALS;
+    }
+  });
+
+  const [notifications, setNotifications] = useState<SystemNotification[]>(() => {
+    try {
+      const cached = localStorage.getItem('talep_cached_notifications');
+      return cached ? JSON.parse(cached) : STATIC_MOCK_NOTIFICATIONS;
+    } catch (e) {
+      return STATIC_MOCK_NOTIFICATIONS;
+    }
+  });
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
   useEffect(() => {
-    // If we are in 'demo' mode, we bypass server synchronization and serve clean state.
+    // If we are in 'demo' mode, we bypass server synchronization and serve clean cached/static state.
     if (mode === 'demo') {
-      setCases(STATIC_MOCK_CASES);
-      setChemicals(STATIC_MOCK_CHEMICALS);
-      setNotifications(STATIC_MOCK_NOTIFICATIONS);
+      setIsLoading(false);
+      setSyncError(null);
+      return;
+    }
+
+    // Free-tier Optimization: Do not register onSnapshot listeners if user is not authenticated yet.
+    if (!currentUser) {
       setIsLoading(false);
       setSyncError(null);
       return;
@@ -91,7 +123,11 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
               createdAt: item.createdAt ? (item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt)) : new Date()
             } as ToxicologyCase);
           });
-          setCases(list.length > 0 ? list : STATIC_MOCK_CASES);
+          const resultList = list.length > 0 ? list : STATIC_MOCK_CASES;
+          setCases(resultList);
+          try {
+            localStorage.setItem('talep_cached_cases', JSON.stringify(resultList));
+          } catch (e) {}
           setIsLoading(false);
         }, 
         (err) => {
@@ -105,7 +141,6 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
       );
     } catch (e) {
       console.warn('Failed to subscribe to toxicology_cases. Using static fallback data.', e);
-      setCases(STATIC_MOCK_CASES);
       setIsLoading(false);
     }
 
@@ -120,6 +155,9 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
           });
           if (list.length > 0) {
             setChemicals(list);
+            try {
+              localStorage.setItem('talep_cached_chemicals', JSON.stringify(list));
+            } catch (e) {}
           }
         },
         (err) => {
@@ -131,7 +169,6 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
       );
     } catch (e) {
       console.warn('Failed to subscribe to chemicals collection. Using static fallback.', e);
-      setChemicals(STATIC_MOCK_CHEMICALS);
     }
 
     // 3. Subscribe to Notifications
@@ -148,7 +185,11 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
               createdAt: item.createdAt ? (item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt)) : new Date()
             } as SystemNotification);
           });
-          setNotifications(list.length > 0 ? list : STATIC_MOCK_NOTIFICATIONS);
+          const resultNotifs = list.length > 0 ? list : STATIC_MOCK_NOTIFICATIONS;
+          setNotifications(resultNotifs);
+          try {
+            localStorage.setItem('talep_cached_notifications', JSON.stringify(resultNotifs));
+          } catch (e) {}
         },
         (err) => {
           console.warn('Notifications subscription error:', err);
@@ -159,7 +200,6 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
       );
     } catch (e) {
       console.warn('Failed to subscribe to notifications collection. Using static fallback.', e);
-      setNotifications(STATIC_MOCK_NOTIFICATIONS);
     }
 
     return () => {
@@ -167,7 +207,7 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
       unsubscribeChemicals();
       unsubscribeNotifs();
     };
-  }, [mode]);
+  }, [mode, currentUser]);
 
   // Reusable unified Case Addition + Assessment + Lab Results transaction
   const addCase = async (

@@ -93,5 +93,18 @@ service cloud.firestore {
         && incoming().read is bool;
       allow delete: if isSignedIn();
     }
+
+    // --- AI Chat Memories Rules ---
+    match /ai_chat_memories/{memoryId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && incoming().userId == request.auth.uid
+        && incoming().sessionId is string
+        && incoming().question is string;
+      allow update: if isSignedIn()
+        && incoming().userId == request.auth.uid;
+      allow delete: if isSignedIn()
+        && existing().userId == request.auth.uid;
+    }
   }
 }
