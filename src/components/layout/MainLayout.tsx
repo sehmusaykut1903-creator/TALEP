@@ -227,6 +227,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1 overflow-y-auto overflow-x-hidden pt-4 md:pt-8 md:px-10 lg:px-14 pb-[130px] md:pb-10 lg:pb-14 scroll-smooth">
           <div className="max-w-7xl mx-auto px-5">
             {children}
+
+            {/* Premium Institutional Footer */}
+            <footer className="mt-16 pt-8 border-t border-slate-200/50 dark:border-slate-800 text-center pb-6">
+              <p className="text-[10px] font-black tracking-widest text-cyan-600 dark:text-cyan-400 uppercase">TALEP v4.0 PREMIUM</p>
+              <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">Toksikolojik Akıllı Laboratuvar Eşleştirme Platformu</p>
+              <p className="text-[8.5px] font-bold text-slate-400 dark:text-slate-600 mt-1.5">
+                “2026 Şehmus Aykut tarafından geliştirilmiştir.”
+              </p>
+            </footer>
           </div>
         </main>
       </div>

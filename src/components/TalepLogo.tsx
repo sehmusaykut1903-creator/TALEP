@@ -32,7 +32,7 @@ export const TalepLogo: React.FC<TalepLogoProps> = ({
   }[variant];
 
   return (
-    <div className={`flex items-center gap-4 ${className}`}>
+    <div className={`flex ${showSubtitle ? 'flex-col items-center text-center' : 'items-center'} gap-3 ${className}`}>
       {/* 3D Glassmorphic Glowing Logo Icon */}
       <div className={`relative flex items-center justify-center shrink-0 ${dimensions.container} ${containerStyles}`}>
         {/* Luminous Glow Layer */}
@@ -99,19 +99,16 @@ export const TalepLogo: React.FC<TalepLogoProps> = ({
       </div>
 
       {showText && (
-        <div className="flex flex-col text-left">
-          <h1 className="font-extrabold tracking-tight leading-none text-slate-900" style={{ fontSize: dimensions.text }}>
+        <div className={`flex flex-col ${showSubtitle ? 'items-center text-center' : 'text-left'}`}>
+          <h1 className={`font-black tracking-widest text-[#0ea5e9] bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 bg-clip-text text-transparent`} style={{ fontSize: showSubtitle ? '2rem' : dimensions.text }}>
             TALEP
           </h1>
           {showSubtitle ? (
-            <div className="mt-1.5 space-y-1">
-              <p className="text-[10px] font-black text-cyan-600 tracking-wider leading-none uppercase">
-                v4.0 PREMIUM
-              </p>
-              <p className="text-[9.5px] font-black tracking-tight text-slate-800 leading-tight uppercase">
+            <div className="mt-2 space-y-1.5 max-w-[240px]">
+              <p className="text-[10px] font-black tracking-tight text-slate-800 dark:text-slate-200 leading-normal uppercase">
                 Toksikolojik Akıllı Laboratuvar Eşleştirme Platformu
               </p>
-              <p className="text-[8px] font-bold text-slate-400 leading-none mt-1 shrink-0 whitespace-nowrap">
+              <p className="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 leading-none mt-1 shrink-0 whitespace-nowrap">
                 “2026 Şehmus Aykut tarafından geliştirilmiştir.”
               </p>
             </div>

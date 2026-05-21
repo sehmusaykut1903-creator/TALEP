@@ -73,7 +73,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 Klinik Sistem Oturumu Kesintiye Uğradı
               </h1>
               <p className="text-sm text-brand-navy/60 max-w-md mb-8">
-                TALEP v3.0 akıllı yürütme katmanında beklenmeyen bir bileşen çalışma hatası saptandı. 
+                TALEP v4.0 akıllı yürütme katmanında beklenmeyen bir bileşen çalışma hatası saptandı. 
                 Tıbbi verileriniz ve aktif oturumunuz güvendedir.
               </p>
 

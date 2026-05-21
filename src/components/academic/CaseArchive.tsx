@@ -21,6 +21,7 @@ import {
   ChevronUp,
   Award
 } from 'lucide-react';
+import { PDFReportHub } from './PDFReportHub';
 
 interface PatientCase {
   id: string;
@@ -238,6 +239,7 @@ const patientArchive: PatientCase[] = [
 export default function CaseArchive() {
   const [activeCase, setActiveCase] = useState<PatientCase>(patientArchive[0]);
   const [searchWord, setSearchWord] = useState('');
+  const [isReportHubOpen, setIsReportHubOpen] = useState(false);
   
   // Side-by-Side Comparison Engine States
   const [compCaseAId, setCompCaseAId] = useState<string>(patientArchive[0].id);
@@ -432,13 +434,22 @@ export default function CaseArchive() {
               <h3 className="text-lg font-black text-slate-800 uppercase">{activeCase.name}</h3>
               <p className="text-[10px] text-slate-400 font-semibold font-mono">SEKTÖR: {activeCase.sector} &bull; TEMAS SURESI: {activeCase.exposureDuration}</p>
             </div>
-            <span className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold shadow-sm ${
-              activeCase.severity === 'Açık_Tehlike' ? 'bg-rose-500 text-white shadow-rose-500/10' :
-              activeCase.severity === 'Ciddi' ? 'bg-amber-500 text-white' :
-              'bg-blue-500 text-white'
-            }`}>
-              DERECE: {activeCase.severity.replace('_', ' ').toUpperCase()}
-            </span>
+            
+            <div className="flex gap-2 items-center">
+              <button 
+                onClick={() => setIsReportHubOpen(true)}
+                className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl cursor-pointer flex items-center gap-1.5 active:scale-95 transition-all shadow-md shadow-cyan-500/10"
+              >
+                <FileText size={12} /> PDF RAPORU AL
+              </button>
+              <span className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold shadow-sm ${
+                activeCase.severity === 'Açık_Tehlike' ? 'bg-rose-500 text-white shadow-rose-500/10' :
+                activeCase.severity === 'Ciddi' ? 'bg-amber-500 text-white' :
+                'bg-blue-500 text-white'
+              }`}>
+                {activeCase.severity.replace('_', ' ').toUpperCase()}
+              </span>
+            </div>
           </div>
 
           {/* Semptomlar */}
@@ -516,6 +527,16 @@ export default function CaseArchive() {
         </div>
 
       </div>
+
+      {isReportHubOpen && (
+        <PDFReportHub 
+          caseData={{
+            ...activeCase,
+            biomarkers: activeCase.biomarkers.map(b => ({ name: b.name, value: b.value, status: b.status }))
+          }} 
+          onClose={() => setIsReportHubOpen(false)} 
+        />
+      )}
     </div>
   );
 }

@@ -2,12 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Global default deny safety net
+    // --- Global Default Deny Safety Net ---
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // --- Core Reusable Helpers ---
+    // --- Core Reusable Handlers & Primitives ---
     function isSignedIn() {
       return request.auth != null;
     }
@@ -28,148 +28,148 @@ service cloud.firestore {
       return resource.data;
     }
 
+    // Helper to validate timestamp on creation or update
+    function isCreateTimeValid(data) {
+      return data.createdAt == request.time;
+    }
+
+    function isUpdateTimeValid(data) {
+      return data.updatedAt == request.time;
+    }
+
     // --- 1. Users Collection ---
+    function isValidUser(data) {
+      return data.email is string && data.email.size() <= 128 &&
+             data.displayName is string && data.displayName.size() <= 128;
+    }
+
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow create: if isOwner(userId) 
-        && incoming().email is string 
-        && incoming().displayName is string;
-      allow update: if isOwner(userId)
-        && incoming().displayName is string;
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'role', 'institution', 'department']);
       allow delete: if isOwner(userId);
     }
 
-    // --- 2. Cases & Backward Compatibility ---
+    // --- 2. Cases and Backward-Compatible Toxicology Cases ---
+    function isValidCase(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 128 &&
+             data.sector is string && data.sector.size() <= 128;
+    }
+
     match /cases/{caseId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 128
-        && incoming().sector is string && incoming().sector.size() <= 64;
-      allow update: if isSignedIn()
-        && incoming().name is string
-        && incoming().sector is string;
-      allow delete: if isSignedIn();
+      allow get: if isSignedIn() && isValidId(caseId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(caseId) && isValidCase(incoming());
+      allow update: if isSignedIn() && isValidId(caseId) && isValidCase(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'age', 'gender', 'sector', 'unit', 'duration', 'ppeUsage', 'symptoms', 'risk', 'notes']);
+      allow delete: if isSignedIn() && isValidId(caseId);
     }
 
     match /toxicology_cases/{caseId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 128
-        && incoming().sector is string && incoming().sector.size() <= 64;
-      allow update: if isSignedIn()
-        && incoming().name is string
-        && incoming().sector is string;
-      allow delete: if isSignedIn();
+      allow get: if isSignedIn() && isValidId(caseId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(caseId) && isValidCase(incoming());
+      allow update: if isSignedIn() && isValidId(caseId) && isValidCase(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'age', 'gender', 'sector', 'unit', 'duration', 'ppeUsage', 'symptoms', 'risk', 'notes']);
+      allow delete: if isSignedIn() && isValidId(caseId);
     }
 
-    // --- 3. Analyses / Assessments ---
-    match /analyses/{analysisId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && incoming().caseId is string
-        && incoming().riskScore is number;
-      allow update: if isSignedIn()
-        && incoming().caseId is string;
-      allow delete: if isSignedIn();
+    // --- 3. Clinical Laboratory Results ---
+    function isValidLabResult(data) {
+      return data.caseId is string && data.caseId.size() <= 128 &&
+             data.testName is string && data.testName.size() <= 128;
+    }
+
+    match /laboratory_results/{resultId} {
+      allow get: if isSignedIn() && isValidId(resultId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(resultId) && isValidLabResult(incoming());
+      allow update: if isSignedIn() && isValidId(resultId) && isValidLabResult(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['testName', 'value', 'isAbnormal', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(resultId);
+    }
+
+    // --- 4. Scientific Assessments / AI Decisions ---
+    function isValidAssessment(data) {
+      return data.caseId is string && data.caseId.size() <= 128 &&
+             data.riskScore is number;
     }
 
     match /ai_assessments/{assessmentId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && incoming().caseId is string
-        && incoming().matchedChemicals is list
-        && incoming().riskScore is number;
-      allow update: if isSignedIn()
-        && incoming().caseId is string;
-      allow delete: if isSignedIn();
+      allow get: if isSignedIn() && isValidId(assessmentId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(assessmentId) && isValidAssessment(incoming());
+      allow update: if isSignedIn() && isValidId(assessmentId) && isValidAssessment(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['matchedChemicals', 'riskScore', 'clinicalAdvice', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(assessmentId);
     }
 
-    // --- 4. Literature Reference Collection ---
+    // --- 5. Clinical Reference Collections (Read-Only to Public, Write to Authenticated) ---
     match /literature/{docId} {
       allow read: if true;
-      allow write: if isSignedIn()
-        && incoming().title is string;
+      allow write: if isSignedIn() && incoming().title is string && incoming().title.size() <= 256;
     }
 
-    // --- 5. Chemicals Reference Collection ---
     match /chemicals/{chemicalId} {
       allow read: if true;
-      allow write: if isSignedIn()
-        && incoming().name is string;
+      allow write: if isSignedIn() && incoming().name is string && incoming().name.size() <= 128;
     }
 
-    // --- 6. Biomarkers Reference tables ---
     match /biomarkers/{biomarkerId} {
       allow read: if true;
-      allow write: if isSignedIn()
-        && incoming().markerName is string;
+      allow write: if isSignedIn() && incoming().markerName is string && incoming().markerName.size() <= 128;
     }
 
-    // --- 7. Epidemiology Dataset Mappings ---
     match /epidemiology/{epiId} {
       allow read: if true;
-      allow write: if isSignedIn()
-        && incoming().sector is string;
+      allow write: if isSignedIn() && incoming().sector is string && incoming().sector.size() <= 128;
     }
 
-    // --- 8. AI Responses Cache ---
-    match /ai_cache/{cacheId} {
-      allow read: if true;
-      allow write: if isSignedIn()
-        && incoming().prompt is string;
-    }
-
-    // --- 9. Generated Medical Reports ---
-    match /reports/{reportId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && incoming().caseId is string
-        && incoming().title is string;
-      allow update: if isSignedIn()
-        && incoming().caseId is string;
-      allow delete: if isSignedIn();
-    }
-
-    // --- 10. Cooperating Institutions ---
     match /institutions/{instId} {
       allow read: if true;
-      allow write: if isSignedIn()
-        && incoming().name is string;
+      allow write: if isSignedIn() && incoming().name is string && incoming().name.size() <= 128;
     }
 
-    // --- System / Back-compat Tables ---
-    match /laboratory_results/{resultId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && incoming().caseId is string
-        && incoming().testName is string
-        && incoming().value is string;
-      allow update: if isSignedIn()
-        && incoming().caseId is string
-        && incoming().testName is string;
+    // --- 6. AI LLM Prompt & Reply Caching ---
+    match /ai_cache/{cacheId} {
+      allow read: if true;
+      allow create, update: if isSignedIn() && incoming().prompt is string && incoming().prompt.size() <= 10000;
       allow delete: if isSignedIn();
     }
 
+    // --- 7. Enterprise Reports Collection (PDF Module) ---
+    function isValidReport(data) {
+      return data.patientName is string && data.patientName.size() <= 128 &&
+             data.patientSector is string && data.patientSector.size() <= 128;
+    }
+
+    match /reports/{reportId} {
+      allow get: if isSignedIn() && isValidId(reportId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(reportId) && isValidReport(incoming());
+      allow update: if isSignedIn() && isValidId(reportId) && isValidReport(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['patientName', 'patientAgeSex', 'patientSector', 'patientUnit', 'exposureDuration', 'severity', 'template', 'symptoms', 'biomarkers', 'clinicalText', 'nextActions']);
+      allow delete: if isSignedIn() && isValidId(reportId);
+    }
+
+    // --- 8. System Notifications Feed ---
     match /notifications/{notifId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && incoming().title is string
-        && incoming().message is string;
-      allow update: if isSignedIn()
-        && incoming().read is bool;
+      allow get: if isSignedIn() && isValidId(notifId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && incoming().title is string && incoming().title.size() <= 256;
+      allow update: if isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['read']);
       allow delete: if isSignedIn();
     }
 
+    // --- 9. AI Copilot Chat Memory Logs ---
     match /ai_chat_memories/{memoryId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && incoming().userId == request.auth.uid
-        && incoming().sessionId is string
-        && incoming().question is string;
-      allow update: if isSignedIn()
-        && incoming().userId == request.auth.uid;
-      allow delete: if isSignedIn()
-        && existing().userId == request.auth.uid;
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid
+        && incoming().sessionId is string && incoming().question is string;
+      allow update: if isSignedIn() && incoming().userId == request.auth.uid
+        && incoming().diff(existing()).affectedKeys().hasOnly(['question', 'answer', 'updatedAt']);
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
     }
   }
 }
