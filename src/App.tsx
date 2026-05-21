@@ -1,5 +1,5 @@
-import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, HashRouter } from 'react-router-dom';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Splash from './pages/Splash';
 import MainLayout from './components/layout/MainLayout';
 import IosMobileTabBar from './components/navigation/IosMobileTabBar';
@@ -59,6 +59,19 @@ try {
 }
 
 function PureAppShell() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 1500); // Strict failsafe max limit for splash
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showSplash) {
+    return <Splash onFinish={() => setShowSplash(false)} />;
+  }
+
   return (
     <>
       <MainLayout>
@@ -122,17 +135,15 @@ function MainAppSelector() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <HashRouter>
-        <SettingsProvider>
-          <AuthProvider>
-            <FirebaseSyncProvider>
-              <MembershipProvider>
-                <MainAppSelector />
-              </MembershipProvider>
-            </FirebaseSyncProvider>
-          </AuthProvider>
-        </SettingsProvider>
-      </HashRouter>
+      <SettingsProvider>
+        <AuthProvider>
+          <FirebaseSyncProvider>
+            <MembershipProvider>
+              <MainAppSelector />
+            </MembershipProvider>
+          </FirebaseSyncProvider>
+        </AuthProvider>
+      </SettingsProvider>
     </ErrorBoundary>
   );
 }
