@@ -111,9 +111,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     }, 2000);
     
-    // Set Persistence explicitly to local
-    setPersistence(auth, browserLocalPersistence)
-      .catch((err) => console.warn('Persistence config issue:', err));
+    // Set Persistence explicitly to local with bulletproof error boundaries
+    try {
+      if (auth && typeof auth.onAuthStateChanged === 'function' && auth.onAuthStateChanged.name !== 'Fallback') {
+        setPersistence(auth, browserLocalPersistence)
+          .catch((err) => console.warn('Persistence config issue:', err));
+      }
+    } catch (err) {
+      console.warn('Could not set persistence safely:', err);
+    }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('[TALEP DEBUG] Firebase Auth listener resolved. User state:', user ? `Logged In (${user.email})` : 'Guest / Observer');
@@ -183,19 +189,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               createdAt: new Date()
             };
             
-            // Try saving placeholder
+            // Try saving placeholder safely with a 1.5s timeout trace
             try {
-              await setDoc(userDocRef, {
-                email: placeholder.email,
-                displayName: placeholder.displayName,
-                role: placeholder.role,
-                institution: placeholder.institution,
-                department: placeholder.department,
-                city: placeholder.city,
-                createdAt: serverTimestamp()
-              });
+              await Promise.race([
+                setDoc(userDocRef, {
+                  email: placeholder.email,
+                  displayName: placeholder.displayName,
+                  role: placeholder.role,
+                  institution: placeholder.institution,
+                  department: placeholder.department,
+                  city: placeholder.city,
+                  createdAt: serverTimestamp()
+                }),
+                new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore save profile timeout')), 1500))
+              ]);
             } catch (err) {
-              console.warn('Could not save user profile document to Firestore due to rule boundaries.', err);
+              console.warn('Could not save user profile document to Firestore due to rule boundaries or timeout.', err);
             }
             
             setUserProfile(placeholder);

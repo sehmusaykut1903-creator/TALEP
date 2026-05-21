@@ -22,7 +22,19 @@ import PremiumUpgradeModal from './components/premium/PremiumUpgradeModal';
 
 function LoginGuard({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
-  if (loading) {
+  const [timedOut, setTimedOut] = React.useState(false);
+
+  React.useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        console.warn('[TALEP Failsafe] LoginGuard loading timeout. Forcing resolution.');
+        setTimedOut(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
+  if (loading && !timedOut) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-brand-bg">
         <span className="w-10 h-10 border-4 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
@@ -37,8 +49,19 @@ function LoginGuard({ children }: { children: React.ReactNode }) {
 
 function ProtectedShell() {
   const { currentUser, loading } = useAuth();
+  const [timedOut, setTimedOut] = React.useState(false);
+
+  React.useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        console.warn('[TALEP Failsafe] ProtectedShell loading timeout. Forcing resolution.');
+        setTimedOut(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
   
-  if (loading) {
+  if (loading && !timedOut) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-brand-bg">
         <div className="flex flex-col items-center gap-3">
