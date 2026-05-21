@@ -200,6 +200,95 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
+        {/* Mobile Drawer Navigation overlay */}
+        <AnimatePresence>
+          {isSidebarOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.4 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsSidebarOpen(false)}
+                className="fixed inset-0 bg-slate-900 z-40 md:hidden"
+              />
+              
+              {/* Sliding sidebar container */}
+              <motion.div
+                initial={{ x: isRTL ? '100%' : '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: isRTL ? '100%' : '-100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-80 max-w-[85vw] bg-white z-50 p-6 flex flex-col justify-between shadow-2xl overflow-y-auto md:hidden`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
+                    <TalepLogo size="sm" showText={true} showSubtitle={true} variant="glass" />
+                    <button 
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-900 transition-colors"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2.5 px-3">KLİNİK ÇEKİRDEK</p>
+                      <nav className="space-y-1">
+                        {coreNavigation.map((item) => {
+                          const IconComp = item.icon;
+                          return (
+                            <NavItem
+                              key={item.to}
+                              to={item.to}
+                              icon={IconComp}
+                              label={item.label}
+                              active={location.pathname === item.to}
+                              onClick={() => setIsSidebarOpen(false)}
+                            />
+                          );
+                        })}
+                      </nav>
+                    </div>
+
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2.5 px-3">AKADEMİK KATMAN</p>
+                      <nav className="space-y-1">
+                        {academicNavigation.map((item) => {
+                          const IconComp = item.icon;
+                          return (
+                            <NavItem
+                              key={item.to}
+                              to={item.to}
+                              icon={IconComp}
+                              label={item.label}
+                              active={location.pathname === item.to}
+                              onClick={() => setIsSidebarOpen(false)}
+                            />
+                          );
+                        })}
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-black uppercase shadow-sm">
+                      {profile.fullName ? (profile.fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)) : 'ŞA'}
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs text-slate-800 truncate">{profile.fullName || 'Şehmus Aykut'}</p>
+                      <p className="text-[9px] text-slate-400 truncate mt-0.5">{profile.title || 'Proje Lideri'}</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
         {/* Global Notifications Panel */}
         <AnimatePresence>
           {showNotifications && (
