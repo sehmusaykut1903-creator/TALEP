@@ -226,15 +226,14 @@ export default function App() {
   }
 
   return (
-    <HashRouter>
-      <MainLayout>
-        <Routes>
-          <Route path="/" element={<DashboardHome />} />
-          <Route path="/ai" element={<TalepAIMock />} />
-          <Route path="/chemicals" element={<ChemicalsMock />} />
-          <Route path="/patients" element={<PatientsMock />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </MainLayout>
+    <MainLayout>
+      <Routes>
+        <Route path="/" element={<DashboardHome />} />
+        <Route path="/ai" element={<TalepAIMock />} />
+        <Route path="/chemicals" element={<ChemicalsMock />} />
+        <Route path="/patients" element={<PatientsMock />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </MainLayout>
   );
 }
