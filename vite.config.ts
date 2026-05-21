@@ -4,7 +4,8 @@ import path from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: process.env.VITE_BASE_PATH || './',
+  // Bağıl yollar (relative paths) sayesinde hem yerel sunucuda hem de GitHub Pages alt klasöründe (örn. /talep/ veya /TALEP/) sorunsuz çalışır
+  base: './', 
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
@@ -16,8 +17,15 @@ export default defineConfig({
     host: '0.0.0.0',
   },
   build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    emptyOutDir: true,
     rollupOptions: {
       output: {
+        // Derleme çıktılarının relative (bağıl) biçimde ./assets/ klasöründe kilitlenmesini sağlar
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('firebase')) {
