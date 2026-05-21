@@ -138,7 +138,11 @@ export function MembershipProvider({ children }: { children: React.ReactNode }) 
         // Firebase sync mode
         try {
           const userSubDocRef = doc(db, 'subscriptions', currentUser.uid);
-          const docSnap = await getDoc(userSubDocRef);
+          // Guard Firestore call with a 1.5s Promise.race timeout to prevent hanging on poor connections
+          const docSnap = await Promise.race([
+            getDoc(userSubDocRef),
+            new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore subscription fetch timeout')), 1500))
+          ]);
 
           let dbState: Partial<MembershipState> = {};
           if (docSnap.exists()) {

@@ -7,7 +7,7 @@ export default function Splash({ onFinish }: { onFinish: () => void }) {
   React.useEffect(() => {
     const timer = setTimeout(() => {
       onFinish();
-    }, 4000); // 4 seconds for elegant reading of details
+    }, 2000); // 2 seconds for faster, elegant entry
     return () => clearTimeout(timer);
   }, [onFinish]);
 

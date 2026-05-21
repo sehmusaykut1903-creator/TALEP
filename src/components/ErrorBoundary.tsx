@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { AlertOctagon, RefreshCw, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
+import { AlertOctagon, RefreshCw, ChevronDown, ChevronUp, Copy, Check, Database } from "lucide-react";
 
 interface Props {
   children?: ReactNode;
@@ -38,6 +38,19 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo: null,
       showDiagnostics: false,
       copied: false,
+    });
+    window.location.reload();
+  };
+
+  private handleForceDemo = () => {
+    localStorage.setItem('talep_mode', 'demo');
+    localStorage.removeItem('talep_cached_cases');
+    localStorage.removeItem('talep_cached_chemicals');
+    localStorage.removeItem('talep_cached_notifications');
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null,
     });
     window.location.reload();
   };
@@ -85,6 +98,15 @@ export class ErrorBoundary extends Component<Props, State> {
                 >
                   <RefreshCw className="w-4 h-4" />
                   Sistemi Yeniden Başlat
+                </button>
+
+                <button
+                  id="error-force-demo-btn"
+                  onClick={this.handleForceDemo}
+                  className="flex items-center gap-2 bg-cyan-600 text-white hover:bg-cyan-700 active:scale-95 transition-all px-5 py-2.5 rounded-xl font-medium text-xs shadow-md shadow-cyan-600/20 cursor-pointer"
+                >
+                  <Database className="w-4 h-4" />
+                  Çevrimdışı Acil Durum Modu
                 </button>
 
                 <button

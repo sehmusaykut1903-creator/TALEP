@@ -104,12 +104,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const failsafeTimeout = setTimeout(() => {
       setLoading((currLoading) => {
         if (currLoading) {
-          console.warn('[TALEP DEBUG] Failsafe Auth Timeout triggered (2.5s). Forcing loading screen resolution for smooth startup.');
+          console.warn('[TALEP DEBUG] Failsafe Auth Timeout triggered (2.0s). Forcing loading screen resolution for smooth startup.');
           return false;
         }
         return currLoading;
       });
-    }, 2500);
+    }, 2000);
     
     // Set Persistence explicitly to local
     setPersistence(auth, browserLocalPersistence)
@@ -144,9 +144,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (e) {}
 
         try {
-          // Fetch the user's role and database info
+          // Fetch the user's role and database info safely with a 1.5s timeout
           const userDocRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
+          const userDoc = await Promise.race([
+            getDoc(userDocRef),
+            new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore user profile fetch timeout')), 1500))
+          ]);
           
           if (userDoc.exists()) {
             const data = userDoc.data() as Omit<UserProfile, 'uid'>;
