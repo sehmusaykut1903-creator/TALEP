@@ -60,17 +60,17 @@ const DEMO_PROFILE_KEY = 'talep_demo_auth_profile';
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { mode, setMode, showToast, setProfile } = useSettings();
   
-  const mockUid = 'demo-guest-uid';
+  const mockUid = 'guest-physician';
   const mockUser = {
     uid: mockUid,
-    email: 'guest@talep.org',
+    email: 'sehmusaykut1903@gmail.com',
     displayName: 'Dr. Şehmus Aykut',
     emailVerified: true
   } as any;
 
   const mockProfile: UserProfile = {
     uid: mockUid,
-    email: 'guest@talep.org',
+    email: 'sehmusaykut1903@gmail.com',
     displayName: 'Dr. Şehmus Aykut',
     role: 'physician',
     institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
@@ -78,10 +78,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     city: 'Yozgat, Turkey'
   };
 
-  const [currentUser, setCurrentUser] = useState<User | null>(mockUser);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(mockProfile);
-  const [role, setRole] = useState<UserRole | null>('physician');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Fallback / Offline Mod Activator
   const startOfflineMode = () => {
@@ -105,24 +105,160 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   };
 
-  // Initialize Auth listeners & persistence support - immediate bypass
+  // Safe non-blocking initialization engine using Promise.race timeout protection
   useEffect(() => {
-    try {
-      localStorage.setItem('talep_mode', 'demo');
-      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(mockUser));
-      localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(mockProfile));
-    } catch (e) {}
+    let active = true;
+    let authUnsubscribe: (() => void) | null = null;
 
-    setProfile({
-      fullName: mockProfile.displayName,
-      email: mockProfile.email,
-      institution: mockProfile.institution,
-      department: mockProfile.department,
-      city: mockProfile.city
-    });
+    // Timeout guard: 2000ms max loading state
+    const timeoutTimer = setTimeout(() => {
+      if (!active) return;
+      console.warn('[Safe Auth Initializer]: Max wait threshold exceeded (2000ms). Activating fallback guest mode.');
+      if (loading) {
+        // Enforce fallback render if loading is still active
+        fallbackToGuestMemory();
+      }
+    }, 2000);
 
-    setMode('demo');
-    setLoading(false);
+    const fallbackToGuestMemory = () => {
+      try {
+        const savedUser = localStorage.getItem(DEMO_USER_KEY);
+        const savedProfile = localStorage.getItem(DEMO_PROFILE_KEY);
+        
+        const activeUser = savedUser ? JSON.parse(savedUser) : mockUser;
+        const activeProfile = savedProfile ? JSON.parse(savedProfile) : mockProfile;
+
+        setCurrentUser(activeUser);
+        setUserProfile(activeProfile);
+        setRole(activeProfile.role || 'physician');
+        
+        setProfile({
+          fullName: activeProfile.displayName,
+          email: activeProfile.email,
+          institution: activeProfile.institution,
+          department: activeProfile.department,
+          city: activeProfile.city
+        });
+      } catch (e) {
+        console.error('Error reading offline auth fallback:', e);
+        // Strict fallback guarantee
+        setCurrentUser(mockUser);
+        setUserProfile(mockProfile);
+        setRole('physician');
+      }
+      setLoading(false);
+    };
+
+    const initializeAuthEngine = async () => {
+      try {
+        // Attempt browser-friendly persistence setting for Firebase Auth (non-blocking)
+        try {
+          if (auth && typeof auth.setPersistence === 'function') {
+            await setPersistence(auth, browserLocalPersistence);
+          }
+        } catch (e) {
+          console.warn('[Auth Persistence Init]: Persistence config is bypassed in this scope:', e);
+        }
+
+        if (!auth || typeof auth.onAuthStateChanged !== 'function') {
+          console.warn('[Auth Initialization]: Firebase Auth is unavailable. Reverting to offline engine.');
+          fallbackToGuestMemory();
+          return;
+        }
+
+        // Register the auth listener
+        authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          if (!active) return;
+          clearTimeout(timeoutTimer);
+
+          if (firebaseUser) {
+            try {
+              // Non-blocking query state resolution
+              const userRef = doc(db, 'users', firebaseUser.uid);
+              const userSnap = await getDoc(userRef);
+              
+              if (userSnap.exists() && active) {
+                const profileData = userSnap.data() as UserProfile;
+                setCurrentUser(firebaseUser);
+                setUserProfile(profileData);
+                setRole(profileData.role || 'observer');
+                
+                setProfile({
+                  fullName: profileData.displayName || firebaseUser.displayName || 'Kullanıcı',
+                  email: profileData.email || firebaseUser.email || '',
+                  institution: profileData.institution || '',
+                  department: profileData.department || '',
+                  city: profileData.city || 'Yozgat, Turkey'
+                });
+                setMode('firebase');
+              } else if (active) {
+                // Default registered profile fallback
+                const fallbackProfile: UserProfile = {
+                  uid: firebaseUser.uid,
+                  email: firebaseUser.email || '',
+                  displayName: firebaseUser.displayName || 'Yeni Hekim',
+                  role: 'observer',
+                  institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
+                  department: 'Halk Sağlığı Anabilim Dalı',
+                  city: 'Yozgat, Turkey'
+                };
+                setCurrentUser(firebaseUser);
+                setUserProfile(fallbackProfile);
+                setRole('observer');
+                setProfile({
+                  fullName: fallbackProfile.displayName,
+                  email: fallbackProfile.email,
+                  institution: fallbackProfile.institution,
+                  department: fallbackProfile.department,
+                  city: fallbackProfile.city
+                });
+                setMode('firebase');
+              }
+            } catch (errSnap) {
+              console.warn('[Firestore Profile Sync Failure]: Failed to fetch real-time profile, keeping auth user context:', errSnap);
+              // Graceful recovery: keep user object and synthesize profile data
+              const fallbackProfile: UserProfile = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email || '',
+                displayName: firebaseUser.displayName || 'Yeni Hekim',
+                role: 'physician',
+                institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
+                department: 'Halk Sağlığı Anabilim Dalı',
+                city: 'Yozgat, Turkey'
+              };
+              setCurrentUser(firebaseUser);
+              setUserProfile(fallbackProfile);
+              setRole('physician');
+            }
+            setLoading(false);
+          } else {
+            // No authenticated Firebase user, apply the local physician guest defaults
+            fallbackToGuestMemory();
+          }
+        }, (authErr) => {
+          console.error('[Firebase Auth Listener Error]:', authErr);
+          fallbackToGuestMemory();
+        });
+
+      } catch (errEngine) {
+        console.error('[Safe Auth Initializer Catastrophe]: Critical failure in auth engine setup:', errEngine);
+        fallbackToGuestMemory();
+      }
+    };
+
+    initializeAuthEngine();
+
+    return () => {
+      active = false;
+      clearTimeout(timeoutTimer);
+      if (authUnsubscribe) {
+        try {
+          authUnsubscribe();
+        } catch (e) {
+          console.warn('Error cleaning up auth subscription:', e);
+        }
+      }
+    };
   }, []);
 
   // Login handler
