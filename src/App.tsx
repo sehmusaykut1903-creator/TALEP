@@ -21,25 +21,9 @@ import { MembershipProvider } from './context/MembershipContext';
 import PremiumUpgradeModal from './components/premium/PremiumUpgradeModal';
 
 function LoginGuard({ children }: { children: React.ReactNode }) {
-  const { currentUser, loading, startOfflineMode } = useAuth();
-  const [timedOut, setTimedOut] = React.useState(false);
+  const { currentUser, loading } = useAuth();
 
-  React.useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        console.warn('[TALEP Failsafe] LoginGuard loading timeout. Auto-triggering Offline Mode.');
-        setTimedOut(true);
-        try {
-          startOfflineMode();
-        } catch (e) {
-          console.error("Autotrigger offline mode failed", e);
-        }
-      }, 3500);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, startOfflineMode]);
-
-  if (loading && !timedOut) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-brand-bg p-4 selection:bg-cyan-500/30 text-slate-900">
         <div className="flex flex-col items-center gap-6 max-w-sm text-center p-8 bg-white/70 backdrop-blur-xl border border-slate-200/45 rounded-[2.5rem] shadow-xl">
@@ -48,12 +32,6 @@ function LoginGuard({ children }: { children: React.ReactNode }) {
             <p className="text-xs text-slate-800 font-bold tracking-tight uppercase">Kimlik Doğrulama Katmanı</p>
             <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">Tıbbi anahtarlar ve kromatografi modülü kuruluyor.</p>
           </div>
-          <button
-            onClick={startOfflineMode}
-            className="w-full mt-2 flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs uppercase tracking-wider py-3.5 px-5 rounded-2xl active:scale-95 transition-all cursor-pointer shadow-md shadow-slate-900/10 border border-slate-800"
-          >
-            Çevrimdışı Güvenli Modda Başlat
-          </button>
         </div>
       </div>
     );
@@ -65,25 +43,9 @@ function LoginGuard({ children }: { children: React.ReactNode }) {
 }
 
 function ProtectedShell() {
-  const { currentUser, loading, startOfflineMode } = useAuth();
-  const [timedOut, setTimedOut] = React.useState(false);
-
-  React.useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        console.warn('[TALEP Failsafe] ProtectedShell loading timeout. Auto-triggering Offline Mode.');
-        setTimedOut(true);
-        try {
-          startOfflineMode();
-        } catch (e) {
-          console.error("Autotrigger offline mode failsafe failed", e);
-        }
-      }, 3500);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, startOfflineMode]);
+  const { currentUser, loading } = useAuth();
   
-  if (loading && !timedOut) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-brand-bg p-4 selection:bg-cyan-500/30 text-slate-900">
         <div className="flex flex-col items-center gap-6 max-w-sm text-center p-8 bg-white/70 backdrop-blur-xl border border-slate-200/45 rounded-[2.5rem] shadow-xl">
@@ -92,12 +54,6 @@ function ProtectedShell() {
             <p className="text-xs text-slate-800 font-bold tracking-tight uppercase">Güvenli Oturum Başlatılıyor</p>
             <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">C-DSS Klinik Karar Destek şebekesi yükleniyor.</p>
           </div>
-          <button
-            onClick={startOfflineMode}
-            className="w-full mt-2 flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs uppercase tracking-wider py-3.5 px-5 rounded-2xl active:scale-95 transition-all cursor-pointer shadow-md shadow-slate-900/10 border border-slate-800"
-          >
-            Çevrimdışı Güvenli Modda Başlat
-          </button>
         </div>
       </div>
     );
