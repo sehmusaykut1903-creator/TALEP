@@ -92,8 +92,6 @@ function PureAppShell() {
 }
 
 function MainAppSelector() {
-  const [showSplash, setShowSplash] = React.useState(true);
-
   React.useEffect(() => {
     // Keep ensuring demo mode is locked in context during hook cycles
     try {
@@ -116,17 +114,7 @@ function MainAppSelector() {
     } catch (e) {
       console.warn('LocalStorage setup is unavailable:', e);
     }
-
-    // Force fluid splash timeout to exactly 1.5 seconds (Requirement 2)
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 1500);
-    return () => clearTimeout(timer);
   }, []);
-
-  if (showSplash) {
-    return <Splash onFinish={() => setShowSplash(false)} />;
-  }
 
   return <PureAppShell />;
 }
