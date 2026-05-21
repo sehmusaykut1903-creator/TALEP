@@ -62,39 +62,6 @@
       </div>
     </div>
     <script type="module" src="./src/main.tsx"></script>
-    <script>
-      // Production Failsafe: If React fails to execute or mount, this script will trigger an escape hatch
-      setTimeout(function() {
-        var root = document.getElementById('root');
-        if (root && root.innerHTML.indexOf('Güvenli klinik portalı yükleniyor') !== -1) {
-          console.warn('[TALEP Failsafe] Infinite Loader detected. Forcing loading screen fallback.');
-          root.innerHTML = `
-            <div style="font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #0f172a; color: #f8fafc; text-align: center; padding: 20px; box-sizing: border-box; overflow: hidden; position: fixed; inset: 0; z-index: 9999;">
-              <div style="margin-bottom: 24px; border: 2px solid #06b6d4; background: rgba(6, 182, 212, 0.05); width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-              </div>
-              <h1 style="font-size: 18px; font-weight: 900; letter-spacing: 0.05em; margin: 0 0 8px 0; text-transform: uppercase;">TALEP <span style="color: #06b6d4;">v4.0</span></h1>
-              <p style="font-size: 11px; color: #94a3b8; max-width: 300px; margin: 0 auto 20px auto; line-height: 1.6; font-weight: 500;">
-                Klinik portal başlatılamadı. Bu durum yerel çevrimdışı önbellek kilitlenmesi veya bağlantı sorunlarından kaynaklanabilir.
-              </p>
-              <button onclick="localStorage.setItem('talep_mode', 'demo'); localStorage.removeItem('talep_cached_cases'); localStorage.removeItem('talep_cached_chemicals'); localStorage.removeItem('talep_cached_notifications'); window.location.reload();" style="background-color: #06b6d4; color: #011E26; border: none; padding: 12px 24px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; box-shadow: 0 0 20px rgba(6, 182, 212, 0.35); margin-bottom: 24px;">
-                Çevrimdışı Güvenli Modda Başlat
-              </button>
-              <div style="padding: 12px 24px 0 24px; border-top: 1px dashed rgba(255,255,255,0.08); max-width: 440px; width: 100%;">
-                <p style="font-size: 8px; font-weight: 900; color: #06b6d4; text-transform: uppercase; margin: 0 0 4px 0;">PROJE EKİBİ</p>
-                <p style="font-size: 10px; font-weight: 700; color: #cbd5e1; margin: 0 0 2px 0;">Şehmus AYKUT • Fatma Nur AYKUT • Aghajan MUSALI</p>
-                <p style="font-size: 9px; font-weight: 600; color: #94a3b8; margin: 0 0 8px 0;">Danışman: Prof. Dr. Vugar Ali TÜRKSOY</p>
-                <p style="font-size: 9px; font-weight: 700; color: #475569; margin: 0;">2026 • Şehmus Aykut tarafından geliştirilmiştir.</p>
-              </div>
-            </div>
-          `;
-        }
-      }, 5000);
-    </script>
   </body>
 </html>
 

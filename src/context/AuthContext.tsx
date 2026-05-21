@@ -59,33 +59,33 @@ const DEMO_PROFILE_KEY = 'talep_demo_auth_profile';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { mode, setMode, showToast, setProfile } = useSettings();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  
+  const mockUid = 'demo-guest-uid';
+  const mockUser = {
+    uid: mockUid,
+    email: 'guest@talep.org',
+    displayName: 'Dr. Şehmus Aykut',
+    emailVerified: true
+  } as any;
+
+  const mockProfile: UserProfile = {
+    uid: mockUid,
+    email: 'guest@talep.org',
+    displayName: 'Dr. Şehmus Aykut',
+    role: 'physician',
+    institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
+    department: 'Halk Sağlığı Anabilim Dalı',
+    city: 'Yozgat, Turkey'
+  };
+
+  const [currentUser, setCurrentUser] = useState<User | null>(mockUser);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(mockProfile);
+  const [role, setRole] = useState<UserRole | null>('physician');
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Fallback / Offline Mod Activator
   const startOfflineMode = () => {
     localStorage.setItem('talep_mode', 'demo');
-    
-    const mockUid = 'demo-guest-uid';
-    const mockUser = {
-      uid: mockUid,
-      email: 'guest@talep.org',
-      displayName: 'Dr. Şehmus Aykut',
-      emailVerified: true
-    } as any;
-
-    const mockProfile: UserProfile = {
-      uid: mockUid,
-      email: 'guest@talep.org',
-      displayName: 'Dr. Şehmus Aykut',
-      role: 'physician',
-      institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
-      department: 'Halk Sağlığı Anabilim Dalı',
-      city: 'Yozgat, Turkey'
-    };
-
     localStorage.setItem(DEMO_USER_KEY, JSON.stringify(mockUser));
     localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(mockProfile));
 
@@ -103,227 +103,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setMode('demo');
     setLoading(false);
-    showToast('Çevrimdışı Güvenli Mod Akıcı Olarak Başlatıldı.');
   };
 
-  // Initialize Auth listeners & persistence support
+  // Initialize Auth listeners & persistence support - immediate bypass
   useEffect(() => {
-    if (mode === 'demo') {
-      // In Demo mode, fetch mock auth profile from localStorage if offline
-      const savedUser = localStorage.getItem(DEMO_USER_KEY);
-      const savedProfile = localStorage.getItem(DEMO_PROFILE_KEY);
-      
-      if (savedUser && savedProfile) {
-        try {
-          setCurrentUser(JSON.parse(savedUser) as any);
-          const parsedProfile = JSON.parse(savedProfile) as UserProfile;
-          setUserProfile(parsedProfile);
-          setRole(parsedProfile.role);
-          setProfile({
-            fullName: parsedProfile.displayName,
-            email: parsedProfile.email,
-            institution: parsedProfile.institution || 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
-            department: parsedProfile.department || 'Halk Sağlığı Anabilim Dalı',
-            city: parsedProfile.city || 'Yozgat, Turkey'
-          });
-        } catch (e) {
-          console.warn('Could not parse persisted static offline demo state.', e);
-        }
-      } else {
-        // Automatically create high-fidelity guest session to satisfy requirement 7
-        const mockUid = 'demo-guest-uid';
-        const mockUser = {
-          uid: mockUid,
-          email: 'guest@talep.org',
-          displayName: 'Dr. Şehmus Aykut',
-          emailVerified: true
-        } as any;
-
-        const mockProfile: UserProfile = {
-          uid: mockUid,
-          email: 'guest@talep.org',
-          displayName: 'Dr. Şehmus Aykut',
-          role: 'physician',
-          institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
-          department: 'Halk Sağlığı Anabilim Dalı',
-          city: 'Yozgat, Turkey'
-        };
-
-        try {
-          localStorage.setItem(DEMO_USER_KEY, JSON.stringify(mockUser));
-          localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(mockProfile));
-        } catch (e) {}
-
-        setCurrentUser(mockUser);
-        setUserProfile(mockProfile);
-        setRole('physician');
-        setProfile({
-          fullName: 'Dr. Şehmus Aykut',
-          email: 'guest@talep.org',
-          institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
-          department: 'Halk Sağlığı Anabilim Dalı',
-          city: 'Yozgat, Turkey'
-        });
-      }
-      setLoading(false);
-      return;
-    }
-
-    // Firebase mode active subscription
-    setLoading(true);
-    console.log('[TALEP DEBUG] Initializing Firebase Auth and Services...');
-    
-    // Failsafe timeout to prevent infinite loader if auth listener or Firestore profile fetching hangs
-    const failsafeTimeout = setTimeout(() => {
-      setLoading((currLoading) => {
-        if (currLoading) {
-          console.warn('[TALEP DEBUG] Failsafe Auth Timeout triggered (2.0s). Forcing loading screen resolution for smooth startup.');
-          return false;
-        }
-        return currLoading;
-      });
-    }, 2000);
-    
-    // Set Persistence explicitly to local with bulletproof error boundaries
     try {
-      if (auth && typeof auth.onAuthStateChanged === 'function' && auth.onAuthStateChanged.name !== 'Fallback') {
-        setPersistence(auth, browserLocalPersistence)
-          .catch((err) => console.warn('Persistence config issue:', err));
-      }
-    } catch (err) {
-      console.warn('Could not set persistence safely:', err);
-    }
+      localStorage.setItem('talep_mode', 'demo');
+      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(mockUser));
+      localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(mockProfile));
+    } catch (e) {}
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('[TALEP DEBUG] Firebase Auth listener resolved. User state:', user ? `Logged In (${user.email})` : 'Guest / Observer');
-      
-      if (user) {
-        setCurrentUser(user);
-        
-        // Caching Optimization: Try loading cached user profile from localStorage first
-        const cacheKey = `talep_profile_cache_${user.uid}`;
-        try {
-          const cachedProfile = localStorage.getItem(cacheKey);
-          if (cachedProfile) {
-            const parsed = JSON.parse(cachedProfile) as UserProfile;
-            setUserProfile(parsed);
-            setRole(parsed.role);
-            setProfile({
-              fullName: parsed.displayName,
-              email: parsed.email,
-              institution: parsed.institution || 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
-              department: parsed.department || 'Halk Sağlığı Anabilim Dalı',
-              city: parsed.city || 'Yozgat, Turkey'
-            });
-            // Resolve visual loading gate early
-            console.log('[TALEP DEBUG] Loaded user profile from local cache successfully.');
-            setLoading(false);
-            clearTimeout(failsafeTimeout);
-          }
-        } catch (e) {}
-
-        try {
-          // Fetch the user's role and database info safely with a 1.5s timeout
-          const userDocRef = doc(db, 'users', user.uid);
-          const userDoc = await Promise.race([
-            getDoc(userDocRef),
-            new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore user profile fetch timeout')), 1500))
-          ]);
-          
-          if (userDoc.exists()) {
-            const data = userDoc.data() as Omit<UserProfile, 'uid'>;
-            const fullProfile: UserProfile = {
-              uid: user.uid,
-              ...data
-            };
-            setUserProfile(fullProfile);
-            setRole(fullProfile.role);
-            setProfile({
-              fullName: fullProfile.displayName,
-              email: fullProfile.email,
-              institution: fullProfile.institution || 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
-              department: fullProfile.department || 'Halk Sağlığı Anabilim Dalı',
-              city: fullProfile.city || 'Yozgat, Turkey'
-            });
-            try {
-              localStorage.setItem(cacheKey, JSON.stringify(fullProfile));
-            } catch (e) {}
-            console.log('[TALEP DEBUG] User profile successfully fetched from Firestore and cached locally.');
-          } else {
-            // Profile entry doesn't exist yet, construct a placeholder entry safely
-            const placeholder: UserProfile = {
-              uid: user.uid,
-              email: user.email || '',
-              displayName: user.displayName || 'Klinik Kullanıcı',
-              role: 'observer',
-              institution: 'Yozgat Bozok Üniversitesi Tıp Fakültesi',
-              department: 'Halk Sağlığı Anabilim Dalı',
-              city: 'Yozgat, Turkey',
-              createdAt: new Date()
-            };
-            
-            // Try saving placeholder safely with a 1.5s timeout trace
-            try {
-              await Promise.race([
-                setDoc(userDocRef, {
-                  email: placeholder.email,
-                  displayName: placeholder.displayName,
-                  role: placeholder.role,
-                  institution: placeholder.institution,
-                  department: placeholder.department,
-                  city: placeholder.city,
-                  createdAt: serverTimestamp()
-                }),
-                new Promise<any>((_, reject) => setTimeout(() => reject(new Error('Firestore save profile timeout')), 1500))
-              ]);
-            } catch (err) {
-              console.warn('Could not save user profile document to Firestore due to rule boundaries or timeout.', err);
-            }
-            
-            setUserProfile(placeholder);
-            setRole(placeholder.role);
-            setProfile({
-              fullName: placeholder.displayName,
-              email: placeholder.email,
-              institution: placeholder.institution,
-              department: placeholder.department,
-              city: placeholder.city
-            });
-            console.log('[TALEP DEBUG] No profile document found in Firestore, created fallback profile placeholder.');
-          }
-        } catch (error) {
-          console.warn('Could not retrieve Firestore user profile, using authenticated user metadata fallback.', error);
-          // Fallback user details
-          const fallback: UserProfile = {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName || 'Klinik Kullanıcı',
-            role: 'observer'
-          };
-          setUserProfile(fallback);
-          setRole('observer');
-        }
-      } else {
-        setCurrentUser(null);
-        setUserProfile(null);
-        setRole(null);
-        console.log('[TALEP DEBUG] Cleared user session details (Guest mode).');
-      }
-      setLoading(false);
-      clearTimeout(failsafeTimeout);
-      console.log('[TALEP DEBUG] Startup sequence complete. Releasing loading screen gate.');
-    }, (error) => {
-      console.error('Firebase Auth listener error: ', error);
-      showToast('Bağlantı Hatası: Güvenli oturum doğrulanamadı.');
-      setLoading(false);
-      clearTimeout(failsafeTimeout);
+    setProfile({
+      fullName: mockProfile.displayName,
+      email: mockProfile.email,
+      institution: mockProfile.institution,
+      department: mockProfile.department,
+      city: mockProfile.city
     });
 
-    return () => {
-      clearTimeout(failsafeTimeout);
-      unsubscribe();
-    };
-  }, [mode]);
+    setMode('demo');
+    setLoading(false);
+  }, []);
 
   // Login handler
   const login = async (email: string, password: string) => {
