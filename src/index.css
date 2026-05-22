@@ -11,6 +11,11 @@
   --color-brand-green: #10B981;
   --color-brand-orange: #F59E0B;
   --color-brand-red: #EF4444;
+
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-bg: var(--brand-bg);
 }
 
 @utility text-adaptive-xs {
@@ -203,4 +208,45 @@
 
 .animate-slide-up {
   animation: slideUp 0.4s ease-out forwards;
+}
+
+/* Premium Clinical Markdown Styles */
+.markdown-body {
+  line-height: 1.5;
+  font-family: inherit;
+}
+.markdown-body h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #38bdf8; /* sky-400 */
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.markdown-body h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #22d3ee; /* cyan-400 */
+  margin-top: 1rem;
+  margin-bottom: 0.35rem;
+}
+.markdown-body ul, .markdown-body ol {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.85rem;
+}
+.markdown-body li {
+  margin-bottom: 0.25rem;
+  color: #cbd5e1; /* slate-330 */
+}
+.markdown-body p {
+  margin-bottom: 0.75rem;
+  color: #e2e8f0; /* slate-200 */
+}
+.markdown-body code {
+  background: rgba(6, 182, 212, 0.15);
+  font-family: monospace;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  color: #34d399; /* emerald-400 */
 }

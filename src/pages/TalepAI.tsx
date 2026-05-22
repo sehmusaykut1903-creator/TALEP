@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import Markdown from 'react-markdown';
 import { 
   Bot, 
   Send, 
@@ -226,8 +227,8 @@ export default function TalepAI() {
   const renderVisualsAndReports = (res: StructuredAiResponse, msgId: string) => {
     if (res.isCasual) {
       return (
-        <div className="prose prose-invert max-w-none text-slate-200 text-xs md:text-sm leading-relaxed p-4 bg-slate-900/60 border border-white/5 rounded-2xl animate-fade-in whitespace-pre-wrap font-sans">
-          <p className="font-semibold text-slate-100">{res.rawText}</p>
+        <div className="prose prose-invert max-w-none text-slate-200 text-xs md:text-sm leading-relaxed p-4 bg-slate-900/60 border border-white/5 rounded-2xl animate-fade-in markdown-body">
+          <Markdown>{res.rawText}</Markdown>
         </div>
       );
     }
@@ -281,8 +282,8 @@ export default function TalepAI() {
           {currentTab === 'text' && (
             <div className="space-y-4 text-slate-100">
               {/* MAIN MARKDOWN CONTAINER WITH WHITESPACE LOGIC */}
-              <div className="text-xs md:text-[13.5px] text-slate-200 leading-relaxed font-semibold whitespace-pre-wrap font-sans dark-report-layer">
-                {res.rawText}
+              <div className="text-xs md:text-[13.5px] text-slate-200 leading-relaxed font-semibold font-sans dark-report-layer markdown-body">
+                <Markdown>{res.rawText}</Markdown>
               </div>
 
               {/* OUTCOMES SUMMARY / BIOMARKERS ASSESSMENT */}
@@ -681,7 +682,9 @@ export default function TalepAI() {
                      
                      <div className="text-[13px] md:text-[13.5px] font-semibold">
                        {msg.structured ? renderVisualsAndReports(msg.structured, msg.id) : (
-                         <div className="whitespace-pre-wrap leading-relaxed">{msg.text}</div>
+                         <div className="leading-relaxed markdown-body">
+                            <Markdown>{msg.text || ''}</Markdown>
+                          </div>
                        )}
                      </div>
 

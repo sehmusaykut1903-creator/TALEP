@@ -287,7 +287,8 @@ const I18N_REPORTS: Record<Language, Record<string, string>> = {
 
 export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose }) => {
   const { currentUser } = useAuth();
-  const { language } = useSettings();
+  const { language, theme } = useSettings();
+  const isDarkTheme = theme?.isDark;
 
   // Unified localized string getter helper
   const translate = (key: string): string => {
@@ -343,6 +344,19 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
 
   // Verification metadata hash
   const verifyHash = `SHA256:4a8b9c...${generatedReportId.replace('REP-', '')}`;
+
+  // Dynamic design variables to support premium light/dark medical document views
+  const previewCardBg = isDarkTheme 
+    ? 'bg-[#0f172a]/80 border-slate-800/80 text-slate-100 shadow-2xl backdrop-blur-3xl' 
+    : 'bg-white border-slate-200 text-slate-850';
+
+  const previewItemBg = isDarkTheme
+    ? 'bg-[#0b1022]/60 border-white/5 text-slate-200'
+    : 'bg-slate-50 border-slate-250 text-slate-700';
+
+  const previewTextPrimary = isDarkTheme ? 'text-white font-extrabold' : 'text-slate-900 font-bold';
+  const previewTextMuted = isDarkTheme ? 'text-slate-400' : 'text-slate-500';
+  const previewBorder = isDarkTheme ? 'border-white/5' : 'border-slate-250';
 
   // AI Auto-Write Function
   const handleAiAutoWrite = () => {
@@ -735,7 +749,7 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
               /* ================= THE A4 SIMULATED DOCUMENT PREVIEW ================= */
               <div 
                 id="print-section"
-                className="w-full max-w-full md:max-w-[210mm] bg-white text-slate-950 p-5 sm:p-8 md:p-[18mm] rounded-3xl border border-slate-200 shadow-2xl font-sans flex flex-col justify-between print:shadow-none print:p-0 print:w-full min-h-[297mm] overflow-hidden select-text relative"
+                className={`w-full max-w-full md:max-w-[210mm] p-5 sm:p-8 md:p-[18mm] rounded-3xl border shadow-2xl font-sans flex flex-col justify-between print:shadow-none print:p-0 print:w-full min-h-[297mm] overflow-hidden select-text relative transition-colors ${previewCardBg}`}
                 style={{ counterReset: 'page' }}
               >
                 {/* Security background subtle vector seal */}
@@ -748,38 +762,38 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
                 <div className="relative z-10 space-y-5 w-full max-w-full min-w-0">
                   
                   {/* Institutional Header Block */}
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-slate-900 pb-4 gap-4">
+                  <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 pb-4 gap-4 ${isDarkTheme ? 'border-white/10' : 'border-slate-900'}`}>
                     <div className="space-y-1.5 min-w-0 pb-1">
-                      <h1 className="text-sm font-black tracking-[0.25em] text-cyan-600 uppercase font-sans">TALEP v4.0</h1>
-                      <p className="text-[10px] font-black uppercase text-slate-900 font-sans tracking-tight leading-none">
+                      <h1 className="text-sm font-black tracking-[0.25em] text-cyan-500 dark:text-cyan-400 uppercase font-sans">TALEP v4.0</h1>
+                      <p className={`text-[10px] uppercase font-sans tracking-tight leading-none ${previewTextPrimary}`}>
                         {translate("project_caption")}
                       </p>
-                      <p className="text-[9px] font-bold text-slate-600 font-sans uppercase">
+                      <p className={`text-[9px] font-bold font-sans uppercase ${previewTextMuted}`}>
                         Halk Sağlığı Tıp Fakültesi &bull; Toksikoloji Enstitüsü
                       </p>
-                      <p className="text-[8px] text-slate-400 font-medium font-sans font-semibold italic">
+                      <p className={`text-[8px] font-medium font-sans font-semibold italic ${previewTextMuted}`}>
                         {translate("advisor_label")}
                       </p>
                     </div>
 
                     <div className="self-end sm:self-auto flex items-center gap-2">
-                      <div className="p-1.5 bg-white border border-slate-300 rounded-lg">
+                      <div className={`p-1.5 rounded-lg border ${isDarkTheme ? 'bg-[#0f172a] border-white/10' : 'bg-white border-slate-300'}`}>
                         <svg width="40" height="40" viewBox="0 0 29 29" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect width="29" height="29" fill="white"/>
-                          <path d="M1 1h7v7H1V1zm13 0h1v1h-1V1zm5 0h1v1h-1V1zm3 0h5v5h-5V1zm-8 4v2h2V5h-2zM1 13h2v2H1v-2zm8 0h4v2H9v-2zm11 0h1v2h-1v-2zm3 0h5v5h-5v-5zm-5 5h1v1h-1v-1zm1 3h3v2h-3v-2zm-6 2h1v1h-1v-1zm5 1h1v1h-1v-1z" fill="#020617"/>
-                          <path d="M22 6h2v2h-2V6zM6 6H4V4h2v2zM6 16H4v2h2v-2zm16-4h2v2h-2v-2zM4 22H2v2h2v-2zm10 2h2v2h-2v-2z" fill="#090d16"/>
+                          <rect width="29" height="29" fill="transparent"/>
+                          <path d="M1 1h7v7H1V1zm13 0h1v1h-1V1zm5 0h1v1h-1V1zm3 0h5v5h-5V1zm-8 4v2h2V5h-2zM1 13h2v2H1v-2zm8 0h4v2H9v-2zm11 0h1v2h-1v-2zm3 0h5v5h-5v-5zm-5 5h1v1h-1v-1zm1 3h3v2h-3v-2zm-6 2h1v1h-1v-1zm5 1h1v1h-1v-1z" fill={isDarkTheme ? "#22d3ee" : "#020617"}/>
+                          <path d="M22 6h2v2h-2V6zM6 6H4V4h2v2zM6 16H4v2h2v-2zm16-4h2v2h-2v-2zM4 22H2v2h2v-2zm10 2h2v2h-2v-2z" fill={isDarkTheme ? "#38bdf888" : "#090d16"}/>
                         </svg>
                       </div>
                       <div className="text-right">
-                        <span className="text-[7.5px] font-mono text-slate-400 uppercase tracking-tight block">VERIFIABLE MEDICAL REPORT</span>
-                        <span className="text-[7.5px] font-mono text-slate-700 font-bold uppercase block">ID: {generatedReportId}</span>
+                        <span className={`text-[7.5px] font-mono uppercase tracking-tight block ${previewTextMuted}`}>VERIFIABLE MEDICAL REPORT</span>
+                        <span className={`text-[7.5px] font-mono font-bold uppercase block ${previewTextPrimary}`}>ID: {generatedReportId}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Template Title */}
                   <div className="text-center space-y-1 py-1">
-                    <h2 className="text-xs sm:text-sm font-black tracking-tight text-slate-950 uppercase font-sans break-words leading-tight">
+                    <h2 className={`text-xs sm:text-sm font-black tracking-tight uppercase font-sans break-words leading-tight ${previewTextPrimary}`}>
                       {template === 'HOSPITAL' && 'KLİNİK TOKSİKOLOJİ TANI & BİYOBELİRTEÇ RAPORU'}
                       {template === 'WHO' && 'DÜNYA SAĞLIK ÖRGÜTÜ (WHO) MESLEKİ MARUZİYET RAPORU'}
                       {template === 'ACADEMIC' && 'KLİNİK AKADEMİK KONGRE & LİTERATÜR EŞLEME DOSYASI'}
@@ -789,30 +803,30 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
                       {template === 'LABORATORY' && 'LABORATUVAR TOKSİKOLOJİ ANALİZ RAPORU'}
                       {template === 'LITERATURE' && 'LİTERATÜR KANIT SEVİYESİ VE KLİNİK BULGU EŞLEME DEKLARASYONU'}
                     </h2>
-                    <div className="flex flex-wrap justify-center items-center gap-2 text-[9px] font-bold text-slate-500 uppercase">
+                    <div className={`flex flex-wrap justify-center items-center gap-2 text-[9px] font-bold uppercase ${previewTextMuted}`}>
                       <span>DÜZENLEME TARİHİ: {timestampString}</span>
                       <span>&bull;</span>
-                      <span className="text-rose-600 font-extrabold pb-0.5">SEVERITY: {severity.toUpperCase()}</span>
+                      <span className="text-rose-500 font-extrabold pb-0.5">SEVERITY: {severity.toUpperCase()}</span>
                     </div>
                   </div>
 
                   {/* Patient Info Fields */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold leading-normal w-full max-w-full">
+                  <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 border rounded-2xl text-xs font-semibold leading-normal w-full max-w-full transition-colors ${previewItemBg}`}>
                     <div className="min-w-0">
-                      <span className="text-[8px] text-slate-400 font-bold block uppercase tracking-wider mb-0.5">Kayıtlı Hasta Adı</span>
-                      <p className="text-slate-900 font-black truncate">{patientName}</p>
+                      <span className={`text-[8px] font-bold block uppercase tracking-wider mb-0.5 ${previewTextMuted}`}>Kayıtlı Hasta Adı</span>
+                      <p className={`font-black truncate ${previewTextPrimary}`}>{patientName}</p>
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[8px] text-slate-400 font-bold block uppercase tracking-wider mb-0.5">Yaş & Cinsiyet</span>
-                      <p className="text-slate-900 font-black truncate">{patientAgeSex}</p>
+                      <span className={`text-[8px] font-bold block uppercase tracking-wider mb-0.5 ${previewTextMuted}`}>Yaş & Cinsiyet</span>
+                      <p className={`font-black truncate ${previewTextPrimary}`}>{patientAgeSex}</p>
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[8px] text-slate-400 font-bold block uppercase tracking-wider mb-0.5">Grup / Branş</span>
-                      <p className="text-slate-900 font-black truncate">{patientSector}</p>
+                      <span className={`text-[8px] font-bold block uppercase tracking-wider mb-0.5 ${previewTextMuted}`}>Grup / Branş</span>
+                      <p className={`font-black truncate ${previewTextPrimary}`}>{patientSector}</p>
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[8px] text-slate-400 font-bold block uppercase tracking-wider mb-0.5">Saha Ünitesi</span>
-                      <p className="text-slate-900 font-black truncate">{patientUnit}</p>
+                      <span className={`text-[8px] font-bold block uppercase tracking-wider mb-0.5 ${previewTextMuted}`}>Saha Ünitesi</span>
+                      <p className={`font-black truncate ${previewTextPrimary}`}>{patientUnit}</p>
                     </div>
                   </div>
 
@@ -820,18 +834,18 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-1 w-full max-w-full">
                     
                     <div className="space-y-2.5 min-w-0">
-                      <span className="text-[9.5px] font-black tracking-wider text-slate-900 uppercase block font-sans border-b border-slate-200 pb-1">
+                      <span className={`text-[9.5px] font-black tracking-wider uppercase block font-sans border-b pb-1 ${previewTextPrimary} ${previewBorder}`}>
                         {translate("bio_sevels")}
                       </span>
                       
                       <div className="space-y-2 text-xs">
                         {biomarkers.map((b, idx) => (
-                          <div key={idx} className="p-3 bg-slate-50/50 border border-slate-200 rounded-xl flex justify-between items-center transition-all">
-                            <span className="font-bold text-slate-700 leading-tight block mr-2 truncate">{b.name}</span>
+                          <div key={idx} className={`p-3 border rounded-xl flex justify-between items-center transition-all ${previewItemBg}`}>
+                            <span className={`font-bold leading-tight block mr-2 truncate ${isDarkTheme ? 'text-slate-200' : 'text-slate-700'}`}>{b.name}</span>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="font-mono font-black text-slate-900">{b.value}</span>
+                              <span className={`font-mono font-black ${previewTextPrimary}`}>{b.value}</span>
                               <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
-                                b.status === 'Kritik' ? 'bg-red-500 text-white' : 'bg-slate-200 text-slate-800'
+                                b.status === 'Kritik' ? 'bg-red-500 text-white' : (isDarkTheme ? 'bg-slate-850 text-slate-300' : 'bg-slate-200 text-slate-800')
                               }`}>
                                 {b.status}
                               </span>
@@ -842,21 +856,21 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
                     </div>
 
                     <div className="space-y-2.5 min-w-0">
-                      <span className="text-[9.5px] font-black tracking-wider text-slate-900 uppercase block font-sans border-b border-slate-200 pb-1">
+                      <span className={`text-[9.5px] font-black tracking-wider uppercase block font-sans border-b pb-1 ${previewTextPrimary} ${previewBorder}`}>
                         🚨 Semptomatik Klinik Bulgular
                       </span>
                       
                       <div className="flex flex-wrap gap-1.5 pt-1 max-w-full">
                         {symptomsInput.split(',').map((s, idx) => (
-                          <span key={idx} className="px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-800 text-[10px] font-bold rounded-lg truncate">
+                          <span key={idx} className={`px-2.5 py-1 border text-[10px] font-bold rounded-lg truncate ${previewItemBg}`}>
                             &bull; {s.trim()}
                           </span>
                         ))}
                       </div>
 
-                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 mt-2.5">
-                        <span className="text-[8px] font-black uppercase tracking-wider text-slate-400">Teknisyen Notu / Zaman</span>
-                        <p className="text-[11px] font-bold text-slate-700 leading-normal">
+                      <div className={`p-3 border rounded-xl space-y-1 mt-2.5 ${previewItemBg}`}>
+                        <span className={`text-[8px] font-black uppercase tracking-wider ${previewTextMuted}`}>Teknisyen Notu / Zaman</span>
+                        <p className={`text-[11px] font-bold leading-normal ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>
                           Lokal izlem süresince edinilen kümülatif {exposureDuration} maruziyet katsayısı %{severity === 'Kritik' ? '92' : '76'} değerinde hassasiyet yaratıyor.
                         </p>
                       </div>
@@ -864,20 +878,20 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
                   </div>
 
                   {/* ================= INTERACTIVE EXPANDABLE DISASTER MATRIX ================= */}
-                  <div className="pt-2 bg-slate-50/40 p-4 rounded-2xl border border-slate-200">
+                  <div className={`pt-2 p-4 rounded-2xl border transition-colors ${previewItemBg}`}>
                     <button 
                       onClick={() => setIsMatrixExpanded(!isMatrixExpanded)}
                       className="w-full flex items-center justify-between font-sans outline-none cursor-pointer group"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black tracking-wider text-slate-900 uppercase">
+                        <span className={`text-[10px] font-black tracking-wider uppercase ${previewTextPrimary}`}>
                           {translate("matrix_title")}
                         </span>
-                        <span className="text-[8.5px] bg-[#0ea5e9]/10 text-cyan-700 font-extrabold px-2 py-0.5 rounded-full uppercase">
+                        <span className="text-[8.5px] bg-cyan-500/10 text-cyan-400 font-extrabold px-2 py-0.5 rounded-full uppercase">
                           {isMatrixExpanded ? (language === 'tr' ? 'Açık' : 'Open') : (language === 'tr' ? 'Yay' : 'Expand')}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-slate-500 group-hover:text-slate-800 text-xs font-bold transition-colors">
+                      <div className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${previewTextMuted} group-hover:text-cyan-400`}>
                         <span className="text-[9px] font-black hidden sm:inline uppercase">{translate("toggle_instructions")}</span>
                         {isMatrixExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       </div>
@@ -885,15 +899,15 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
 
                     {/* Expandable Animation Section */}
                     {isMatrixExpanded && (
-                      <div className="mt-3.5 space-y-3 pt-3 border-t border-slate-200 animate-fadeIn text-xs leading-normal">
+                      <div className={`mt-3.5 space-y-3 pt-3 border-t animate-fadeIn text-xs leading-normal ${previewBorder}`}>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-1">
                           {matrixData.map((item, i) => (
-                            <div key={i} className="p-3 bg-white border border-slate-150 rounded-xl space-y-1.5 shadow-sm">
+                            <div key={i} className={`p-3 border rounded-xl space-y-1.5 shadow-sm ${isDarkTheme ? 'bg-[#0f172a]/50 border-white/5' : 'bg-white border-slate-150'}`}>
                               <div className="flex justify-between items-center">
-                                <span className="font-extrabold text-[10px] text-slate-600 truncate">{item.organ}</span>
+                                <span className={`font-extrabold text-[10px] truncate ${previewTextMuted}`}>{item.organ}</span>
                                 <span className={`font-mono font-black ${item.statusColor} text-[11px] shrink-0`}>{item.value}</span>
                               </div>
-                              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                              <div className={`w-full h-1.5 rounded-full overflow-hidden ${isDarkTheme ? 'bg-slate-950' : 'bg-slate-100'}`}>
                                 <div className={`h-full ${item.barColor}`} style={{ width: item.value }} />
                               </div>
                             </div>
@@ -908,46 +922,46 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
                   </div>
 
                   {/* Scientific Evaluation */}
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1.5 w-full max-w-full">
-                    <span className="text-[9.5px] font-black tracking-wider text-slate-900 uppercase block font-sans border-b border-slate-200 pb-1">
+                  <div className={`p-4 border rounded-2xl space-y-1.5 w-full max-w-full transition-colors ${previewItemBg}`}>
+                    <span className={`text-[9.5px] font-black tracking-wider uppercase block font-sans border-b pb-1 ${previewTextPrimary} ${previewBorder}`}>
                       {translate("clinical_discussion")}
                     </span>
-                    <p className="text-[10.5px] text-slate-800 leading-relaxed font-semibold italic break-words">
+                    <p className={`text-[10.5px] leading-relaxed font-semibold italic break-words ${isDarkTheme ? 'text-slate-200' : 'text-slate-800'}`}>
                       "{clinicalText}"
                     </p>
                   </div>
 
                   {/* Recommendations */}
-                  <div className="p-4 bg-slate-900 text-white rounded-2xl space-y-1.5 w-full max-w-full">
-                    <span className="text-[9.5px] font-black tracking-wider text-[#22d3ee] uppercase block font-sans border-b border-slate-800 pb-1">
+                  <div className={`p-4 rounded-2xl space-y-1.5 w-full max-w-full transition-colors ${isDarkTheme ? 'bg-cyan-950/20 border border-cyan-500/20 text-slate-100' : 'bg-slate-900 text-white'}`}>
+                    <span className={`text-[9.5px] font-black tracking-wider uppercase block font-sans border-b pb-1 ${isDarkTheme ? 'text-cyan-400 border-cyan-900/60' : 'text-cyan-300 border-slate-800'}`}>
                       {translate("emergency_plan")}
                     </span>
-                    <p className="text-[11px] text-slate-100 leading-relaxed font-bold break-words">
+                    <p className="text-[11px] leading-relaxed font-bold break-words">
                       {nextActions}
                     </p>
                   </div>
 
                   {/* Literature Evidence reference badge */}
-                  <div className="p-3 bg-white border border-slate-250 rounded-xl text-[9px] text-slate-400 flex justify-between items-center w-full max-w-full">
+                  <div className={`p-3 border rounded-xl text-[9px] flex justify-between items-center w-full max-w-full transition-colors ${previewItemBg}`}>
                     <span className="truncate">📚 <b>Referans:</b> IARC Monograph Group 2B / WHO Air Quality Guidelines &bull; Sayfa 284</span>
-                    <span className="font-mono text-[7px] uppercase tracking-wider text-cyan-600 font-bold ml-1 flex-shrink-0">VALID SIGNATURE</span>
+                    <span className="font-mono text-[7px] uppercase tracking-wider text-cyan-500 font-bold ml-1 flex-shrink-0">VALID SIGNATURE</span>
                   </div>
 
                 </div>
 
                 {/* Simulated decentralized A4 report footer */}
-                <div className="pt-4 border-t border-slate-350 flex flex-col sm:flex-row justify-between items-start text-[9px] text-slate-500 mt-8 gap-3">
+                <div className={`pt-4 border-t flex flex-col sm:flex-row justify-between items-start text-[9px] mt-8 gap-3 ${isDarkTheme ? 'border-white/10 text-slate-400' : 'border-slate-350 text-slate-500'}`}>
                   <div className="space-y-0.5">
-                    <p className="font-black text-slate-800 uppercase tracking-tight">{translate("project_caption")}</p>
-                    <p className="font-semibold text-slate-500">
+                    <p className={`font-black uppercase tracking-tight ${previewTextPrimary}`}>{translate("project_caption")}</p>
+                    <p className="font-semibold">
                       Halk Sağlığı Anabilim Dalı &bull; Klinik Sürveyans Destek Hattı
                     </p>
-                    <p className="text-[7.5px] text-slate-400 italic">Doğrulama: {verifyHash}</p>
+                    <p className="text-[7.5px] opacity-70 italic">Doğrulama: {verifyHash}</p>
                   </div>
 
                   <div className="text-left sm:text-right space-y-0.5">
-                    <p className="font-black text-cyan-600 uppercase tracking-widest">{translate("team_label")}</p>
-                    <p className="font-semibold text-slate-700">Şehmus AYKUT &bull; Fatma Nur AYKUT &bull; Aghajan MUSALI</p>
+                    <p className="font-black text-cyan-500 uppercase tracking-widest">{translate("team_label")}</p>
+                    <p className={`font-semibold ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>Şehmus AYKUT &bull; Fatma Nur AYKUT &bull; Aghajan MUSALI</p>
                   </div>
                 </div>
 
@@ -977,8 +991,37 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
             max-width: 100% !important;
             box-shadow: none !important;
             margin: 0 !important;
-            padding: 0 !important;
+            padding: 10mm !important;
             border: none !important;
+            background: white !important;
+            color: black !important;
+          }
+          /* Override any inline dynamic backgrounds and borders for high contrast paper print */
+          #print-section div, 
+          #print-section p, 
+          #print-section h1, 
+          #print-section h2, 
+          #print-section span {
+            background: transparent !important;
+            color: black !important;
+            border-color: #cbd5e1 !important;
+          }
+          #print-section .bg-slate-900,
+          #print-section .bg-slate-950,
+          #print-section .bg-slate-[#0b1022],
+          #print-section .bg-[#0b1022]\\/60,
+          #print-section .bg-[#0f172a]\\/80 {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+          }
+          #print-section .text-cyan-400,
+          #print-section .text-cyan-500,
+          #print-section .text-emerald-400 {
+            color: #0284c7 !important;
+          }
+          #print-section .text-rose-500 {
+            color: #b91c1c !important;
+            font-weight: 900 !important;
           }
           .print\\:hidden {
             display: none !important;

@@ -15,6 +15,7 @@ export interface Theme {
   secondary: string;
   accent: string;
   background: string;
+  isDark: boolean;
 }
 
 export const themes: Record<ThemeId, Theme> = {
@@ -25,61 +26,69 @@ export const themes: Record<ThemeId, Theme> = {
     secondary: '#3b82f6', // blue-500
     accent: '#f59e0b', // amber-500
     background: '#f8fafc',
+    isDark: false,
   },
   medical: {
     id: 'medical',
     name: 'Medical Blue',
-    primary: '#1e40af', // blue-800
-    secondary: '#60a5fa',
-    accent: '#10b981', // emerald-500
-    background: '#f0f9ff',
+    primary: '#0f172a',
+    secondary: '#2563eb', // blue-650
+    accent: '#10b981', // emerald-550
+    background: '#f1f5f9',
+    isDark: false,
   },
   public_health: {
     id: 'public_health',
     name: 'Public Health Green',
-    primary: '#064e3b', // emerald-900
+    primary: '#111827',
     secondary: '#10b981',
-    accent: '#f97316', // orange-500
+    accent: '#14b8a6',
     background: '#f0fdf4',
+    isDark: false,
   },
   toxicology: {
     id: 'toxicology',
     name: 'Toxicology Dark',
-    primary: '#000000',
-    secondary: '#ef4444', // red-500
-    accent: '#7c3aed', // violet-600
-    background: '#0a0a0a',
+    primary: '#cbd5e1', // slate-300
+    secondary: '#22d3ee', // cyan-400
+    accent: '#f43f5e', // rose-500
+    background: '#030712', // slate-950
+    isDark: true,
   },
   antalya: {
     id: 'antalya',
-    name: 'Antalya Congress',
-    primary: '#c2410c', // orange-700
-    secondary: '#f97316',
-    accent: '#0369a1', // sky-700
-    background: '#fff7ed',
+    name: 'Midnight Sunset',
+    primary: '#f8fafc',
+    secondary: '#ea580c', // orange-600
+    accent: '#8b5cf6', // violet-500
+    background: '#090514', // dark indigo-990
+    isDark: true,
   },
   minimal: {
     id: 'minimal',
     name: 'Minimal White',
     primary: '#171717',
-    secondary: '#737373',
-    accent: '#000000',
+    secondary: '#171717',
+    accent: '#737373',
     background: '#ffffff',
+    isDark: false,
   },
   emergency: {
     id: 'emergency',
-    name: 'Emergency Red',
-    primary: '#991b1b', // red-800
-    secondary: '#dc2626',
-    accent: '#facc15', // yellow-400
-    background: '#fef2f2',
+    name: 'Emergency Room',
+    primary: '#1c1917',
+    secondary: '#ef4444', // red-500
+    accent: '#eab308', // yellow-500
+    background: '#fff5f5',
+    isDark: false,
   },
   laboratory: {
     id: 'laboratory',
     name: 'Laboratory Purple',
-    primary: '#4c1d95', // violet-900
-    secondary: '#8b5cf6',
-    accent: '#ec4899', // pink-500
+    primary: '#1e1b4b',
+    secondary: '#7c3aed', // violet-600
+    accent: '#db2777', // pink-600
     background: '#f5f3ff',
+    isDark: false,
   }
 };

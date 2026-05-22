@@ -594,21 +594,28 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
                   <div className="bg-slate-950/50 border border-white/5 rounded-2xl p-5 space-y-4">
                     <h4 className="text-xs font-black text-white mb-2">{tLocal("live_preview")}</h4>
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                      {themePresets.map((pr) => (
-                        <button
-                          key={pr.id}
-                          onClick={() => setTheme(pr.id as ThemeId)}
-                          className="flex items-center gap-3 p-3 bg-slate-900/80 hover:bg-slate-800 border border-white/5 rounded-xl text-left cursor-pointer transition-all"
-                        >
-                          <div className={`w-5 h-5 rounded-full ${pr.color} flex-shrink-0 border`} />
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-white truncate">{pr.label}</p>
-                            <p className="text-[8px] text-slate-500 uppercase font-mono">
-                              {pr.id === currentTheme.id ? "ACTIVE" : "SELECT"}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
+                      {themePresets.map((pr) => {
+                        const isActive = pr.id === currentTheme.id;
+                        return (
+                          <button
+                            key={pr.id}
+                            onClick={() => setTheme(pr.id as ThemeId)}
+                            className={`flex items-center gap-3 p-3.5 rounded-xl text-left cursor-pointer transition-all border ${
+                              isActive
+                                ? "bg-white/10 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)] text-white"
+                                : "bg-slate-900/60 hover:bg-slate-800 border-white/5 text-slate-400"
+                            }`}
+                          >
+                            <div className={`w-5 h-5 rounded-full ${pr.color} flex-shrink-0 border`} />
+                            <div className="min-w-0">
+                              <p className={`text-xs font-bold truncate ${isActive ? "text-[#22d3ee]" : "text-white"}`}>{pr.label}</p>
+                              <p className={`text-[8px] uppercase font-mono ${isActive ? "text-cyan-400 font-black" : "text-slate-500"}`}>
+                                {isActive ? "● ACTIVE" : "SELECT"}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -637,6 +644,19 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
                         checked={accessibility.largeText}
                         onChange={(e) => setAccessibility({ largeText: e.target.checked })}
                         className="w-4 h-4 text-cyan-500 rounded focus:ring-cyan-500"
+                      />
+                    </div>
+
+                    <div className="border-t border-white/5 pt-4 flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-black text-white">Bold Medical Font</h4>
+                        <p className="text-[10px] text-slate-500">Enable high readability bold text across panels.</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={accessibility.boldText}
+                        onChange={(e) => setAccessibility({ boldText: e.target.checked })}
+                        className="w-4 h-4 text-cyan-500 rounded focus:ring-cyan-500 cursor-pointer"
                       />
                     </div>
                   </div>
@@ -1077,14 +1097,14 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
                 onChange={(e) => setLanguage(e.target.value as Language)}
                 className="bg-transparent border-none text-xs font-bold text-cyan-400 outline-none cursor-pointer text-right max-w-28"
               >
-                <option value="tr">Türkçe</option>
-                <option value="en">English</option>
-                <option value="ru">Русский</option>
-                <option value="az">Azərbaycan</option>
-                <option value="ar">العربية</option>
-                <option value="de">Deutsch</option>
-                <option value="fr">Français</option>
-                <option value="es">Español</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="az">🇦🇿 Azərbaycan</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="fr">🇫🇷 Français</option>
+                <option value="es">🇪🇸 Español</option>
               </select>
             </div>
 
@@ -1173,6 +1193,44 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
                 type="checkbox"
                 checked={accessibility.highContrast}
                 onChange={(e) => setAccessibility({ highContrast: e.target.checked })}
+                className="w-4 h-4 text-cyan-500 rounded focus:ring-cyan-500"
+              />
+            </div>
+
+            {/* Large Typography */}
+            <div className="flex items-center justify-between p-4 bg-slate-950/15">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+                  <Sliders size={14} />
+                </div>
+                <div>
+                  <span className="text-xs font-black block text-white">Large Typography</span>
+                  <span className="text-[9.5px] text-slate-400">Enlarge lab data & headers</span>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={accessibility.largeText}
+                onChange={(e) => setAccessibility({ largeText: e.target.checked })}
+                className="w-4 h-4 text-cyan-500 rounded focus:ring-cyan-500"
+              />
+            </div>
+
+            {/* Bold Font */}
+            <div className="flex items-center justify-between p-4 bg-slate-950/15">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 bg-violet-600 rounded-lg flex items-center justify-center text-white">
+                  <Palette size={14} />
+                </div>
+                <div>
+                  <span className="text-xs font-black block text-white">Bold Medical Font</span>
+                  <span className="text-[9.5px] text-slate-400">Increase font weight for keys</span>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={accessibility.boldText}
+                onChange={(e) => setAccessibility({ boldText: e.target.checked })}
                 className="w-4 h-4 text-cyan-500 rounded focus:ring-cyan-500"
               />
             </div>
