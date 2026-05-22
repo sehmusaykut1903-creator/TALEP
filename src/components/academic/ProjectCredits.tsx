@@ -28,7 +28,7 @@ export const ProjectCredits: React.FC<ProjectCreditsProps> = ({ variant = 'card'
     <div className={`relative overflow-hidden group rounded-[2.5rem] transition-all duration-300 ${
       variant === 'panel' 
         ? 'bg-slate-900 text-white p-8 md:p-10 border border-slate-800 shadow-2xl' 
-        : 'bg-white/60 backdrop-blur-xl p-8 border border-slate-100/80 shadow-xl shadow-slate-200/50'
+        : 'bg-white p-8 md:p-10 border border-slate-200/80 shadow-2xl shadow-slate-200/40'
     } ${className}`}>
       
       {/* Background Decorative Bio-Molecular Grid */}

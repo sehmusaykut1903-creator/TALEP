@@ -60,6 +60,14 @@
     overflow-y: auto;
   }
 
+  @media (max-width: 767px) {
+    html, body, #root {
+      height: 100% !important;
+      height: 100dvh !important;
+      overflow: hidden !important;
+    }
+  }
+
   * {
     box-sizing: border-box;
   }
@@ -166,6 +174,20 @@
     .ios-tabbar {
       display: none !important;
     }
+  }
+
+  /* Universal Solid lock for the Premium Mobile Navigation Dock */
+  .mobile-nav-dock {
+    position: fixed !important;
+    bottom: 12px !important;
+    bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 2147483640 !important;
+    width: 92% !important;
+    max-width: 480px !important;
+    pointer-events: auto !important;
+    contain: layout style !important;
   }
 
   .text-large { 

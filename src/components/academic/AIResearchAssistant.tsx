@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { MsdsPremiumBanner } from '../MsdsPremiumBanner';
 import { 
   Sparkles, 
   Send, 
@@ -366,6 +367,9 @@ export default function AIResearchAssistant() {
         </div>
 
       </div>
+
+      <MsdsPremiumBanner className="mt-6" />
+
     </div>
   );
 }

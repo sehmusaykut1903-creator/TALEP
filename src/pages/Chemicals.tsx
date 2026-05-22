@@ -22,7 +22,7 @@ export default function Chemicals() {
       <header className="flex flex-col md:flex-row justify-between items-end gap-6">
         <div>
           <h2 className="text-4xl font-black tracking-tight text-slate-900">{t('library')}</h2>
-          <p className="text-slate-500 mt-2 font-medium">TALEP v2.0 MSDS Integrated Toxicology Database</p>
+          <p className="text-slate-650 mt-2 font-semibold">TALEP v4.0 Premium • Uluslararası Akredite MSDS ve Kimyasal Güvenlik Veritabanı</p>
         </div>
         <div className="relative w-full md:w-96">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
@@ -111,8 +111,8 @@ export default function Chemicals() {
 
             <div className="mt-8 p-6 bg-slate-900 rounded-[2rem] relative z-10">
                <div className="flex items-center gap-3 mb-3">
-                  <ShieldAlert size={18} className="text-brand-blue" />
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">MSDS Klinik Özeti</p>
+                  <ShieldAlert size={18} className="text-cyan-400" />
+                  <p className="text-[10px] font-black text-[#06b6d4] uppercase tracking-widest">🛡️ MSDS Güvenlik Protokolü & Klinik Önlemler</p>
                </div>
                <p className="text-sm font-medium text-slate-300 leading-relaxed italic">
                  "{chemical.riskInfo}"

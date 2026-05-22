@@ -92,7 +92,7 @@ export default function SubscriptionPanel({ isModal = false, onClose }: Subscrip
 
   const features = [
     { name: 'Gelişmiş Toksikoloji AI Analizleri', lite: 'Temel (5/gün)', premium: 'Sınırsız (Ultra Mantık)' },
-    { name: 'Kapsamlı Literatür İstihbaratı', lite: 'Kısıtlı Görünüm', premium: 'Sınırsız Erişim (Gerçek Zamanlı)' },
+    { name: 'Kapsamlı Literatür Taraması', lite: 'Kısıtlı Görünüm', premium: 'Sınırsız Erişim (Gerçek Zamanlı)' },
     { name: 'Prof. Dr. VTS Akademik Modeli', lite: 'Devre Dışı', premium: 'Aktif Genomik/Epidemiyoloji' },
     { name: 'PDF Detaylı Rapor Raporlama', lite: 'Filigranlı (3/gün)', premium: 'Sınırsız Profesyonel' },
     { name: 'Klinik Karar Hafızası / Cache', lite: 'Her Oturumda Sıfırlanır', premium: 'Kalıcı & Güvenli Firestore' },

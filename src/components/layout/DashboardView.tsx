@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useSettings } from "../../context/SettingsContext";
+import { MsdsPremiumBanner } from "../MsdsPremiumBanner";
 
 interface Patient {
   id: string;
@@ -47,12 +48,10 @@ export default function DashboardView({
   const isDarkTheme = theme.isDark;
 
   // Card & Text Styles based on theme mode
-  const cardClass = isDarkTheme
-    ? "bg-[#0f172a]/70 border border-white/10 backdrop-blur-xl shadow-2xl rounded-3xl p-6 relative overflow-hidden"
-    : "bg-white border border-slate-200/80 shadow-md backdrop-blur-xl rounded-3xl p-6 relative overflow-hidden";
+  const cardClass = `${theme.cardBg} border backdrop-blur-xl rounded-3xl p-6 relative overflow-hidden transition-all duration-200`;
 
   const textClass = isDarkTheme ? "text-slate-100" : "text-slate-800";
-  const mutedTextClass = isDarkTheme ? "text-slate-400" : "text-slate-500 font-medium";
+  const mutedTextClass = isDarkTheme ? "text-slate-405 text-slate-400" : "text-slate-500 font-medium";
   const titleColor = isDarkTheme ? "text-white" : "text-[#0f172a] font-extrabold";
   const bannerClass = isDarkTheme
     ? "relative overflow-hidden rounded-[2.5rem] border border-cyan-500/30 bg-gradient-to-br from-slate-950 via-slate-900/90 to-[#0c1020] p-6 sm:p-8 md:p-10 shadow-[0_0_40px_rgba(6,182,212,0.15)] group"
@@ -213,34 +212,6 @@ export default function DashboardView({
         </motion.div>
       </div>
 
-      {/* DASHBOARD ABOUT / PROJECT TEAM PRESETS CARD (As explicitly requested by user) */}
-      <div className={isDarkTheme ? "bg-slate-900/40 border border-white/5 p-6 rounded-3xl" : "bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-100/50 p-6 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6"}>
-        <div className="space-y-2">
-          <h3 className="text-sm font-black text-blue-900 dark:text-cyan-400 flex items-center gap-1.5 uppercase">
-            <Award size={16} /> Proje Ekibi & Akademik Kadro
-          </h3>
-          <div className="text-xs space-y-1.5">
-            <p className={textClass}>
-              <strong className="text-blue-900/90 dark:text-slate-300">Proje Ekibi:</strong> Şehmus AYKUT • Fatma Nur AYKUT • Aghajan MUSALI
-            </p>
-            <p className={textClass}>
-              <strong className="text-blue-900/90 dark:text-slate-300">Akademik Danışman:</strong> Prof. Dr. Vugar Ali TÜRKSOY
-            </p>
-            <p className={mutedTextClass}>
-              <strong>Kurum:</strong> Yozgat Bozok Üniversitesi Tıp Fakültesi Halk Sağlığı Anabilim Dalı
-            </p>
-          </div>
-        </div>
-        <div className="border-t md:border-t-0 md:border-l border-blue-200 dark:border-white/5 pt-4 md:pt-0 md:pl-6 text-xs text-slate-500 max-w-xs shrink-0 self-stretch flex flex-col justify-center">
-          <p className="font-bold flex items-center gap-1 text-blue-700 dark:text-cyan-400">
-            <BookOpen size={12} /> Bilgilendirme Notu
-          </p>
-          <p className="text-[11px] mt-1 leading-normal leading-relaxed text-slate-500">
-            TALEP platformu, Yozgat Bozok Üniversitesi Tıp Fakültesi Halk Sağlığı kürsüsünde geliştirilmiş koruyucu karar destek laboratuvar analiz sistemidir.
-          </p>
-        </div>
-      </div>
-
       {/* ACTIVE SURVEILLANCE TABLE AND NEW RECORD FORM */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
@@ -388,6 +359,36 @@ export default function DashboardView({
           </form>
         </div>
 
+      </div>
+
+      <MsdsPremiumBanner />
+
+      {/* DASHBOARD ABOUT / PROJECT TEAM PRESETS CARD (Relocated to bottom) */}
+      <div className={isDarkTheme ? "bg-slate-900/40 border border-white/5 p-6 rounded-3xl mt-6" : "bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-100/50 p-6 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mt-6"}>
+        <div className="space-y-2">
+          <h3 className="text-sm font-black text-blue-900 dark:text-cyan-400 flex items-center gap-1.5 uppercase">
+            <Award size={16} /> Proje Ekibi & Akademik Kadro
+          </h3>
+          <div className="text-xs space-y-1.5">
+            <p className={textClass}>
+              <strong className="text-blue-900/90 dark:text-slate-300">Proje Ekibi:</strong> Şehmus AYKUT • Fatma Nur AYKUT • Aghajan MUSALI
+            </p>
+            <p className={textClass}>
+              <strong className="text-blue-900/90 dark:text-slate-300">Akademik Danışman:</strong> Prof. Dr. Vugar Ali TÜRKSOY
+            </p>
+            <p className={mutedTextClass}>
+              <strong>Kurum:</strong> Yozgat Bozok Üniversitesi Tıp Fakültesi Halk Sağlığı Anabilim Dalı
+            </p>
+          </div>
+        </div>
+        <div className="border-t md:border-t-0 md:border-l border-blue-200 dark:border-white/5 pt-4 md:pt-0 md:pl-6 text-xs text-slate-500 max-w-xs shrink-0 self-stretch flex flex-col justify-center">
+          <p className="font-bold flex items-center gap-1 text-blue-700 dark:text-cyan-400">
+            <BookOpen size={12} /> Bilgilendirme Notu
+          </p>
+          <p className="text-[11px] mt-1 leading-normal leading-relaxed text-slate-500">
+            TALEP platformu, Yozgat Bozok Üniversitesi Tıp Fakültesi Halk Sağlığı kürsüsünde geliştirilmiş koruyucu karar destek laboratuvar analiz sistemidir.
+          </p>
+        </div>
       </div>
 
     </div>

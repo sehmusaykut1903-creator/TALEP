@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { MsdsPremiumBanner } from '../MsdsPremiumBanner';
 import { 
   Flame, 
   AlertTriangle, 
@@ -366,6 +367,8 @@ export default function EmergencyToxicology() {
         </div>
 
       </div>
+
+      <MsdsPremiumBanner className="my-6" />
 
       {/* EMERGENCY SERVICES QUICK CODES */}
       <div className="bg-slate-900 border border-slate-850 p-6 rounded-[2.2rem] text-white flex flex-col md:flex-row justify-between items-center gap-4">

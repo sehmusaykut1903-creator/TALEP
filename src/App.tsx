@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { 
   Activity, 
   Database, 
@@ -136,16 +137,14 @@ export default function App() {
   });
 
   // Base dynamic theme classes
-  const mainShellClass = `min-h-screen w-full flex flex-col md:flex-row antialiased select-none font-sans ${
-    isDarkTheme ? "bg-[#020617] text-[#cbd5e1]" : "bg-slate-50 text-slate-800"
+  const mainShellClass = `h-screen h-[100dvh] md:h-screen w-full flex flex-col md:flex-row antialiased select-none font-sans overflow-hidden transition-all duration-250 ${
+    isDarkTheme ? "text-[#cbd5e1]" : "text-slate-800"
   }`;
 
-  const sidebarBg = isDarkTheme
-    ? "bg-slate-950 font-sans border-r border-[#22d3ee]/10 shadow-2xl"
-    : "bg-[#0f172a] text-white border-r border-slate-200/50 shadow-md";
+  const sidebarBg = `${theme.sidebarBg} font-sans border-r shadow-2xl transition-all duration-250`;
 
   return (
-    <div className={mainShellClass}>
+    <div className={mainShellClass} style={{ backgroundColor: theme.background }}>
       
       {/* Cinematic Soft Ambient Background Lights (Subtle, Apple-like, No heavy neon flickering) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
@@ -165,9 +164,9 @@ export default function App() {
             <div className="relative flex flex-col items-center max-w-sm text-center space-y-4">
               <TalepLogo size="md" variant="glass" />
               <div className="space-y-1">
-                <h2 className={`text-lg font-black tracking-tight ${isDarkTheme ? "text-white" : "text-slate-900"}`}>TALEP v4.0 PREMIUM</h2>
+                <h2 className={`text-lg font-black tracking-[0.15em] ${isDarkTheme ? "text-white" : "text-slate-900"}`}>TALEP</h2>
                 <div className="h-[2px] w-12 bg-blue-600 dark:bg-cyan-400 mx-auto" />
-                <p className="text-[10px] text-slate-400 font-mono tracking-widest uppercase">AKADEMİK TIP PORTALI YENİLENİYOR...</p>
+                <p className="text-[9px] text-slate-400 font-mono tracking-widest uppercase">AKADEMİK TIP PORTALI</p>
               </div>
             </div>
           </motion.div>
@@ -213,31 +212,33 @@ export default function App() {
         md:sticky md:top-0 md:h-screen shrink-0 overflow-y-auto
       `}>
         <div className="space-y-6">
-          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-            <TalepLogo size="md" variant="glass" />
-            <div>
-              <span className="text-sm font-black tracking-widest text-[#22d3ee] uppercase block">
-                TALEP v4.0
+          <div className="flex items-center gap-3 border-b border-black/5 dark:border-white/5 pb-4">
+            <TalepLogo size="md" variant={isDarkTheme ? "glass" : "light"} />
+            <div className="flex flex-col">
+              <span className="text-base font-black tracking-[0.25em] text-[#06b6d4] uppercase block leading-none" style={{ color: theme.secondary }}>
+                TALEP
               </span>
-              <p className="text-[8px] text-slate-400 font-black tracking-widest uppercase">PREMIUM OS</p>
+              <span className="text-[6.5px] text-slate-500 dark:text-slate-400 font-extrabold tracking-[0.03em] uppercase leading-tight mt-1 max-w-[155px]">
+                Toksikolojik Akıllı Laboratuvar Eşleştirme Platformu
+              </span>
             </div>
           </div>
 
           {/* Clinician short bio */}
-          <div className="bg-white/[0.03] p-3 rounded-xl border border-white/5 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-400/20 flex items-center justify-center text-cyan-300 font-black text-xs">
+          <div className="bg-slate-550/10 dark:bg-white/[0.03] p-3 rounded-xl border border-black/5 dark:border-white/5 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-400/20 flex items-center justify-center font-black text-xs shrink-0" style={{ color: theme.secondary, borderColor: theme.secondary + '40' }}>
               ŞA
             </div>
             <div className="overflow-hidden">
-              <span className="text-[11px] font-black text-white block truncate">{sessionUser.displayName}</span>
-              <span className="text-[8.5px] text-slate-400 block truncate leading-none mt-0.5">{sessionUser.department}</span>
+              <span className="text-[11px] font-black text-slate-800 dark:text-white block truncate">{sessionUser.displayName}</span>
+              <span className="text-[8.5px] text-slate-500 dark:text-slate-400 block truncate leading-none mt-0.5">{sessionUser.department}</span>
             </div>
           </div>
 
           {/* Navigation Links */}
           <div className="space-y-4 pt-2">
             <div>
-              <span className="text-[8px] font-black tracking-[0.2em] text-[#06b6d4] pl-2 block mb-1">KLİNİK MODÜLLER</span>
+              <span className="text-[8px] font-black tracking-[0.2em] pl-2 block mb-1" style={{ color: theme.secondary }}>KLİNİK MODÜLLER</span>
               <nav className="space-y-1">
                 {[
                   { id: "pano", label: "Sürveyans / Pano", icon: Activity },
@@ -252,9 +253,10 @@ export default function App() {
                       onClick={() => { setActiveTab(item.id as any); setSidebarOpen(false); }}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left font-bold text-xs transition-all cursor-pointer ${
                         isActive 
-                          ? "bg-blue-600 dark:bg-[#06b6d4] text-white dark:text-slate-950 shadow-md font-extrabold" 
-                          : "text-slate-300 hover:text-white hover:bg-white/5"
+                          ? "shadow-md font-extrabold" 
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
                       }`}
+                      style={isActive ? { backgroundColor: theme.secondary, color: theme.isDark ? '#020617' : '#ffffff' } : {}}
                     >
                       <Icon size={14} />
                       {item.label}
@@ -265,10 +267,10 @@ export default function App() {
             </div>
 
             <div>
-              <span className="text-[8px] font-black tracking-[0.2em] text-[#06b6d4] pl-2 block mb-1">AKADEMİK KATMAN</span>
-              <nav className="space-y-0.5 max-h-[220px] overflow-y-auto pr-1">
+              <span className="text-[8px] font-black tracking-[0.2em] pl-2 block mb-1" style={{ color: theme.secondary }}>AKADEMİK KATMAN</span>
+              <nav className="space-y-0.5 pr-1">
                 {[
-                  { id: "literature", label: "Literatür İstihbaratı", icon: BookOpen },
+                  { id: "literature", label: "Literatür Taraması", icon: BookOpen },
                   { id: "epidemiology", label: "Mesleki Epidemioloji", icon: TrendingUp },
                   { id: "airesearch", label: "AI Araştırma Asistanı", icon: Sparkles },
                   { id: "reports", label: "Raporlama Merkezi", icon: FileText },
@@ -284,9 +286,10 @@ export default function App() {
                       onClick={() => { setActiveTab(item.id as any); setSidebarOpen(false); }}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left font-bold text-xs transition-all cursor-pointer ${
                         isActive 
-                          ? "bg-blue-600 dark:bg-[#06b6d4] text-white dark:text-slate-950 shadow-md font-extrabold" 
-                          : "text-slate-300 hover:text-white hover:bg-white/5"
+                          ? "shadow-md font-extrabold" 
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
                       }`}
+                      style={isActive ? { backgroundColor: theme.secondary, color: theme.isDark ? '#020617' : '#ffffff' } : {}}
                     >
                       <Icon size={14} />
                       {item.label}
@@ -297,7 +300,7 @@ export default function App() {
             </div>
 
             <div>
-              <span className="text-[8px] font-black tracking-[0.2em] text-slate-400 pl-2 block mb-1">DİĞER</span>
+              <span className="text-[8px] font-black tracking-[0.2em] text-slate-400 dark:text-slate-500 pl-2 block mb-1">DİĞER</span>
               <nav className="space-y-1">
                 {[
                   { id: "settings", label: "Sistem Ayarları", icon: Settings },
@@ -311,9 +314,10 @@ export default function App() {
                       onClick={() => { setActiveTab(item.id as any); setSidebarOpen(false); }}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left font-bold text-xs transition-all cursor-pointer ${
                         isActive 
-                          ? "bg-blue-600 dark:bg-[#06b6d4] text-white dark:text-slate-950 shadow-md font-extrabold" 
-                          : "text-slate-300 hover:text-white hover:bg-white/5"
+                          ? "shadow-md font-extrabold" 
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
                       }`}
+                      style={isActive ? { backgroundColor: theme.secondary, color: theme.isDark ? '#020617' : '#ffffff' } : {}}
                     >
                       <Icon size={14} />
                       {item.label}
@@ -332,36 +336,13 @@ export default function App() {
         </div>
       </aside>
 
-      {/* CORE CONTENT LAYOUT WRAPPER (Auto-scrolled, no 100vh locking) */}
-      <div className="flex-1 min-h-screen flex flex-col justify-between relative z-10">
+      {/* CORE CONTENT LAYOUT WRAPPER (Independent scrolling on Desktop and Mobile) */}
+      <div className="flex-1 h-full md:h-screen flex flex-col justify-between relative z-10 overflow-hidden">
         
-        <main className="p-4 sm:p-6 md:p-8 flex-1 space-y-6 max-w-full overflow-x-hidden pb-[140px] md:pb-12">
+        <main className="p-4 sm:p-6 md:p-8 flex-1 space-y-6 max-w-full overflow-x-hidden overflow-y-auto pb-[140px] md:pb-16 flex flex-col min-h-0">
           
-          {/* HEADER BRANDING BANNER */}
-          <div className={`p-5 md:p-6 border border-slate-200/60 dark:border-white/5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3.5 ${
-            isDarkTheme ? "bg-slate-900/30 backdrop-blur-md" : "bg-white shadow-sm"
-          }`}>
-            <div className="space-y-0.5">
-              <span className="text-[9px] font-black tracking-[0.2em] text-blue-600 dark:text-cyan-400 uppercase block">KLİNİK KARAR VE SÜRVEYANS ALGORİTMA PANALİ</span>
-              <h1 className={`text-lg md:text-xl font-extrabold tracking-tight ${isDarkTheme ? "text-white" : "text-slate-900"}`}>
-                {isTr ? "Toksikolojik Vaka Takip & Karar Destek Sistemi" : "Clinical Toxicology Decision Support & Tracking"}
-              </h1>
-              <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
-                <Building size={11} className="text-blue-500 shrink-0" />
-                Yozgat Bozok Üniversitesi Tıp Fakültesi Halk Sağlığı Bölümü
-              </span>
-            </div>
-
-            <div className={`p-2.5 rounded-xl border flex items-center gap-2 ${
-              isDarkTheme ? "bg-slate-950/60 border-white/15 text-slate-300" : "bg-slate-50 border-slate-200/50 text-slate-700 font-semibold"
-            }`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[9px] tracking-widest font-mono uppercase">ONLINE: SECURE</span>
-            </div>
-          </div>
-
           {/* ACTIVE VIEW MANAGER (DYNAMICS) */}
-          <div className="min-h-0 w-full">
+          <div className="min-h-0 w-full flex-1">
             {activeTab === "pano" && (
               <DashboardView 
                 patients={patients} 
@@ -396,100 +377,103 @@ export default function App() {
             {activeTab === "about" && <About />}
           </div>
 
-        </main>
+          {/* ================= ACCESSIBLE INSTITUTIONAL FOOTER ================= */}
+          {activeTab !== "ai" && activeTab !== "settings" && (
+            <footer className={`hidden md:block py-6 px-6 border-t text-center space-y-1.5 shrink-0 z-10 text-xs font-semibold mt-auto -mx-4 sm:-mx-6 md:-mx-8 ${theme.cardBg} border-slate-200/50 dark:border-white/5`}>
+              <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="space-y-1 text-center md:text-left">
+                  <p className="font-black tracking-[0.15em] text-blue-800 dark:text-cyan-300">TALEP</p>
+                  <p className="text-[11px] opacity-80 leading-relaxed leading-normal">
+                    {isTr ? "Proje Ekibi: Şehmus AYKUT, Fatma Nur AYKUT, Aghajan MUSALI" : "Project Team: Şehmus AYKUT, Fatma Nur AYKUT, Aghajan MUSALI"}
+                  </p>
+                  <p className="text-[11px] opacity-80">
+                    {isTr ? "Akademik Danışman: Prof. Dr. Vugar Ali TÜRKSOY" : "Academical Supervisor: Prof. Dr. Vugar Ali TÜRKSOY"}
+                  </p>
+                </div>
+                
+                <div className="text-center md:text-right text-[10.5px] opacity-70">
+                  <p>{isTr ? "Yozgat Bozok Üniversitesi Tıp Fakültesi Halk Sağlığı Anabilim Dalı" : "Yozgat Bozok University Faculty of Medicine"}</p>
+                  <p className="font-bold mt-0.5">2026 • Şehmus Aykut tarafından geliştirilmiştir.</p>
+                </div>
+              </div>
+            </footer>
+          )}
 
-        {/* ================= ACCESSIBLE INSTITUTIONAL FOOTER ================= */}
-        <footer className={`py-6 px-6 border-t text-center space-y-1.5 shrink-0 z-10 w-full text-xs font-semibold ${
-          isDarkTheme ? "bg-[#04060b]/90 border-white/5 text-slate-400" : "bg-white border-slate-200 text-slate-500 shadow-inner"
-        }`}>
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="space-y-1 text-center md:text-left">
-              <p className="font-extrabold text-blue-800 dark:text-cyan-300">TALEP v4.0 Premium CDSS</p>
-              <p className="text-[11px] opacity-80 leading-relaxed leading-normal">
-                {isTr ? "Proje Ekibi: Şehmus AYKUT, Fatma Nur AYKUT, Aghajan MUSALI" : "Project Team: Şehmus AYKUT, Fatma Nur AYKUT, Aghajan MUSALI"}
-              </p>
-              <p className="text-[11px] opacity-80">
-                {isTr ? "Akademik Danışman: Prof. Dr. Vugar Ali TÜRKSOY" : "Academical Supervisor: Prof. Dr. Vugar Ali TÜRKSOY"}
-              </p>
-            </div>
-            
-            <div className="text-center md:text-right text-[10.5px] opacity-70">
-              <p>{isTr ? "Yozgat Bozok Üniversitesi Tıp Fakültesi Halk Sağlığı Anabilim Dalı" : "Yozgat Bozok University Faculty of Medicine"}</p>
-              <p className="font-bold mt-0.5">2026 • Şehmus Aykut tarafından geliştirilmiştir.</p>
-            </div>
-          </div>
-        </footer>
+        </main>
 
       </div>
 
       {/* ================= MOBILE PREMIUM FLOATING NAVIGATION DOCK (Apple-style / Stable) ================= */}
-      <div className="md:hidden fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[100] w-[92%] bg-[#0f172a]/95 border border-white/10 backdrop-blur-3xl rounded-[28px] p-2.5 shadow-xl select-none">
-        
-        {/* Dynamic Academic Popup Panel inside Dock */}
-        <AnimatePresence>
-          {academicMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              className="absolute bottom-16 left-1/2 -translate-x-1/2 w-[95%] bg-slate-900 border border-white/10 rounded-[20px] p-2.5 shadow-2xl z-50 space-y-1 text-white"
-            >
-              {[
-                { id: "epidemiology", label: "Mesleki Epidemiyoloji", icon: TrendingUp },
-                { id: "airesearch", label: "AI Tez / Analizi", icon: Sparkles },
-                { id: "cases", label: "Vaka Arşivi", icon: Users },
-                { id: "exposure", label: "Maruziyet Rejimi", icon: Database },
-                { id: "emergency", label: "Acil Toksikoloji", icon: Flame },
-              ].map(sub => {
-                const isSubActive = activeTab === sub.id;
-                const SubIcon = sub.icon;
-                return (
-                  <button
-                    key={sub.id}
-                    onClick={() => {
-                      setActiveTab(sub.id as any);
-                      setAcademicMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-left transition-all ${
-                      isSubActive ? "bg-blue-600 text-white" : "hover:bg-white/5 text-slate-300"
-                    }`}
-                  >
-                    <SubIcon size={14} />
-                    {sub.label}
-                  </button>
-                )
-              })}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Primary Dock Menu Items */}
-        <div className="flex items-center justify-around w-full">
-          {[
-            { id: "pano", label: "Pano", icon: Activity },
-            { id: "chemicals", label: "Toksik", icon: Database },
-            { id: "ai", label: "TALEP AI", icon: Bot },
-            { id: "academic", label: "Akademik", icon: Sparkles, action: () => setAcademicMenuOpen(!academicMenuOpen) },
-            { id: "settings", label: "Ayarlar", icon: Settings }
-          ].map(dock => {
-            const DockIcon = dock.icon;
-            const isDockActive = activeTab === dock.id || (dock.id === "academic" && ["epidemiology", "airesearch", "cases", "exposure", "emergency"].includes(activeTab));
-            return (
-              <button
-                key={dock.id}
-                onClick={dock.action ? dock.action : () => { setActiveTab(dock.id as any); setAcademicMenuOpen(false); }}
-                className={`flex flex-col items-center justify-center p-1 rounded-xl transition-all relative cursor-pointer min-w-[44px] ${
-                  isDockActive ? "text-cyan-400 scale-105" : "text-slate-400 hover:text-slate-250"
-                }`}
+      {createPortal(
+        <div className={`md:hidden mobile-nav-dock border backdrop-blur-3xl rounded-[28px] p-2.5 shadow-xl select-none transition-all duration-200 ${theme.cardBg} border-black/10 dark:border-white/10`}>
+          
+          {/* Dynamic Academic Popup Panel inside Dock */}
+          <AnimatePresence>
+            {academicMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 15 }}
+                className={`absolute bottom-16 left-1/2 -translate-x-1/2 w-[95%] border rounded-[20px] p-2.5 shadow-2xl z-50 space-y-1 transition-all duration-200 ${theme.cardBg} border-black/10 dark:border-white/10`}
               >
-                <DockIcon size={16} />
-                <span className="text-[7.5px] mt-0.5 font-bold tracking-tight uppercase">{dock.label}</span>
-              </button>
-            )
-          })}
-        </div>
+                {[
+                  { id: "epidemiology", label: "Mesleki Epidemiyoloji", icon: TrendingUp },
+                  { id: "airesearch", label: "AI Tez / Analizi", icon: Sparkles },
+                  { id: "cases", label: "Vaka Arşivi", icon: Users },
+                  { id: "exposure", label: "Maruziyet Rejimi", icon: Database },
+                  { id: "emergency", label: "Acil Toksikoloji", icon: Flame },
+                ].map(sub => {
+                  const isSubActive = activeTab === sub.id;
+                  const SubIcon = sub.icon;
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => {
+                        setActiveTab(sub.id as any);
+                        setAcademicMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-left transition-all ${
+                        isSubActive ? "bg-blue-600 text-white" : "hover:bg-white/5 text-slate-300"
+                      }`}
+                    >
+                      <SubIcon size={14} />
+                      {sub.label}
+                    </button>
+                  )
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-      </div>
+          {/* Primary Dock Menu Items */}
+          <div className="flex items-center justify-around w-full">
+            {[
+              { id: "pano", label: "Pano", icon: Activity },
+              { id: "chemicals", label: "Toksik", icon: Database },
+              { id: "ai", label: "TALEP AI", icon: Bot },
+              { id: "academic", label: "Akademik", icon: Sparkles, action: () => setAcademicMenuOpen(!academicMenuOpen) },
+              { id: "settings", label: "Ayarlar", icon: Settings }
+            ].map(dock => {
+              const DockIcon = dock.icon;
+              const isDockActive = activeTab === dock.id || (dock.id === "academic" && ["epidemiology", "airesearch", "cases", "exposure", "emergency"].includes(activeTab));
+              return (
+                <button
+                  key={dock.id}
+                  onClick={dock.action ? dock.action : () => { setActiveTab(dock.id as any); setAcademicMenuOpen(false); }}
+                  className={`flex flex-col items-center justify-center p-1 rounded-xl transition-all relative cursor-pointer min-w-[44px] ${
+                    isDockActive ? "text-cyan-400 scale-105" : "text-slate-400 hover:text-slate-250"
+                  }`}
+                >
+                  <DockIcon size={16} />
+                  <span className="text-[7.5px] mt-0.5 font-bold tracking-tight uppercase">{dock.label}</span>
+                </button>
+              )
+            })}
+          </div>
+
+        </div>,
+        document.body
+      )}
 
     </div>
   );

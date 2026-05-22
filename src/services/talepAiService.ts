@@ -513,6 +513,21 @@ export function getCasualResponse(question: string): StructuredAiResponse {
   };
 }
 
+function getApiUrl(path: string): string {
+  if (typeof window === "undefined") return path;
+  const origin = window.location.origin;
+  const isLocalOrMobile = origin.startsWith("file://") || 
+                          origin.includes("localhost") || 
+                          origin.includes("127.0.0.1") || 
+                          origin.startsWith("http://10.") || 
+                          origin.startsWith("http://192.");
+  if (isLocalOrMobile) {
+    // Route to the deployed Shared App URL so that APK or other devices can still access the server-side Gemini API!
+    return `https://ais-pre-ak5nokzomltoczrdeqtej7-575613917658.europe-west2.run.app${path}`;
+  }
+  return path;
+}
+
 /**
  * Triggers the full-stack scientific reasoning engine.
  * Contacts the server-side API endpoint secure pipeline or falls back to local database.
@@ -576,7 +591,7 @@ export async function generateScientificReasoning(
   }
 
   try {
-    const res = await fetch("/api/talep-ai/reason", {
+    const res = await fetch(getApiUrl("/api/talep-ai/reason"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

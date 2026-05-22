@@ -52,7 +52,7 @@ export interface PDFReportHubProps {
 // Full 8-language localized content dictionary to guarantee zero runtime translation drops
 const I18N_REPORTS: Record<Language, Record<string, string>> = {
   tr: {
-    wizard_title: "Rapor Sihirbazı v4.0",
+    wizard_title: "Rapor Sihirbazı",
     template_label: "Kurumsal Şablon Modeli",
     patient_params: "Hasta / Sürveyans Parametreleri",
     patient_name: "Hasta Adı Soyadı",
@@ -81,7 +81,7 @@ const I18N_REPORTS: Record<Language, Record<string, string>> = {
     tab_preview: "📜 Rapor Önizleme"
   },
   en: {
-    wizard_title: "Report Wizard v4.0",
+    wizard_title: "Report Wizard",
     template_label: "Corporate Template Model",
     patient_params: "Patient / Surveillance Parameters",
     patient_name: "Attending Patient Name",
@@ -110,7 +110,7 @@ const I18N_REPORTS: Record<Language, Record<string, string>> = {
     tab_preview: "📜 Live Report Preview"
   },
   az: {
-    wizard_title: "Hesabat Sehrbazı v4.0",
+    wizard_title: "Hesabat Sehrbazı",
     template_label: "Korporativ Şablon Modeli",
     patient_params: "Xəstə / Sürveyans Parametrləri",
     patient_name: "Xəstə Adı Soyadı",
@@ -255,7 +255,7 @@ const I18N_REPORTS: Record<Language, Record<string, string>> = {
     tab_preview: "📜 معاينة التقرير"
   },
   es: {
-    wizard_title: "Asistente de Informes v4.0",
+    wizard_title: "Asistente de Informes",
     template_label: "Modelo de Plantilla Corporativa",
     patient_params: "Parámetros del Paciente & Vigilancia",
     patient_name: "Nombre Completo del Paciente",
@@ -688,7 +688,7 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
                 <div className="flex justify-between items-center border-b border-indigo-950 pb-5 relative z-10">
                    <div>
                      <span className="text-[9px] font-black tracking-[0.25em] text-[#0ea5e9] uppercase font-mono">
-                       CONGRESS DECK &bull; TALEP v4.0
+                       CONGRESS DECK &bull; TALEP
                      </span>
                      <p className="text-[#e2e8f0] text-lg font-black mt-1 uppercase tracking-tight">
                        Vaka {generatedReportId} Retrospektif Akıllı Konsültasyonu
@@ -764,7 +764,7 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
                   {/* Institutional Header Block */}
                   <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 pb-4 gap-4 ${isDarkTheme ? 'border-white/10' : 'border-slate-900'}`}>
                     <div className="space-y-1.5 min-w-0 pb-1">
-                      <h1 className="text-sm font-black tracking-[0.25em] text-cyan-500 dark:text-cyan-400 uppercase font-sans">TALEP v4.0</h1>
+                      <h1 className="text-sm font-black tracking-[0.25em] text-cyan-500 dark:text-cyan-400 uppercase font-sans">TALEP</h1>
                       <p className={`text-[10px] uppercase font-sans tracking-tight leading-none ${previewTextPrimary}`}>
                         {translate("project_caption")}
                       </p>

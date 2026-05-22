@@ -2,6 +2,7 @@ import React from "react";
 import { Database, Search } from "lucide-react";
 import { motion } from "motion/react";
 import { useSettings } from "../../context/SettingsContext";
+import { MsdsPremiumBanner } from "../MsdsPremiumBanner";
 
 interface Chemical {
   id: string;
@@ -33,16 +34,14 @@ export default function ChemicalsView({
   const isDarkTheme = theme.isDark;
 
   // Light/Dark classes
-  const cardClass = isDarkTheme
-    ? "bg-slate-900/60 border border-white/10 rounded-[24px] p-6 relative overflow-hidden"
-    : "bg-white border border-slate-200/80 shadow-md rounded-[24px] p-6 relative overflow-hidden";
+  const cardClass = `${theme.cardBg} border rounded-[24px] p-6 relative overflow-hidden transition-all duration-200`;
 
   const titleColor = isDarkTheme ? "text-white" : "text-[#0f172a] font-extrabold";
   const textClass = isDarkTheme ? "text-slate-200" : "text-slate-800";
   const mutedTextClass = isDarkTheme ? "text-slate-400" : "text-slate-500 font-medium";
 
   return (
-    <div className={`backdrop-blur-xl ${isDarkTheme ? 'bg-[#0f172a]/40 border border-cyan-500/10' : 'bg-slate-50/50 border border-slate-250'} rounded-[32px] p-6 sm:p-8 space-y-6 shadow-xl`}>
+    <div className={`backdrop-blur-xl border ${theme.cardBg} rounded-[32px] p-6 sm:p-8 space-y-6 shadow-xl`}>
       
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
@@ -132,6 +131,8 @@ export default function ChemicalsView({
           </div>
         )}
       </div>
+
+      <MsdsPremiumBanner className="mt-8" />
 
     </div>
   );

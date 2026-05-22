@@ -106,7 +106,7 @@ export const translations: Record<Language, any> = {
     overview: "Genel Bakış",
     
     // New Sidebar Modules
-    literature_intelligence: "Literatür İstihbaratı",
+    literature_intelligence: "Literatür Taraması",
     epidemiology: "Mesleki Epidemioloji",
     exposure_db: "Maruziyet Veritabanı",
     case_archive: "Vaka Arşivi",

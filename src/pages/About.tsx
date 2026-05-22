@@ -20,13 +20,9 @@ export default function About() {
   const isDark = theme.isDark;
 
   // Light/Dark classes
-  const containerBg = isDark 
-    ? "bg-slate-950/20 text-slate-100 p-6 sm:p-8 space-y-8" 
-    : "bg-slate-50/50 text-slate-800 p-6 sm:p-8 space-y-8 rounded-[32px] border border-slate-200";
+  const containerBg = `${theme.cardBg} border ${isDark ? "text-slate-100" : "text-slate-800"} p-6 sm:p-8 space-y-8 rounded-[32px] max-w-6xl mx-auto mt-6 mb-12 shadow-2xl transition-all duration-200`;
 
-  const cardClass = isDark
-    ? "bg-slate-900/40 border border-white/5 p-6 rounded-3xl relative overflow-hidden space-y-4"
-    : "bg-white border border-slate-200/80 shadow-md p-6 rounded-3xl relative overflow-hidden space-y-4";
+  const cardClass = `${theme.cardBg} border p-6 rounded-3xl relative overflow-hidden space-y-4 transition-all duration-200`;
 
   const titleColor = isDark ? "text-white" : "text-[#0f172a] font-black";
   const mutedTextClass = isDark ? "text-slate-450" : "text-slate-500 font-medium";
@@ -40,7 +36,7 @@ export default function About() {
     >
       
       {/* SECTION HEADER: E-DEVLET / REPUBLIC OF TURKEY OFFICIAL PORTAL STYLING */}
-      <header className={`border-b-4 ${isDark ? "bg-slate-950/70 border-[#22d3ee]/60" : "bg-white border-red-600 shadow-sm"} rounded-3xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6`}>
+      <header className={`border-b-4 ${theme.cardBg} border-b-[#22d3ee]/60 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 transition-all duration-200`}>
         <div className="flex items-center gap-4">
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-cyan-500/10 text-cyan-400" : "bg-red-50 text-red-600"}`}>
             <Building2 size={32} />

@@ -29,6 +29,11 @@ interface SettingsContextType {
     boldText: boolean;
     highContrast: boolean;
     reducedMotion: boolean;
+    reducedTransparency: boolean;
+    compactMode: boolean;
+    cardDensity: 'low' | 'normal' | 'high';
+    useSystemTheme: boolean;
+    animationQuality: 'low' | 'normal' | 'high';
   };
   setAccessibility: (settings: Partial<SettingsContextType['accessibility']>) => void;
   mode: 'demo' | 'firebase';
@@ -78,17 +83,28 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [themeId, setThemeIdState] = useState<ThemeId>(() => {
-    return (localStorage.getItem('talep_theme') as ThemeId) || 'medical';
+    return (localStorage.getItem('talep_theme') as ThemeId) || 'arctic';
   });
 
   const [accessibility, setAccessibilityState] = useState(() => {
     const saved = localStorage.getItem('talep_accessibility');
-    return saved ? JSON.parse(saved) : { 
+    const defaultVal = { 
       largeText: false, 
       boldText: false, 
       highContrast: false, 
-      reducedMotion: false 
+      reducedMotion: false,
+      reducedTransparency: false,
+      compactMode: false,
+      cardDensity: 'normal' as 'low' | 'normal' | 'high',
+      useSystemTheme: false,
+      animationQuality: 'normal' as 'low' | 'normal' | 'high'
     };
+    if (!saved) return defaultVal;
+    try {
+      return { ...defaultVal, ...JSON.parse(saved) };
+    } catch {
+      return defaultVal;
+    }
   });
 
   const [mode, setModeState] = useState<'demo' | 'firebase'>(() => {
@@ -117,17 +133,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     
     try {
       const parsed = JSON.parse(saved);
-      // Migration: if 'role' exists but 'title' doesn't, or if 'title' is the old value
       if (parsed.role && !parsed.title) {
         parsed.title = parsed.role;
       }
-      
-      // Force update older defaults
       if (parsed.fullName === "Şehmus Aykut" && (parsed.title === "Halk Sağlığı Uzmanı" || !parsed.title)) {
         parsed.title = defaultProfile.title;
       }
-
-      // Ensure all default fields exist
       return { ...defaultProfile, ...parsed };
     } catch (e) {
       return defaultProfile;
@@ -144,7 +155,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('talep_lang', lang);
-    showToast(translations[lang]?.updated || 'Language updated');
+    showToast(translations[lang]?.updated || 'Dil güncellendi');
   };
 
   const setTheme = (id: ThemeId) => {
@@ -193,7 +204,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
        if (result && result[k]) {
           result = result[k];
        } else {
-          // Fallback to TR
+          // Fallback to TR - but strictly only run translations if we exist.
           let trFallback = translations['tr'];
           for (const trK of keys) {
              if (trFallback && trFallback[trK]) {
@@ -211,20 +222,36 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const isRTL = language === 'ar';
 
   useEffect(() => {
-    const currentTheme = themes[themeId];
+    let activeThemeId = themeId;
+    if (accessibility.useSystemTheme) {
+      const wantsDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      activeThemeId = wantsDark ? 'midnight' : 'arctic';
+    }
+
+    const currentTheme = themes[activeThemeId];
     if (currentTheme) {
       document.documentElement.style.setProperty('--brand-primary', currentTheme.primary);
       document.documentElement.style.setProperty('--brand-secondary', currentTheme.secondary);
       document.documentElement.style.setProperty('--brand-accent', currentTheme.accent);
       document.documentElement.style.setProperty('--brand-bg', currentTheme.background);
+      
+      if (currentTheme.isDark) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.style.colorScheme = 'dark';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.style.colorScheme = 'light';
+      }
     }
     
     // Apply contrast and text size classes to body
     document.body.className = `
-      ${accessibility.largeText ? 'text-large' : ''} 
-      ${accessibility.boldText ? 'text-bold' : ''}
+      ${accessibility.largeText ? 'text-large font-medium' : ''} 
+      ${accessibility.boldText ? 'text-bold font-extrabold' : ''}
       ${accessibility.reducedMotion ? 'reduce-motion' : ''}
-      ${accessibility.highContrast ? 'contrast-125' : 'contrast-100'}
+      ${accessibility.reducedTransparency ? 'reduce-transparency' : ''}
+      ${accessibility.compactMode ? 'compact-layout' : ''}
+      ${accessibility.highContrast ? 'contrast-125 saturate-125' : 'contrast-100'}
       ${isRTL ? 'dir-rtl' : 'dir-ltr'}
     `;
     
@@ -235,7 +262,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   return (
     <SettingsContext.Provider value={{ 
       language, setLanguage, 
-      theme: themes[themeId], setTheme,
+      theme: themes[themeId] || themes['arctic'], setTheme,
       accessibility, setAccessibility,
       mode, setMode,
       options, setOption,
