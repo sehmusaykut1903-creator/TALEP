@@ -35,6 +35,7 @@ import EmergencyToxicology from "./components/academic/EmergencyToxicology";
 import DashboardView from "./components/layout/DashboardView";
 import ChemicalsView from "./components/layout/ChemicalsView";
 import About from "./pages/About";
+import Splash from "./pages/Splash";
 import { useSettings } from "./context/SettingsContext";
 
 // Types
@@ -78,12 +79,7 @@ export default function App() {
     department: "Halk Sağlığı Anabilim Dalı"
   });
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoadingScreen(false);
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, []);
+  // Removed automatic timeout to allow the premium onboarding Splash screen with "Platforma Gir" button to act as the gateway
 
   // Shared Patients State
   const [patients, setPatients] = useState<Patient[]>([
@@ -152,24 +148,10 @@ export default function App() {
         {!isDarkTheme && <div className="absolute inset-0 bg-radial-gradient from-blue-500/[0.02] via-[#f0f9ff]/5 to-transparent pointer-events-none" />}
       </div>
 
-      {/* Startup Screen Animation */}
+      {/* Startup Screen Animation (Premium Apple-level Splash Screen) */}
       <AnimatePresence>
         {loadingScreen && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 ${isDarkTheme ? "bg-[#020617]" : "bg-white"}`}
-          >
-            <div className="relative flex flex-col items-center max-w-sm text-center space-y-4">
-              <TalepLogo size="md" variant="glass" />
-              <div className="space-y-1">
-                <h2 className={`text-lg font-black tracking-[0.15em] ${isDarkTheme ? "text-white" : "text-slate-900"}`}>TALEP</h2>
-                <div className="h-[2px] w-12 bg-blue-600 dark:bg-cyan-400 mx-auto" />
-                <p className="text-[9px] text-slate-400 font-mono tracking-widest uppercase">AKADEMİK TIP PORTALI</p>
-              </div>
-            </div>
-          </motion.div>
+          <Splash onFinish={() => setLoadingScreen(false)} />
         )}
       </AnimatePresence>
 

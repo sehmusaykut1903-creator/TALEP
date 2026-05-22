@@ -15,14 +15,14 @@ export const MsdsPremiumBanner: React.FC<{ className?: string }> = ({ className 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-[9.5px] font-black tracking-[0.25em] text-emerald-400 font-mono uppercase leading-none">
-            MSDS LABORATUVAR UYUMLULUĞU
+            MSDS TABANLI FAILSAFE TOKSİKOLOJİK KARARGÜCÜ
           </span>
           <span className="text-[7.5px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded font-black tracking-widest uppercase border border-emerald-400/20">
-            %100 GÜVENLİ
+            FAILSAFE OPERATIONAL
           </span>
         </div>
         <p className="text-[9px] text-slate-300 leading-snug mt-1 font-semibold">
-          Klinik analizler, kimyasal bileşen veritabanı ve laboratuvar eşleştirmeleri Uluslararası Malzeme Güvenlik Bilgi Formu (MSDS) kriterleriyle tam akreditedir.
+          Klinik analizler, kimyasal bileşen veritabanı, koruyucu hekimlik algoritmaları ve laboratuvar eşleştirmeleri Uluslararası Malzeme Güvenlik Bilgi Formu (MSDS) kriterleriyle %100 onaylı ve hataya kapalı (failsafe) karar desteği sunar.
         </p>
       </div>
     </div>

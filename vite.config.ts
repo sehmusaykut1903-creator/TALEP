@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   // Bağıl yollar (relative paths) sayesinde hem yerel sunucuda hem de GitHub Pages alt klasöründe (örn. /talep/ veya /TALEP/) sorunsuz çalışır
-  base: '/TALEP/',
+  base: './', 
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

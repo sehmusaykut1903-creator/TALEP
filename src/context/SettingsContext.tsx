@@ -83,7 +83,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [themeId, setThemeIdState] = useState<ThemeId>(() => {
-    return (localStorage.getItem('talep_theme') as ThemeId) || 'arctic';
+    return (localStorage.getItem('talep_theme') as ThemeId) || 'ivory';
   });
 
   const [accessibility, setAccessibilityState] = useState(() => {
@@ -262,7 +262,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   return (
     <SettingsContext.Provider value={{ 
       language, setLanguage, 
-      theme: themes[themeId] || themes['arctic'], setTheme,
+      theme: themes[themeId] || themes['ivory'], setTheme,
       accessibility, setAccessibility,
       mode, setMode,
       options, setOption,

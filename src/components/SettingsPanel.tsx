@@ -68,8 +68,6 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
     return [
       { id: "tr", name: "Türkçe", flag: "🇹🇷" },
       { id: "en", name: "English", flag: "🇬🇧" },
-      { id: "de", name: "Deutsch", flag: "🇩🇪" },
-      { id: "fr", name: "Français", flag: "🇫🇷" },
     ].find(l => l.id === language) || { id: "tr", name: "Türkçe", flag: "🇹🇷" };
   }, [language]);
 
@@ -168,8 +166,6 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
                     {[
                       { id: "tr", name: "Türkçe", flag: "🇹🇷" },
                       { id: "en", name: "English", flag: "🇬🇧" },
-                      { id: "de", name: "Deutsch", flag: "🇩🇪" },
-                      { id: "fr", name: "Français", flag: "🇫🇷" },
                     ].map(lang => (
                       <button
                         key={lang.id}
@@ -292,6 +288,20 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
                   className="w-4 h-4 rounded text-blue-600 accent-blue-600 scale-110"
                 />
               </div>
+
+              {/* Sistem Temasını Kullan */}
+              <div className="flex items-center justify-between p-3.5 bg-slate-50/50 dark:bg-[#070b14]/40 border border-slate-200/50 dark:border-white/5 rounded-xl">
+                <div className="space-y-0.5">
+                  <span className="text-xs font-bold text-slate-800 dark:text-white block">Sistem Temasını Kullan</span>
+                  <span className="text-[10px] text-slate-405 dark:text-slate-400 block">Cihazın açık/koyu mod ayarlarını otomatik olarak eşleştirir.</span>
+                </div>
+                <input 
+                  type="checkbox"
+                  checked={accessibility.useSystemTheme || false}
+                  onChange={(e) => setAccessibility({ useSystemTheme: e.target.checked })}
+                  className="w-4 h-4 rounded text-blue-600 accent-blue-600 scale-110"
+                />
+              </div>
             </div>
 
             {/* Density Selector */}
@@ -342,17 +352,18 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
           <div className="space-y-6">
             <div>
               <h3 className="text-sm font-bold tracking-tight mb-1 text-slate-900 dark:text-white">Premium Tema & Görünüm Kataloğu</h3>
-              <p className="text-xs text-slate-400">Tek tıkla, sayfa yenilemeden değişen 6 özel tasarlanmış akademik klinik renk şeması.</p>
+              <p className="text-xs text-slate-400">Tek tıkla, sayfa yenilemeden değişen 7 özel tasarlanmış akademik klinik renk şeması (Ana Tema Beyaz).</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 border-t border-slate-100 dark:border-white/10 pt-4">
               {[
-                { id: "arctic", name: "Arctic Clinical", type: "Light Theme", desc: "Zarif, temiz, göz yormayan mavi ve beyaz pürüzsüz tonlar." },
-                { id: "ivory", name: "Ivory Government", type: "Light Theme", desc: "T.C. e-Devlet ve kamu standartlarında klasik kurumsal bej ve yeşil." },
-                { id: "midnight", name: "Midnight Toxicology", type: "Dark Theme", desc: "Derin toksikoloji laboratuvarlarına özgü kontrast elips neon cyan tonlar." },
-                { id: "obsidian", name: "Obsidian AI", type: "Dark Theme", desc: "Kömür karası asistan tonlarıyla saf akılcı yapay zeka deneyimi." },
-                { id: "emerald", name: "Emerald Surveillance", type: "Dark Theme", desc: "Vakaların epidemiyolojik paternlerini ve maruziyet yoğunluğunu süzen yeşil." },
-                { id: "sapphire", name: "Sapphire Intelligence", type: "Dark Theme", desc: "Askeri ve akademik analiz odaları için koyu asil derin safir mavisi." }
+                { id: "ivory", name: "Ivory Clinical (Açık Beyaz)", type: "Light Theme", desc: "Zarif, pürüzsüz, Apple Health tasarımlı tıbbi beyaz arayüz." },
+                { id: "graphite", name: "Graphite Government (Gri)", type: "Light Theme", desc: "Klasik, resmi ve diplomatik kurumsal gri ve yeşil kamu tonları." },
+                { id: "obsidian", name: "Obsidian Core (Siyah)", type: "Dark Theme", desc: "Kömür karası asistan tonlarıyla saf akılcı yapay zeka deneyimi." },
+                { id: "navy", name: "Navy Intelligence (Lacivert)", type: "Dark Theme", desc: "Akademik derin analiz odaları için koyu asil derin lacivert tonlar." },
+                { id: "crimson", name: "Crimson Emergency (Kırmızı)", type: "Dark Theme", desc: "Kırmızı tonları taşıyan acil servis ve yüksek kontrast acil tıp teması." },
+                { id: "emerald", name: "Emerald Toxicology (Yeşil)", type: "Dark Theme", desc: "Kimyasal maruziyet ve toksikolojik laboratuvar alarm tonları." },
+                { id: "sapphire", name: "Sapphire Medical (Mavi)", type: "Dark Theme", desc: "Güven verici ve temiz tıbbi derin safir mavisi medikal tasarımı." }
               ].map(th => {
                 const isActive = currentThemeId === th.id;
                 return (
