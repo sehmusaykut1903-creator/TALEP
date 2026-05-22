@@ -1,20 +1,15 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { fileURLToPath } from 'url';
+import react from '@vitejs/plugin-react';
 import path from 'path';
-
-// ESM mimarisinde __dirname hatasını (tanımsızlık çökmesini) önleyen modern JavaScript köprüsü
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // GitHub Pages alt klasör yapısıyla (%100 küçük harf) tam eşleşen mutlak sunucu tabanı
-  base: '/talep/', 
+  // Bağıl yollar (relative paths) sayesinde hem yerel sunucuda hem de GitHub Pages alt klasöründe (örn. /talep/ veya /TALEP/) sorunsuz çalışır
+  base: './', 
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, '.'),
     },
   },
   server: {
@@ -25,10 +20,9 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     emptyOutDir: true,
-    sourcemap: false,
     rollupOptions: {
       output: {
-        // Varlıkların /talep/assets/ klasöründe hatasız haritalanmasını sağlayan kilit üretim şeması
+        // Derleme çıktılarının relative (bağıl) biçimde ./assets/ klasöründe kilitlenmesini sağlar
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
@@ -40,7 +34,7 @@ export default defineConfig({
             if (id.includes('lucide') || id.includes('lucide-react')) {
               return 'vendor-lucide';
             }
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom') || id.includes('motion')) {
               return 'vendor-react';
             }
             if (id.includes('recharts') || id.includes('d3')) {
