@@ -27,7 +27,7 @@ import {
   Flame,
   Briefcase
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import TalepLogo from "./components/TalepLogo";
 import ProjectCredits from "./components/academic/ProjectCredits";
 import TalepAI from "./pages/TalepAI";
