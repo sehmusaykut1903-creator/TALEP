@@ -302,6 +302,28 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
 
   // Matrix collapsible state
   const [isMatrixExpanded, setIsMatrixExpanded] = useState(false);
+  
+  // Recent Searches History Panel State
+  const [recentSearches, setRecentSearches] = useState<any[]>(() => {
+    try {
+      const stored = localStorage.getItem('talep_recent_searches');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleSaveToRecentSearches = () => {
+    const currentAssessment = {
+      id: generatedReportId,
+      name: patientName,
+      template: template,
+      date: new Date().toLocaleString()
+    };
+    const updated = [currentAssessment, ...recentSearches].slice(0, 10);
+    setRecentSearches(updated);
+    localStorage.setItem('talep_recent_searches', JSON.stringify(updated));
+  };
 
   // Active Template Mode
   const [template, setTemplate] = useState<'HOSPITAL' | 'WHO' | 'ACADEMIC' | 'EMERGENCY' | 'EPIDEMIOLOGY' | 'EXPOSURE' | 'LABORATORY' | 'LITERATURE'>('HOSPITAL');
@@ -664,6 +686,31 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
                   <TrendingUp size={12} className="text-amber-400" />
                   {translate("presentation_btn")}
                 </button>
+              </div>
+
+              {/* Added Recent Searches Saving & Panel */}
+              <div className="border border-white/10 p-3 rounded-xl bg-slate-950/40">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[10px] font-black tracking-widest uppercase text-slate-400">Önceki Aramalar</span>
+                  <button 
+                    onClick={handleSaveToRecentSearches}
+                    className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-1 rounded-lg text-[9px] font-bold uppercase transition hover:bg-cyan-500 hover:text-slate-900 cursor-pointer"
+                  >
+                    💾 Kaydet
+                  </button>
+                </div>
+                <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                  {recentSearches.length === 0 ? (
+                     <div className="text-[9px] text-slate-500 italic">Kayıtlı arama geçmişi yok.</div>
+                  ) : (
+                     recentSearches.map(s => (
+                       <div key={s.id} className="text-[9px] flex flex-col p-1.5 border border-white/5 rounded-md bg-white/5 cursor-pointer hover:bg-white/10">
+                          <span className="font-bold text-slate-300">{s.name} - {s.template}</span>
+                          <span className="text-slate-500">{s.date}</span>
+                       </div>
+                     ))
+                  )}
+                </div>
               </div>
             </div>
 

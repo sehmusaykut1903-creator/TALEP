@@ -359,27 +359,7 @@ export default function App() {
             {activeTab === "about" && <About />}
           </div>
 
-          {/* ================= ACCESSIBLE INSTITUTIONAL FOOTER ================= */}
-          {activeTab !== "ai" && activeTab !== "settings" && (
-            <footer className={`hidden md:block py-6 px-6 border-t text-center space-y-1.5 shrink-0 z-10 text-xs font-semibold mt-auto -mx-4 sm:-mx-6 md:-mx-8 ${theme.cardBg} border-slate-200/50 dark:border-white/5`}>
-              <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="space-y-1 text-center md:text-left">
-                  <p className="font-black tracking-[0.15em] text-blue-800 dark:text-cyan-300">TALEP</p>
-                  <p className="text-[11px] opacity-80 leading-relaxed leading-normal">
-                    {isTr ? "Proje Ekibi: Şehmus AYKUT, Fatma Nur AYKUT, Aghajan MUSALI" : "Project Team: Şehmus AYKUT, Fatma Nur AYKUT, Aghajan MUSALI"}
-                  </p>
-                  <p className="text-[11px] opacity-80">
-                    {isTr ? "Akademik Danışman: Prof. Dr. Vugar Ali TÜRKSOY" : "Academical Supervisor: Prof. Dr. Vugar Ali TÜRKSOY"}
-                  </p>
-                </div>
-                
-                <div className="text-center md:text-right text-[10.5px] opacity-70">
-                  <p>{isTr ? "Yozgat Bozok Üniversitesi Tıp Fakültesi Halk Sağlığı Anabilim Dalı" : "Yozgat Bozok University Faculty of Medicine"}</p>
-                  <p className="font-bold mt-0.5">2026 • Şehmus Aykut tarafından geliştirilmiştir.</p>
-                </div>
-              </div>
-            </footer>
-          )}
+
 
         </main>
 

@@ -23,7 +23,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { TalepLogo } from '../components/TalepLogo';
-import { ProjectCredits } from '../components/academic/ProjectCredits';
+
 
 export default function Login() {
   const navigate = useNavigate();
@@ -296,17 +296,7 @@ export default function Login() {
 
       </div>
 
-      {/* FOOTER: Fixed Academic Affiliation Credits & Team Names */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between text-[11px] font-bold text-slate-400 border-t border-slate-200/40 pt-4 gap-3 pointer-events-none">
-        <div>
-          TALEP v4.0 PREMIUM • Yozgat Bozok Üniversitesi Tıp Fakültesi
-        </div>
-        <div className="flex gap-4">
-          <span>Şehmus AYKUT</span>
-          <span>Fatma Nur AYKUT</span>
-          <span>Aghajan MUSALI</span>
-        </div>
-      </div>
+
 
     </div>
   );

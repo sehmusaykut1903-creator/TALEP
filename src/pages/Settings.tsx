@@ -31,7 +31,7 @@ import { useAuth } from '../context/AuthContext';
 import { themes, ThemeId } from '../themes/themes';
 import { Language } from '../i18n/translations';
 import { TalepLogo } from '../components/TalepLogo';
-import { ProjectCredits } from '../components/academic/ProjectCredits';
+
 import SubscriptionPanel from '../components/premium/SubscriptionPanel';
 
 export default function Settings() {
@@ -575,7 +575,7 @@ export default function Settings() {
             </div>
 
             <div className="space-y-6 pt-10 border-t border-slate-100">
-               <ProjectCredits variant="card" />
+               
             </div>
 
             <div className="text-center opacity-35 pt-4">

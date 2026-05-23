@@ -1,11 +1,15 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { defineConfig } from 'vite';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export default defineConfig({
-  // Bağıl yollar (relative paths) sayesinde hem yerel sunucuda hem de GitHub Pages alt klasöründe (örn. /talep/ veya /TALEP/) sorunsuz çalışır
-  base: './', 
+  // Bağıl yollar (relative paths) yerine /talep/ (GitHub pages repository name)
+  base: '/talep/', 
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
@@ -22,7 +26,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        // Derleme çıktılarının relative (bağıl) biçimde ./assets/ klasöründe kilitlenmesini sağlar
+        // Derleme çıktılarının cache sorunu yaratmaması için name-hash kuralı
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',

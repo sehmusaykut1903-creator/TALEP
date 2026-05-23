@@ -36,7 +36,7 @@ import { useFirebaseSync } from '../context/FirebaseSyncContext';
 import { updates } from '../data/updates';
 import { generateTalepAIResponse } from '../services/talepAiService';
 import { TalepLogo } from '../components/TalepLogo';
-import { ProjectCredits } from '../components/academic/ProjectCredits';
+
 
 export default function Dashboard() {
   const { t, theme, profile } = useSettings();
@@ -377,7 +377,7 @@ export default function Dashboard() {
       </div>
 
       {/* Elegant academic project credits section */}
-      <ProjectCredits variant="card" className="w-full mt-10 bg-white/40" />
+      
     </motion.div>
   );
 }

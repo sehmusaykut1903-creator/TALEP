@@ -1,4 +1,4 @@
-import React, { StrictMode } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App';
@@ -8,15 +8,13 @@ import { SettingsProvider } from './context/SettingsContext';
 import { AuthProvider } from './context/AuthContext';
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <SettingsProvider>
-        <AuthProvider>
-          <HashRouter>
-            <App />
-          </HashRouter>
-        </AuthProvider>
-      </SettingsProvider>
-    </ErrorBoundary>
-  </StrictMode>
+  <ErrorBoundary>
+    <SettingsProvider>
+      <AuthProvider>
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </AuthProvider>
+    </SettingsProvider>
+  </ErrorBoundary>
 );
