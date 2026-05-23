@@ -38,7 +38,7 @@ jobs:
 
       - name: Build platform 🏗️
         env:
-          VITE_BASE_PATH: /talep/
+          VITE_BASE_PATH: /TALEP/
         run: npm run build
 
       - name: Setup Pages ⚙️
