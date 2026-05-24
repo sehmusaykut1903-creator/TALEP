@@ -786,8 +786,8 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
                     <p className="font-semibold text-slate-400">Prof. Dr. Vugar Ali TÜRKSOY Akademik Denetimi</p>
                   </div>
                   <div className="text-left sm:text-right">
-                    <p className="font-black text-cyan-400 uppercase tracking-wider">{translate("team_label")}</p>
-                    <p className="font-bold text-slate-400">Şehmus AYKUT &bull; Fatma Nur AYKUT &bull; Aghajan MUSALI</p>
+                    <p className="font-black text-cyan-400 uppercase tracking-wider">ONAY SİSTEMİ</p>
+                    <p className="font-bold text-slate-400">Elektronik İmzalıdır</p>
                   </div>
                 </div>
               </div>
@@ -1007,8 +1007,8 @@ export const PDFReportHub: React.FC<PDFReportHubProps> = ({ caseData, onClose })
                   </div>
 
                   <div className="text-left sm:text-right space-y-0.5">
-                    <p className="font-black text-cyan-500 uppercase tracking-widest">{translate("team_label")}</p>
-                    <p className={`font-semibold ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>Şehmus AYKUT &bull; Fatma Nur AYKUT &bull; Aghajan MUSALI</p>
+                    <p className="font-black text-cyan-500 uppercase tracking-widest">ONAY SİSTEMİ</p>
+                    <p className={`font-semibold ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>Elektronik İmzalıdır</p>
                   </div>
                 </div>
 

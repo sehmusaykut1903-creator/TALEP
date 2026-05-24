@@ -37,18 +37,9 @@ import ChemicalsView from "./components/layout/ChemicalsView";
 import About from "./pages/About";
 import Splash from "./pages/Splash";
 import { useSettings } from "./context/SettingsContext";
+import { scientificDatabase, ScientificToxin } from "./data/scientificDatabase";
 
 // Types
-interface Chemical {
-  id: string;
-  cas: string;
-  name: string;
-  class: "İnhalasyon" | "Ağır Metal" | "Organofosfat" | "İlaç Etken Maddesi" | "Deri/Korozif";
-  limit: string;
-  triage: string;
-  antidote: string;
-}
-
 interface Patient {
   id: string;
   name: string;
@@ -64,6 +55,12 @@ export default function App() {
   const { theme, t, language } = useSettings();
   const isTr = language === "tr";
   const isDarkTheme = theme.isDark;
+
+  // Labels Helper
+  const getLabel = (key: string, fallback: string) => {
+    const val = t(key);
+    return (val === key || !val) ? fallback : val;
+  };
 
   // Navigation: state-based tab layout for flawless performance on static servers/GitHub Pages
   const [activeTab, setActiveTab] = useState<"pano" | "chemicals" | "ai" | "literature" | "epidemiology" | "reports" | "airesearch" | "cases" | "exposure" | "emergency" | "settings" | "about">("pano");
@@ -93,14 +90,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState("Tümü");
 
-  const chemicalsData: Chemical[] = [
-    { id: "C-01", cas: "56-38-2", name: "Paration (Organofosfat Antikolinesteraz)", class: "Organofosfat", limit: "TWA 0.1 mg/m³", triage: "Kolinerjik Sendrom: Aşırı sekresyon, miyozis, bradikardi. Acil havayolu emniyeti alın.", antidote: "Atropin Sülfat + Pralidoksim (2-PAM)" },
-    { id: "C-02", cas: "630-08-0", name: "Karbonmonoksit (CO Gazı)", class: "İnhalasyon", limit: "TWA 25 ppm / STEL 50 ppm", triage: "Karboksihemoglobinem: Baş ağrısı, konfüzyon, kiraz kırmızısı mukozalar.", antidote: "%100 Normobarik Oksijen / Gerekirse Hiperbarik Oksijen" },
-    { id: "C-03", cas: "7439-92-1", name: "Kurşun (İnorganik Toz/Duman)", class: "Ağır Metal", limit: "TWA 0.05 mg/m³ (Kan seviyesi >40 µg/dL)", triage: "Plumbizm: Karın ağrısı, mikrositer anemi, periferik nöropati (düşük el).", antidote: "Kalsiyum Disodyum EDTA / DMSA" },
-    { id: "C-04", cas: "103-90-2", name: "Parasetamol (Asetaminofen)", class: "İlaç Etken Maddesi", limit: "Günlük Maksimum 4g Dozu Aşımı", triage: "Hepatotoksisite riski. 4. ve 16. saat plazma düzeylerini Rumack-Matthew nomogramına göre değerlendirin.", antidote: "N-Asetilsistein (NAC) Protokolü" },
-    { id: "C-05", cas: "7664-39-3", name: "Hidroflorik Asit (HF Reaksiyon)", class: "Deri/Korozif", limit: "Ceiling 3 ppm", triage: "Derin doku erozyonu ve hipokalsemi. Dokularda şiddetli kalsiyum fiksasyonu.", antidote: "Kalsiyum Glukonat %2.5 Jel veya Subkutan Enjeksiyon" },
-    { id: "C-06", cas: "115-29-7", name: "Endosülfan (Organoklorlu Pestisit)", class: "Organofosfat", limit: "TWA 0.1 mg/m³ (Deri)", triage: "SSS stimülasyonu, dirençli jeneralize konvülsiyonlar.", antidote: "Semptomatik / Benzodiyazepinler (Spesifik antidotu yoktur)" }
-  ];
+  const chemicalsData: ScientificToxin[] = scientificDatabase;
 
   const handleAddPatient = (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,7 +118,11 @@ export default function App() {
   const filteredChemicals = chemicalsData.filter(chem => {
     const matchesSearch = chem.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           chem.cas.includes(searchQuery);
-    const matchesClass = classFilter === "Tümü" || chem.class === classFilter;
+    
+    // For now we map sectors or exposureRoutes to class to emulate previous filters
+    const matchesClass = classFilter === "Tümü" || 
+                         chem.exposureRoutes.some(r => r.includes(classFilter)) ||
+                         chem.sectors.some(s => s.includes(classFilter));
     return matchesSearch && matchesClass;
   });
 
@@ -163,7 +157,7 @@ export default function App() {
           <TalepLogo size="sm" variant="glass" />
           <div>
             <span className="text-xs font-black tracking-widest text-cyan-400 dark:text-cyan-300">TALEP OS</span>
-            <p className="text-[8px] text-slate-400 font-bold uppercase">Yozgat Bozok Üniversitesi</p>
+            <p className="text-[7.5px] text-slate-400/90 font-bold tracking-[0.03em] uppercase mt-[1px]">2026 Şehmus Aykut Tarafından Geliştirilmiştir - YOBÜ Tıp Fakültesi</p>
           </div>
         </div>
         <button 
@@ -189,43 +183,45 @@ export default function App() {
 
       {/* SIDEBAR NAVIGATION PANEL (Desktop & Mobile Drawer in harmony) */}
       <aside className={`
-        fixed inset-y-0 left-0 z-45 w-[80dvw] sm:w-[320px] md:w-64 lg:w-72 p-5 ${sidebarBg} flex flex-col justify-between transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-45 w-[88%] max-w-[340px] md:w-[280px] lg:w-[320px] p-6 pb-[120px] md:pb-6 ${sidebarBg} flex flex-col justify-between transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        md:sticky md:top-0 md:h-screen shrink-0 overflow-y-auto
+        md:sticky md:top-0 md:h-screen shrink-0 overflow-y-auto scrollbar-hide
       `}>
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 border-b border-black/5 dark:border-white/5 pb-4">
-            <TalepLogo size="md" variant={isDarkTheme ? "glass" : "light"} />
+        <div className="space-y-8">
+          <div className="flex items-center gap-4 border-b border-black/5 dark:border-white/5 pb-5">
+            <div className="p-1 rounded-2xl bg-white/5 shadow-sm border border-white/10">
+              <TalepLogo size="md" variant={isDarkTheme ? "glass" : "light"} />
+            </div>
             <div className="flex flex-col">
-              <span className="text-base font-black tracking-[0.25em] text-[#06b6d4] uppercase block leading-none" style={{ color: theme.secondary }}>
+              <span className="text-xl font-black tracking-[0.25em] text-[#06b6d4] uppercase block leading-none" style={{ color: theme.secondary }}>
                 TALEP
               </span>
-              <span className="text-[6.5px] text-slate-500 dark:text-slate-400 font-extrabold tracking-[0.03em] uppercase leading-tight mt-1 max-w-[155px]">
+              <span className="text-[7.5px] text-slate-500 dark:text-slate-400 font-extrabold tracking-[0.03em] uppercase leading-tight mt-1.5 max-w-[155px]">
                 Toksikolojik Akıllı Laboratuvar Eşleştirme Platformu
               </span>
             </div>
           </div>
 
           {/* Clinician short bio */}
-          <div className="bg-slate-550/10 dark:bg-white/[0.03] p-3 rounded-xl border border-black/5 dark:border-white/5 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-400/20 flex items-center justify-center font-black text-xs shrink-0" style={{ color: theme.secondary, borderColor: theme.secondary + '40' }}>
+          <div className="bg-slate-500/5 dark:bg-white/[0.02] p-4 rounded-2xl border border-black/5 dark:border-white/5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-[10px] bg-blue-500/10 border border-blue-400/20 flex items-center justify-center font-black text-sm shrink-0 shadow-inner" style={{ color: theme.secondary, borderColor: theme.secondary + '40' }}>
               ŞA
             </div>
             <div className="overflow-hidden">
-              <span className="text-[11px] font-black text-slate-800 dark:text-white block truncate">{sessionUser.displayName}</span>
-              <span className="text-[8.5px] text-slate-500 dark:text-slate-400 block truncate leading-none mt-0.5">{sessionUser.department}</span>
+              <span className="text-xs font-black text-slate-800 dark:text-white block truncate tracking-tight">{sessionUser.displayName}</span>
+              <span className="text-[9px] text-slate-500 dark:text-slate-400 block truncate leading-tight mt-1 font-medium">{sessionUser.department}</span>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <div className="space-y-4 pt-2">
+          <div className="space-y-6 pt-2">
             <div>
-              <span className="text-[8px] font-black tracking-[0.2em] pl-2 block mb-1" style={{ color: theme.secondary }}>KLİNİK MODÜLLER</span>
-              <nav className="space-y-1">
+              <span className="text-[9px] font-black tracking-[0.25em] pl-3 block mb-3 opacity-90 text-slate-500 dark:text-slate-400">{getLabel('clinical_modules', 'KLİNİK MODÜLLER')}</span>
+              <nav className="space-y-1.5">
                 {[
-                  { id: "pano", label: "Sürveyans / Pano", icon: Activity },
-                  { id: "chemicals", label: "Toksikoloji DB", icon: Database },
-                  { id: "ai", label: "TALEP Klinik AI", icon: Bot },
+                  { id: "pano", label: getLabel('surveillance_dashboard', 'Sürveyans / Pano'), icon: Activity },
+                  { id: "chemicals", label: getLabel('toxicology_db', 'Toksikoloji Veritabanı'), icon: Database },
+                  { id: "ai", label: getLabel('clinical_ai', 'TALEP Klinik AI'), icon: Bot },
                 ].map(item => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
@@ -233,14 +229,20 @@ export default function App() {
                     <button
                       key={item.id}
                       onClick={() => { setActiveTab(item.id as any); setSidebarOpen(false); }}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left font-bold text-xs transition-all cursor-pointer ${
+                      className={`relative w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-left text-[13px] transition-all cursor-pointer overflow-hidden group ${
                         isActive 
-                          ? "shadow-md font-extrabold" 
-                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                          ? "font-black shadow-md bg-white dark:bg-white/10" 
+                          : "font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
                       }`}
-                      style={isActive ? { backgroundColor: theme.secondary, color: theme.isDark ? '#020617' : '#ffffff' } : {}}
+                      style={isActive ? { color: theme.secondary } : {}}
                     >
-                      <Icon size={14} />
+                      {isActive && (
+                        <div 
+                          className="absolute left-0 top-2 bottom-2 w-1.5 rounded-r-md shadow-sm" 
+                          style={{ backgroundColor: theme.secondary }} 
+                        />
+                      )}
+                      <Icon size={18} strokeWidth={isActive ? 2.5 : 2} className={isActive ? "" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors"} />
                       {item.label}
                     </button>
                   );
@@ -249,16 +251,16 @@ export default function App() {
             </div>
 
             <div>
-              <span className="text-[8px] font-black tracking-[0.2em] pl-2 block mb-1" style={{ color: theme.secondary }}>AKADEMİK KATMAN</span>
-              <nav className="space-y-0.5 pr-1">
+              <span className="text-[9px] font-black tracking-[0.25em] pl-3 block mb-3 opacity-90 text-slate-500 dark:text-slate-400">{getLabel('academic_layer', 'AKADEMİK KATMAN')}</span>
+              <nav className="space-y-1.5 pr-1">
                 {[
-                  { id: "literature", label: "Literatür Taraması", icon: BookOpen },
-                  { id: "epidemiology", label: "Mesleki Epidemioloji", icon: TrendingUp },
-                  { id: "airesearch", label: "AI Araştırma Asistanı", icon: Sparkles },
-                  { id: "reports", label: "Raporlama Merkezi", icon: FileText },
-                  { id: "cases", label: "Vaka Arşiv Sistemi", icon: Users },
-                  { id: "exposure", label: "Maruziyet Veritabanı", icon: Database },
-                  { id: "emergency", label: "Acil Toksikoloji", icon: Flame },
+                  { id: "literature", label: getLabel('literature_review', 'Literatür Taraması'), icon: BookOpen },
+                  { id: "epidemiology", label: getLabel('occupational_epidem', 'Mesleki Epidemiyoloji'), icon: TrendingUp },
+                  { id: "airesearch", label: getLabel('ai_research', 'AI Araştırma Asistanı'), icon: Sparkles },
+                  { id: "reports", label: getLabel('reporting_center', 'Raporlama Merkezi'), icon: FileText },
+                  { id: "cases", label: getLabel('case_archive', 'Vaka Arşiv Sistemi'), icon: Users },
+                  { id: "exposure", label: getLabel('exposure_database', 'Maruziyet Veritabanı'), icon: Database },
+                  { id: "emergency", label: getLabel('emergency_tox', 'Acil Toksikoloji'), icon: Flame },
                 ].map(item => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
@@ -266,14 +268,20 @@ export default function App() {
                     <button
                       key={item.id}
                       onClick={() => { setActiveTab(item.id as any); setSidebarOpen(false); }}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left font-bold text-xs transition-all cursor-pointer ${
+                      className={`relative w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-left text-[13px] transition-all cursor-pointer overflow-hidden group ${
                         isActive 
-                          ? "shadow-md font-extrabold" 
-                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                          ? "font-black shadow-md bg-white dark:bg-white/10" 
+                          : "font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
                       }`}
-                      style={isActive ? { backgroundColor: theme.secondary, color: theme.isDark ? '#020617' : '#ffffff' } : {}}
+                      style={isActive ? { color: theme.secondary } : {}}
                     >
-                      <Icon size={14} />
+                      {isActive && (
+                        <div 
+                          className="absolute left-0 top-2 bottom-2 w-1.5 rounded-r-md shadow-sm" 
+                          style={{ backgroundColor: theme.secondary }} 
+                        />
+                      )}
+                      <Icon size={18} strokeWidth={isActive ? 2.5 : 2} className={isActive ? "" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors"} />
                       {item.label}
                     </button>
                   );
@@ -281,12 +289,12 @@ export default function App() {
               </nav>
             </div>
 
-            <div>
-              <span className="text-[8px] font-black tracking-[0.2em] text-slate-400 dark:text-slate-500 pl-2 block mb-1">DİĞER</span>
-              <nav className="space-y-1">
+            <div className="pt-2 border-t border-black/5 dark:border-white/5">
+              <span className="text-[9px] font-black tracking-[0.25em] pl-3 block mb-3 opacity-90 text-slate-500 dark:text-slate-400">{getLabel('other', 'DİĞER')}</span>
+              <nav className="space-y-1.5">
                 {[
-                  { id: "settings", label: "Sistem Ayarları", icon: Settings },
-                  { id: "about", label: isTr ? "Hakkında" : "About", icon: Info },
+                  { id: "settings", label: getLabel('system_settings', 'Sistem Ayarları'), icon: Settings },
+                  { id: "about", label: getLabel('about', 'Hakkında'), icon: Info },
                 ].map(item => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
@@ -294,14 +302,20 @@ export default function App() {
                     <button
                       key={item.id}
                       onClick={() => { setActiveTab(item.id as any); setSidebarOpen(false); }}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left font-bold text-xs transition-all cursor-pointer ${
+                      className={`relative w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-left text-[13px] transition-all cursor-pointer overflow-hidden group ${
                         isActive 
-                          ? "shadow-md font-extrabold" 
-                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                          ? "font-black shadow-md bg-white dark:bg-white/10" 
+                          : "font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
                       }`}
-                      style={isActive ? { backgroundColor: theme.secondary, color: theme.isDark ? '#020617' : '#ffffff' } : {}}
+                      style={isActive ? { color: theme.secondary } : {}}
                     >
-                      <Icon size={14} />
+                      {isActive && (
+                        <div 
+                          className="absolute left-0 top-2 bottom-2 w-1.5 rounded-r-md shadow-sm"
+                          style={{ backgroundColor: theme.secondary }}
+                        />
+                      )}
+                      <Icon size={18} strokeWidth={isActive ? 2.5 : 2} className={isActive ? "" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors"} />
                       {item.label}
                     </button>
                   );
@@ -312,16 +326,16 @@ export default function App() {
         </div>
 
         {/* Sidebar Institutional Footer */}
-        <div className="pt-4 mt-6 border-t border-white/5 text-[9px] text-slate-400 space-y-0.5">
-          <p className="font-bold text-blue-400 dark:text-cyan-400 uppercase">Yozgat Bozok Üniversitesi</p>
-          <p>Tıp Fakültesi Halk Sağlığı Anabilim Dalı</p>
+        <div className="pt-5 mt-8 border-t border-black/5 dark:border-white/5 text-[10px] text-slate-500 space-y-1 font-medium">
+          <p className="font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest text-[9px]">Yozgat Bozok Üniversitesi</p>
+          <p className="opacity-80">Tıp Fakültesi Halk Sağlığı Anabilim Dalı</p>
         </div>
       </aside>
 
       {/* CORE CONTENT LAYOUT WRAPPER (Independent scrolling on Desktop and Mobile) */}
       <div className="flex-1 h-full md:h-screen flex flex-col justify-between relative z-10 overflow-hidden">
         
-        <main className="p-4 sm:p-6 md:p-8 flex-1 space-y-6 max-w-full overflow-x-hidden overflow-y-auto pb-[140px] md:pb-16 flex flex-col min-h-0">
+        <main className="p-4 sm:p-6 md:p-8 flex-1 space-y-6 max-w-full overflow-x-hidden overflow-y-auto pb-[180px] md:pb-16 flex flex-col min-h-0">
           
           {/* ACTIVE VIEW MANAGER (DYNAMICS) */}
           <div className="min-h-0 w-full flex-1">
@@ -366,7 +380,7 @@ export default function App() {
       </div>
 
       {/* ================= MOBILE PREMIUM FLOATING NAVIGATION DOCK (Apple-style / Stable) ================= */}
-      {createPortal(
+      {!loadingScreen && activeTab !== "login" as any && createPortal(
         <div className={`md:hidden mobile-nav-dock border backdrop-blur-3xl rounded-[28px] p-2.5 shadow-xl select-none transition-all duration-200 ${theme.cardBg} border-black/10 dark:border-white/10`}>
           
           {/* Dynamic Academic Popup Panel inside Dock */}

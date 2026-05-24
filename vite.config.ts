@@ -8,8 +8,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  // Bağıl yollar (relative paths) yerine /talep/ (GitHub pages repository name)
-  base: '/talep/', 
+  // Bağıl yollar (relative paths) yerine /TALEP/ (GitHub pages repository name) sadece GitHub Pages derlemesinde
+  base: process.env.VITE_GITHUB_PAGES === 'true' || process.env.BUILD_FOR_GITHUB === 'true' || process.env.GITHUB_PAGES === 'true' ? '/TALEP/' : '/', 
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

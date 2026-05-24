@@ -40,7 +40,7 @@ export interface StructuredAiResponse {
   riskHeatmap: { field: string; riskPercent: number }[];
 }
 
-const AI_MEMORIES_COL = "ai_chat_memories";
+const getAiMemoriesCol = (userId: string) => `users/${userId}/chats`;
 
 /**
  * Save an AI reasoning session analysis to Firestore for persistent memory.
@@ -75,8 +75,13 @@ export async function saveAiChatMemory(
     console.warn("Local storage write disabled or corrupt:", e);
   }
 
+  // Bypass Firestore entirely for guest/demo mock users to prevent permission errors
+  if (!userId || userId.startsWith("guest") || userId.startsWith("demo")) {
+    return "local-id-" + Math.random().toString(36).substring(2, 9);
+  }
+
   try {
-    const docRef = await addDoc(collection(db, AI_MEMORIES_COL), {
+    const docRef = await addDoc(collection(db, getAiMemoriesCol(userId)), {
       userId,
       sessionId,
       mode,
@@ -97,17 +102,22 @@ export async function saveAiChatMemory(
  */
 export async function getAiChatHistory(userId: string): Promise<any[]> {
   const cacheKey = `talep_ai_history_${userId}`;
+  const isGuestOrDemo = userId.startsWith("guest") || userId.startsWith("demo");
   try {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       const parsed = JSON.parse(cached);
       // Asynchronously refresh the cached list from Firebase without blocking the main thread
-      fetchAndCacheHistoryInBackground(userId, cacheKey).catch(() => {});
+      if (!isGuestOrDemo) {
+        fetchAndCacheHistoryInBackground(userId, cacheKey).catch(() => {});
+      }
       return parsed;
     }
   } catch (e) {
     console.warn("Failed reading offline history cache:", e);
   }
+
+  if (isGuestOrDemo) return [];
 
   return fetchAndCacheHistoryFromFirestore(userId, cacheKey);
 }
@@ -115,8 +125,7 @@ export async function getAiChatHistory(userId: string): Promise<any[]> {
 async function fetchAndCacheHistoryFromFirestore(userId: string, cacheKey: string): Promise<any[]> {
   try {
     const q = query(
-      collection(db, AI_MEMORIES_COL),
-      where("userId", "==", userId),
+      collection(db, getAiMemoriesCol(userId)),
       orderBy("createdAt", "desc")
     );
     const snap = await getDocs(q);
@@ -146,8 +155,7 @@ async function fetchAndCacheHistoryFromFirestore(userId: string, cacheKey: strin
 async function fetchAndCacheHistoryInBackground(userId: string, cacheKey: string) {
   try {
     const q = query(
-      collection(db, AI_MEMORIES_COL),
-      where("userId", "==", userId),
+      collection(db, getAiMemoriesCol(userId)),
       orderBy("createdAt", "desc")
     );
     const snap = await getDocs(q);
@@ -419,20 +427,23 @@ function getCacheKey(question: string, context: AiContext, mode: string): string
 }
 
 export function isCasualChat(question: string): boolean {
-  const q = question.trim().toLowerCase();
+  // Strip Context if present
+  let q = question.split("\n\n[Mevcut Vaka Konsept Bilgileri]")[0].trim().toLowerCase();
   
   // Exact or pattern matches for small greetings/confirmations
   const casualWords = [
     "selam", "merhaba", "hello", "hi", "hey", "nasılsın", "nasilsin", "teşekkür", "tesekkur", 
     "sağol", "sagol", "tamam", "ok", "kısa soru", "kisa soru", "kimsin", "ne işe yararsın",
     "mrb", "esbin", "merhabalar", "selamlar", "nasılsınız", "nasilsiniz", "eyvallah",
-    "thanks", "thank you", "okay", "tamamdır", "tamamdir", "anlaşıldı", "anlasildi", "olur"
+    "thanks", "thank you", "okay", "tamamdır", "tamamdir", "anlaşıldı", "anlasildi", "olur",
+    "günaydın", "gunaydin", "iyi günler", "iyi gunler", "iyi akşamlar", "iyi aksamlar", "iyi geceler",
+    "ne yapıyorsun", "bugün günlerden ne", "hava durumu", "görüşürüz", "naber", "reis", "kral"
   ];
 
   // If the query is basically just a greetings word or list of greetings
-  if (q.length < 35 && casualWords.some(word => q.includes(word))) {
+  if (q.length < 150 && casualWords.some(word => q.includes(word))) {
     // Ensure it's not actually asking a specific medical question with medical keywords
-    const medicalKeywords = ["kurşun", "benzen", "civa", "cıva", "arsenik", "formaldehit", "organofosfat", "semptom", "seviye", "oran", "test", "limit", "bll", "iarc", "osha", "niosh", "toksin", "zehirlenme", "karsinojen"];
+    const medicalKeywords = ["kurşun", "benzen", "civa", "cıva", "arsenik", "formaldehit", "organofosfat", "semptom", "seviye", "oran", "test", "limit", "bll", "iarc", "osha", "niosh", "toksin", "zehirlenme", "karsinojen", "vaka", "laboratuvar", "tedavi", "antidot", "mesleki", "epidemiyoloji", "maruziyet"];
     const hasMedical = medicalKeywords.some(med => q.includes(med));
     if (!hasMedical) {
       return true;
@@ -442,7 +453,7 @@ export function isCasualChat(question: string): boolean {
 }
 
 export function getCasualResponse(question: string): StructuredAiResponse {
-  const q = question.toLowerCase().trim();
+  const q = question.split("\n\n[Mevcut Vaka Konsept Bilgileri]")[0].trim().toLowerCase();
   
   // Array of varied responses to prevent repetition
   const responses_greetings = [
@@ -540,17 +551,14 @@ export async function generateScientificReasoning(
   history: any[] = [],
   advancedReasoning: boolean = false
 ): Promise<StructuredAiResponse> {
-  // Check for casual chat first
-  if (isCasualChat(question)) {
-    return getCasualResponse(question);
-  }
-
+  const pureQuestion = question.split("\n\n[Mevcut Vaka Konsept Bilgileri]")[0].trim();
+  const isCasual = isCasualChat(pureQuestion);
   const cacheKey = getCacheKey(question, context, mode);
 
   // 1. Local Memory Cache Tier (0-latency instant loading)
   try {
     const localCached = localStorage.getItem(`talep_ai_cache_${cacheKey}`);
-    if (localCached) {
+    if (localCached && !isCasual) {
       console.log(`[TALEP CACHE] Hit Core (LocalStorage): ${cacheKey}`);
       return JSON.parse(localCached);
     }
@@ -559,7 +567,7 @@ export async function generateScientificReasoning(
   }
 
   // 2. Firestore Schema Cache Tier (Free-Tier API protection & shared enterprise sync)
-  if (advancedReasoning) {
+  if (advancedReasoning && !isCasual) {
     try {
       const { doc, getDoc } = await import("firebase/firestore");
       const cacheRef = doc(db, "ai_cache", cacheKey);
@@ -579,9 +587,10 @@ export async function generateScientificReasoning(
 
   // If advanced reasoning is NOT requested, solve instantly via local database matching! Saves API cost & loads instantly.
   if (!advancedReasoning) {
-    const localMatch = findLocalToxinMatch(question, context);
+    const pureQuestion = question.split("\n\n[Mevcut Vaka Konsept Bilgileri]")[0].trim();
+    const localMatch = findLocalToxinMatch(pureQuestion, context);
     console.log("Local database analysis selected. Matched toxin:", localMatch?.name);
-    const mockRes = generateLocalStructuredResponse(question, context, mode, localMatch);
+    const mockRes = generateLocalStructuredResponse(pureQuestion, context, mode, localMatch);
     
     // Save generated local match to LocalStorage to avoid re-generating
     try {
@@ -601,6 +610,7 @@ export async function generateScientificReasoning(
         context,
         mode,
         history,
+        isCasual
       }),
     });
 
@@ -629,8 +639,9 @@ export async function generateScientificReasoning(
     return serverResponse;
   } catch (error) {
     console.warn("Full-stack scientific engine endpoint was unreachable. Falling back to structured local database scanner:", error);
-    const localMatchBackup = findLocalToxinMatch(question, context);
-    const backupRes = generateLocalStructuredResponse(question, context, mode, localMatchBackup);
+    const pureQuestion = question.split("\n\n[Mevcut Vaka Konsept Bilgileri]")[0].trim();
+    const localMatchBackup = findLocalToxinMatch(pureQuestion, context);
+    const backupRes = generateLocalStructuredResponse(pureQuestion, context, mode, localMatchBackup);
     try {
       localStorage.setItem(`talep_ai_cache_${cacheKey}`, JSON.stringify(backupRes));
     } catch (e) {}

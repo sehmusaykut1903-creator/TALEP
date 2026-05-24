@@ -73,7 +73,7 @@ export default function Login() {
       <div className="absolute bottom-0 right-1/4 w-[40rem] h-[40rem] bg-emerald-100/20 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Main Container: Split Landing Showcase + Form Card */}
-      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+      <div className="w-full max-w-7xl flex flex-col-reverse lg:grid lg:grid-cols-12 gap-8 items-center relative z-10 lg:my-0 pb-12 lg:pb-0">
         
         {/* LEFT PANE: Premium Medical AI Startup Tech Showcase & Dynamic Landing Page */}
         <div className="lg:col-span-7 flex flex-col justify-between py-6 lg:py-10 space-y-8">

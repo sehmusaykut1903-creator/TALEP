@@ -97,8 +97,9 @@
     .library-page,
     .patients-page,
     .mobile-page-content,
-    .mobile-scroll-content {
-      padding-bottom: 150px !important;
+    .mobile-scroll-content,
+    .about-page {
+      padding-bottom: 250px !important;
     }
   }
 

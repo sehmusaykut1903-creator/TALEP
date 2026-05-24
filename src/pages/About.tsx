@@ -177,7 +177,7 @@ export default function About() {
       </div>
 
       {/* E, F, G) PROJE EKİBİ & GÖREV DAĞILIMI */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-24 md:pb-0">
         
         {/* E & F) PROJECT TEAM & TASK ALLOCATIONS */}
         <div className={cardClass}>

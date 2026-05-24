@@ -698,31 +698,6 @@ export default function LiteratureIntelligence() {
                   <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-xs leading-relaxed font-semibold italic">
                     "Halk sağlığı çalışmalarında mesleki maruziyetlerin tespiti genetik polimorfizmlerden, tam hematopoetik sayımlara kadar çok disiplinli akademik referanslara dayanmalıdır."
                   </div>
-                  <div className="flex flex-col border-t border-white/10 pt-4 space-y-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#0a2040] border border-cyan-400/25 flex items-center justify-center text-sm font-black text-cyan-400">VT</div>
-                      <div>
-                        <h5 className="text-xs font-black">Prof. Dr. Vugar Ali Türksoy</h5>
-                        <p className="text-[9px] text-cyan-300 font-bold uppercase font-mono tracking-wider">Halk Sağlığı Anabilim Dalı</p>
-                        <p className="text-[8px] text-slate-400">Akademik Katman Danışmanı</p>
-                      </div>
-                    </div>
-                    
-                    <div className="pt-2.5 border-t border-white/5 space-y-1 text-[9px] font-mono text-slate-400">
-                      <div className="flex justify-between items-center">
-                        <span>Ana Geliştirici:</span>
-                        <span className="font-bold text-white font-sans">Şehmus AYKUT</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Klinik Koordinasyon:</span>
-                        <span className="font-bold text-slate-200 font-sans">Fatma Nur AYKUT</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Araştırma Geliştirme:</span>
-                        <span className="font-bold text-slate-300 font-sans">Aghajan MUSALI</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
 

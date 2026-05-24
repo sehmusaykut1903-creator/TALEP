@@ -11,12 +11,17 @@ import {
   ShieldCheck,
   Lock,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  UserCog,
+  Save,
+  Bell,
+  HardDrive
 } from "lucide-react";
 import { useSettings } from "../context/SettingsContext";
 import { ThemeId, themes } from "../themes/themes";
 import { Language } from "../i18n/translations";
 import { MsdsPremiumBanner } from "./MsdsPremiumBanner";
+import { motion, AnimatePresence } from "motion/react";
 
 interface SettingsUser {
   displayName: string;
@@ -30,7 +35,7 @@ interface SettingsPanelProps {
   setSessionUser: React.Dispatch<React.SetStateAction<SettingsUser>>;
 }
 
-type SettingCategory = "general" | "accessibility" | "appearance" | "clinical_ai" | "security";
+type SettingCategory = "general" | "accessibility" | "appearance" | "clinical_ai" | "security" | "preferences";
 
 export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsPanelProps) {
   const {
@@ -56,6 +61,7 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
     { id: "appearance", label: "Görünüm & Temalar", icon: Palette, gradient: "from-pink-500 to-rose-455" },
     { id: "clinical_ai", label: "Akademik Klinik AI", icon: Sparkles, gradient: "from-violet-500 to-purple-455" },
     { id: "security", label: "Veri Emniyeti & KVKK", icon: ShieldCheck, gradient: "from-emerald-505 to-teal-455" },
+    { id: "preferences", label: "Gelişmiş Tercihler", icon: UserCog, gradient: "from-indigo-500 to-blue-500" }
   ] as const;
 
   // Search filter
@@ -68,6 +74,12 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
     return [
       { id: "tr", name: "Türkçe", flag: "🇹🇷" },
       { id: "en", name: "English", flag: "🇬🇧" },
+      { id: "ru", name: "Русский", flag: "🇷🇺" },
+      { id: "az", name: "Azərbaycanca", flag: "🇦🇿" },
+      { id: "ar", name: "العربية", flag: "🇸🇦" },
+      { id: "de", name: "Deutsch", flag: "🇩🇪" },
+      { id: "fr", name: "Français", flag: "🇫🇷" },
+      { id: "es", name: "Español", flag: "🇪🇸" }
     ].find(l => l.id === language) || { id: "tr", name: "Türkçe", flag: "🇹🇷" };
   }, [language]);
 
@@ -145,50 +157,65 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
                 Uygulama dilini seçin. Türkçe varsayılandır, tıklayarak dilediğiniz dili anında aktif edebilirsiniz.
               </p>
 
-              <div className="relative pt-1">
+              <div className="pt-1">
                 <button
                   type="button"
                   onClick={() => setIsLangOpen(!isLangOpen)}
-                  className="w-full sm:w-72 px-4 py-3 bg-slate-50 dark:bg-[#040812] border border-slate-200 dark:border-white/10 rounded-2xl text-xs font-black text-slate-800 dark:text-white flex items-center justify-between cursor-pointer hover:border-cyan-500/50 transition-all shadow-sm ring-1 ring-black/5"
+                  className="w-full sm:w-72 px-4 py-3 bg-white/50 backdrop-blur-md dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-[1.25rem] text-[13px] font-black text-slate-800 dark:text-white flex items-center justify-between cursor-pointer hover:bg-white dark:hover:bg-white/5 hover:border-blue-500/30 transition-all shadow-sm group"
                 >
-                  <span className="flex items-center gap-2.5">
-                    <span className="text-base leading-none">{activeLangObj.flag}</span>
-                    <span>{activeLangObj.name}</span>
+                  <span className="flex items-center gap-3">
+                    <span className="text-xl leading-none origin-center group-hover:scale-110 transition-transform">{activeLangObj.flag}</span>
+                    <span className="tracking-tight">{activeLangObj.name}</span>
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[8.5px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded border border-cyan-450/20 font-mono tracking-tight">AKTİF</span>
-                    <ChevronRight size={14} className={`text-slate-400 transition-transform ${isLangOpen ? "rotate-90" : ""}`} />
+                    <span className="text-[9px] bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded border border-blue-500/20 font-black tracking-widest uppercase shadow-sm">AKTİF</span>
+                    <ChevronRight size={16} className={`text-slate-400 transition-transform duration-300 ${isLangOpen ? "rotate-90" : ""}`} />
                   </div>
                 </button>
 
-                {isLangOpen && (
-                  <div className="absolute left-0 mt-2 w-full sm:w-72 bg-white dark:bg-[#080d19] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 divide-y divide-slate-100 dark:divide-white/5 overflow-hidden animate-in fade-in slide-in-from-top-3 duration-200">
-                    {[
-                      { id: "tr", name: "Türkçe", flag: "🇹🇷" },
-                      { id: "en", name: "English", flag: "🇬🇧" },
-                    ].map(lang => (
-                      <button
-                        key={lang.id}
-                        type="button"
-                        onClick={() => {
-                          setLanguage(lang.id as Language);
-                          setIsLangOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-3.5 text-xs font-bold transition-colors flex items-center justify-between cursor-pointer ${
-                          language === lang.id
-                            ? "bg-blue-600 dark:bg-cyan-500 text-white"
-                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
-                        }`}
-                      >
-                        <span className="flex items-center gap-2.5">
-                          <span className="text-base leading-none">{lang.flag}</span>
-                          <span>{lang.name}</span>
-                        </span>
-                        {language === lang.id && <Check size={13} className="text-white shrink-0" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <AnimatePresence>
+                  {isLangOpen && (
+                    <motion.div 
+                       initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                       animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+                       exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                       className="overflow-hidden w-full sm:w-72"
+                    >
+                      <div className="bg-white/70 dark:bg-black/40 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-[1.25rem] shadow-xl divide-y divide-slate-100/80 dark:divide-white/5 overflow-y-auto max-h-[300px] custom-scrollbar">
+                        {[
+                          { id: "tr", name: "Türkçe", flag: "🇹🇷" },
+                          { id: "en", name: "English", flag: "🇬🇧" },
+                          { id: "ru", name: "Русский", flag: "🇷🇺" },
+                          { id: "az", name: "Azərbaycanca", flag: "🇦🇿" },
+                          { id: "ar", name: "العربية", flag: "🇸🇦" },
+                          { id: "de", name: "Deutsch", flag: "🇩🇪" },
+                          { id: "fr", name: "Français", flag: "🇫🇷" },
+                          { id: "es", name: "Español", flag: "🇪🇸" }
+                        ].map(lang => (
+                          <button
+                            key={lang.id}
+                            type="button"
+                            onClick={() => {
+                              setLanguage(lang.id as Language);
+                              setTimeout(() => setIsLangOpen(false), 200);
+                            }}
+                            className={`w-full text-left px-4 py-3.5 text-[14px] font-bold transition-all flex items-center justify-between cursor-pointer group ${
+                              language === lang.id
+                                ? "bg-blue-500/5 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 shadow-[inset_2px_0_0_#3b82f6]"
+                                : "text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-white/5"
+                            }`}
+                          >
+                            <span className="flex items-center gap-3">
+                              <span className="text-xl leading-none scale-95 group-hover:scale-110 transition-transform">{lang.flag}</span>
+                              <span className={language === lang.id ? "tracking-tight" : "font-medium"}>{lang.name}</span>
+                            </span>
+                            {language === lang.id && <Check size={16} className="text-blue-600 dark:text-blue-400 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
@@ -523,6 +550,82 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
           </div>
         );
 
+      case "preferences":
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-sm font-bold tracking-tight mb-1 text-slate-900 dark:text-white">Gelişmiş Sistem Tercihleri</h3>
+              <p className="text-xs text-slate-400">Bildirimler, veri saklama koşulları, öneri motoru ve mahremiyet gibi uygulamanın diğer çalışma prensipleri.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 dark:border-white/10 pt-4">
+              {/* Sistem Bildirimleri */}
+              <div className="flex items-center justify-between p-3.5 bg-slate-50/50 dark:bg-[#070b14]/40 border border-slate-200/50 dark:border-white/5 rounded-xl">
+                <div className="space-y-0.5 max-w-[80%]">
+                  <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-2"><Bell size={14} className="text-indigo-500" /> Sistem Bildirimleri</span>
+                  <span className="text-[10px] text-slate-405 dark:text-slate-400 block leading-normal pt-1">
+                    Maruziyet raporu tamamlandığında bildirim panellerini uyarır.
+                  </span>
+                </div>
+                <input 
+                  type="checkbox"
+                  checked={options.notifications}
+                  onChange={(e) => setOption("notifications", e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 accent-blue-600 scale-110 shrink-0"
+                />
+              </div>
+
+              {/* Akıllı Öneri Motoru */}
+              <div className="flex items-center justify-between p-3.5 bg-slate-50/50 dark:bg-[#070b14]/40 border border-slate-200/50 dark:border-white/5 rounded-xl">
+                <div className="space-y-0.5 max-w-[80%]">
+                  <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-2"><Sparkles size={14} className="text-cyan-500" /> Yapay Zeka Önerileri</span>
+                  <span className="text-[10px] text-slate-405 dark:text-slate-400 block leading-normal pt-1">
+                    Girdiğiniz tanı ve laboratuvar değerlerine proaktif çözümler önerir.
+                  </span>
+                </div>
+                <input 
+                  type="checkbox"
+                  checked={options.suggestionEngine}
+                  onChange={(e) => setOption("suggestionEngine", e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 accent-blue-600 scale-110 shrink-0"
+                />
+              </div>
+
+              {/* Yerel Depolamada Tut */}
+              <div className="flex items-center justify-between p-3.5 bg-slate-50/50 dark:bg-[#070b14]/40 border border-slate-200/50 dark:border-white/5 rounded-xl">
+                <div className="space-y-0.5 max-w-[80%]">
+                  <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-2"><HardDrive size={14} className="text-emerald-500" /> Kalıcı Yerel Veri (LocalData)</span>
+                  <span className="text-[10px] text-slate-405 dark:text-slate-400 block leading-normal pt-1">
+                    Ziyaretler arasındaki tüm ayarları makinenizde hatırlar.
+                  </span>
+                </div>
+                <input 
+                  type="checkbox"
+                  checked={options.storeLocalData}
+                  onChange={(e) => setOption("storeLocalData", e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 accent-blue-600 scale-110 shrink-0"
+                />
+              </div>
+
+              {/* Hasta Mahremiyeti Modu */}
+              <div className="flex items-center justify-between p-3.5 bg-slate-50/50 dark:bg-[#070b14]/40 border border-slate-200/50 dark:border-white/5 rounded-xl">
+                <div className="space-y-0.5 max-w-[80%]">
+                  <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-2"><ShieldCheck size={14} className="text-rose-500" /> İsmi Maskele (Hipotez)</span>
+                  <span className="text-[10px] text-slate-405 dark:text-slate-400 block leading-normal pt-1">
+                    Tüm klinik ekranlarda hasta ismi yerine "***" yer tutucusu kullan.
+                  </span>
+                </div>
+                <input 
+                  type="checkbox"
+                  checked={options.hidePatientName}
+                  onChange={(e) => setOption("hidePatientName", e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 accent-blue-600 scale-110 shrink-0"
+                />
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -575,7 +678,7 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
             <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           </div>
 
-          <div className="bg-white/40 dark:bg-[#0c101d]/60 border border-slate-200/60 dark:border-white/5 p-2 rounded-2xl flex flex-col space-y-1">
+          <div className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-white/5 p-2.5 rounded-2xl flex flex-col space-y-1.5 backdrop-blur-xl">
             {filteredCategories.map((cat) => {
               const Icon = cat.icon;
               const isSelected = activeTab === cat.id;
@@ -584,14 +687,17 @@ export default function SettingsPanel({ sessionUser, setSessionUser }: SettingsP
                   key={cat.id}
                   type="button"
                   onClick={() => setActiveTab(cat.id)}
-                  className={`w-full text-left px-3.5 py-3 rounded-xl text-xs font-black transition-all flex items-center gap-3.5 cursor-pointer ${
+                  className={`w-full text-left px-3.5 py-3.5 rounded-[14px] text-[13px] font-bold transition-all relative flex items-center gap-3.5 cursor-pointer ${
                     isSelected 
-                      ? "bg-blue-600 dark:bg-cyan-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/10 dark:border-cyan-400/10" 
-                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5"
+                      ? "bg-white dark:bg-[#18181b] text-slate-800 dark:text-white border border-slate-200/80 dark:border-[#27272a] shadow-[0_4px_15px_rgb(0,0,0,0.05)] dark:shadow-[0_4px_15px_rgba(6,182,212,0.1)]" 
+                      : "text-slate-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800 border border-transparent hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
-                  <div className={`p-1 rounded-lg ${isSelected ? "bg-blue-600/10 dark:bg-cyan-500/20" : "bg-slate-100 dark:bg-white/5"}`}>
-                    <Icon size={14} />
+                  {isSelected && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 dark:bg-cyan-500 rounded-l-[14px]" />
+                  )}
+                  <div className={`p-1.5 rounded-[10px] ${isSelected ? "text-blue-500 dark:text-cyan-400 bg-blue-50 dark:bg-cyan-500/10" : "text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800"}`}>
+                    <Icon size={16} />
                   </div>
                   {cat.label}
                 </button>

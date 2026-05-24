@@ -168,13 +168,13 @@ export default function Splash({ onFinish }: { onFinish: () => void }) {
           <button
             type="button"
             onClick={onFinish}
-            className="group relative flex items-center justify-center gap-3 px-10 py-4 w-72 bg-blue-600 hover:bg-blue-500 dark:bg-cyan-550 dark:bg-cyan-500 dark:hover:bg-cyan-400 text-white rounded-3xl text-sm font-black transition-all cursor-pointer shadow-lg hover:shadow-cyan-500/20 active:scale-95 border border-white/10"
+            className="group relative flex items-center justify-center gap-3 px-10 py-4 w-72 bg-blue-600 hover:bg-blue-500 dark:bg-cyan-550 dark:border-cyan-400/30 dark:bg-slate-900/40 text-blue-50 dark:text-cyan-400 rounded-3xl text-[10px] uppercase tracking-widest font-black transition-all cursor-pointer shadow-lg hover:shadow-cyan-500/20 active:scale-95 border border-blue-500/30 backdrop-blur-sm"
           >
-            <span>Platforma Gir</span>
-            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+            <span>Klinik Sisteme Geçiş Yap</span>
+            <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
           </button>
           
-          <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-mono tracking-wide uppercase">
+          <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-mono tracking-wide uppercase mt-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>MÜKEMMEL KORUMA & MSDS ENTEGRASYONU AKTİF</span>
           </div>

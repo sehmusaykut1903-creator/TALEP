@@ -1,20 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { 
-  initializeFirestore, 
-  getFirestore,
-  persistentLocalCache, 
-  persistentMultipleTabManager 
-} from "firebase/firestore";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDw4fhe9HaPWI809pllmvGIDE22c5WsA",
-  authDomain: "talep-1aa0f.firebaseapp.com",
-  projectId: "talep-1aa0f",
-  storageBucket: "talep-1aa0f.firebasestorage.app",
-  messagingSenderId: "554079661226",
-  appId: "1:554079661226:web:3fad281c73559a4d5874d3",
-};
+import { getFirestore } from "firebase/firestore";
+import firebaseConfig from "../../firebase-applet-config.json";
 
 let app: any = null;
 try {
@@ -23,7 +10,7 @@ try {
   console.error("Firebase initializeApp failed:", e);
 }
 
-// Fallback/Mock app if initialization failed or returned null/undefined
+// Guarantee app is never undefined/null
 if (!app) {
   app = {
     name: "[DEFAULT]",
@@ -33,23 +20,10 @@ if (!app) {
 
 let db: any = null;
 try {
-  if (app) {
-    // Attempt Firestore persistence with high-fidelity IndexedDB isolation guards
-    db = initializeFirestore(app, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager(),
-      }),
-    });
-  }
-} catch (e) {
-  console.warn("Firebase initializeFirestore with persistent multi-tab cache failed, falling back to basic/in-memory Firestore:", e);
-  try {
-    if (app) {
-      db = getFirestore(app);
-    }
-  } catch (errInner) {
-    console.error("Fallback getFirestore failed:", errInner);
-  }
+  // Pass the Database ID securely to initialize the correct database
+  db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+} catch (errInner) {
+  console.error("Fallback getFirestore failed:", errInner);
 }
 
 // Guarantee Firestore DB is never undefined/null to prevent crash and preserve render flow
@@ -65,9 +39,7 @@ if (!db) {
 
 let auth: any = null;
 try {
-  if (app) {
-    auth = getAuth(app);
-  }
+  auth = getAuth(app);
 } catch (e) {
   console.error("Firebase getAuth failed:", e);
 }

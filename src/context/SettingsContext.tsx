@@ -79,15 +79,22 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
-    return (localStorage.getItem('talep_lang') as Language) || 'tr';
+    try {
+      return (localStorage.getItem('talep_language') as Language) || 'tr';
+    } catch {
+      return 'tr';
+    }
   });
 
   const [themeId, setThemeIdState] = useState<ThemeId>(() => {
-    return (localStorage.getItem('talep_theme') as ThemeId) || 'ivory';
+    try {
+      return (localStorage.getItem('talep_theme') as ThemeId) || 'ivory';
+    } catch {
+      return 'ivory';
+    }
   });
 
   const [accessibility, setAccessibilityState] = useState(() => {
-    const saved = localStorage.getItem('talep_accessibility');
     const defaultVal = { 
       largeText: false, 
       boldText: false, 
@@ -99,8 +106,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       useSystemTheme: false,
       animationQuality: 'normal' as 'low' | 'normal' | 'high'
     };
-    if (!saved) return defaultVal;
     try {
+      const saved = localStorage.getItem('talep_accessibility');
+      if (!saved) return defaultVal;
       return { ...defaultVal, ...JSON.parse(saved) };
     } catch {
       return defaultVal;
@@ -108,15 +116,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [mode, setModeState] = useState<'demo' | 'firebase'>(() => {
-    return (localStorage.getItem('talep_mode') as 'demo' | 'firebase') || 'demo';
+    try {
+      return (localStorage.getItem('talep_mode') as 'demo' | 'firebase') || 'demo';
+    } catch {
+      return 'demo';
+    }
   });
 
   const [options, setOptionsState] = useState<SettingsContextType['options']>(() => {
-    const saved = localStorage.getItem('talep_options');
-    return saved ? JSON.parse(saved) : {
-      darkMode: 'auto',
-      reportType: 'standard',
-      alertSensitivity: 'normal',
+    const defaultVal = {
+      darkMode: 'auto' as 'light' | 'dark' | 'auto',
+      reportType: 'standard' as 'short' | 'standard' | 'detailed',
+      alertSensitivity: 'normal' as 'low' | 'normal' | 'high',
       notifications: true,
       suggestionEngine: true,
       presentationMode: false,
@@ -125,13 +136,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       includeClinicalWarning: true,
       includeKvkkNote: true
     };
+    try {
+      const saved = localStorage.getItem('talep_options');
+      return saved ? { ...defaultVal, ...JSON.parse(saved) } : defaultVal;
+    } catch {
+      return defaultVal;
+    }
   });
 
   const [profile, setProfileState] = useState<Profile>(() => {
-    const saved = localStorage.getItem('talep_profile');
-    if (!saved) return defaultProfile;
-    
     try {
+      const saved = localStorage.getItem('talep_profile');
+      if (!saved) return defaultProfile;
+      
       const parsed = JSON.parse(saved);
       if (parsed.role && !parsed.title) {
         parsed.title = parsed.role;
@@ -154,8 +171,31 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('talep_lang', lang);
+    localStorage.setItem('talep_language', lang);
     showToast(translations[lang]?.updated || 'Dil güncellendi');
+    
+    if (lang === 'ar') {
+      document.documentElement.dir = 'rtl';
+    } else {
+      document.documentElement.dir = 'ltr';
+    }
+    
+    // Trigger Google Translate Programmatically
+    try {
+       const selectElement = document.querySelector('#google_translate_element select') as HTMLSelectElement;
+       if (selectElement) {
+         selectElement.value = lang;
+         selectElement.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+       } else {
+         // Some versions of Google Translate use iframe dropdowns, so a simple iframe trick or cookie might be needed
+         // For reliability, we set the googtrans cookie and reload
+         document.cookie = `googtrans=/tr/${lang}; path=/`;
+         document.cookie = `googtrans=/tr/${lang}; domain=.${window.location.hostname}; path=/`;
+         window.location.reload();
+       }
+    } catch (err) {
+       console.error("Google Translate hatası:", err);
+    }
   };
 
   const setTheme = (id: ThemeId) => {
@@ -244,9 +284,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       }
     }
     
+    
+    // Apply large text scaling to html element directly for rem scaling
+    if (accessibility.largeText) {
+      document.documentElement.style.fontSize = '110%'; // Boost base font size
+    } else {
+      document.documentElement.style.fontSize = '100%';
+    }
+
     // Apply contrast and text size classes to body
     document.body.className = `
-      ${accessibility.largeText ? 'text-large font-medium' : ''} 
       ${accessibility.boldText ? 'text-bold font-extrabold' : ''}
       ${accessibility.reducedMotion ? 'reduce-motion' : ''}
       ${accessibility.reducedTransparency ? 'reduce-transparency' : ''}

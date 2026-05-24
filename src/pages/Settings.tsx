@@ -24,7 +24,13 @@ import {
   FlaskConical,
   Shield,
   LogOut,
-  Sparkles
+  Sparkles,
+  CloudOff,
+  Code,
+  Building,
+  AlertTriangle,
+  CloudUpload,
+  Monitor
 } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
@@ -56,33 +62,72 @@ export default function Settings() {
     }
   };
 
-  const categories = [
-    { id: 'profile', title: t('profile'), icon: User },
-    { id: 'membership', title: 'Üyelik & Premium Lisans', icon: Sparkles },
-    { id: 'language', title: t('language'), icon: Globe },
-    { id: 'theme', title: t('theme'), icon: Palette },
-    { id: 'accessibility', title: t('accessibility'), icon: Accessibility },
-    { id: 'reports', title: t('report_settings'), icon: FileText },
-    { id: 'security', title: t('security'), icon: ShieldCheck },
-    { id: 'sync', title: t('system_mode'), icon: Database },
-    { id: 'presentation', title: t('presentation_mode'), icon: Terminal },
-    { id: 'about', title: t('about'), icon: Info },
+  const categoryGroups = [
+    {
+      title: 'GENEL',
+      items: [
+        { id: 'system', title: 'Sistem', icon: Terminal },
+        { id: 'theme', title: 'Tema Merkezi', icon: Palette },
+        { id: 'language', title: 'Dil ve Bölge', icon: Globe },
+        { id: 'accessibility', title: t('accessibility') || 'Erişilebilirlik', icon: Accessibility },
+      ]
+    },
+    {
+      title: 'KULLANICI & KİMLİK',
+      items: [
+        { id: 'profile', title: 'Profil', icon: User },
+        { id: 'enterprise', title: 'Kurumsal Kimlik', icon: Building },
+        { id: 'membership', title: 'Roller ve Yetkiler', icon: Shield },
+        { id: 'security', title: 'Güvenlik', icon: ShieldCheck },
+      ]
+    },
+    {
+      title: 'AKADEMİK KATMAN',
+      items: [
+        { id: 'literature', title: 'Literatür Taraması', icon: FileText },
+        { id: 'epidemiology', title: 'Mesleki Epidemiyoloji', icon: Activity },
+        { id: 'ai', title: 'AI Araştırma Asistanı', icon: Sparkles },
+        { id: 'clinical_ai', title: 'Akademik Klinik AI', icon: Target },
+        { id: 'reports', title: t('report_settings') || 'Raporlama Merkezi', icon: FileText },
+        { id: 'case_archive', title: 'Vaka Arşiv Sistemi', icon: Database },
+        { id: 'exposure', title: 'Maruziyet Veritabanı', icon: FlaskConical },
+        { id: 'emergency', title: 'Acil Toksikoloji', icon: AlertTriangle },
+      ]
+    },
+    {
+      title: 'VERİ & SENKRONİZASYON',
+      items: [
+        { id: 'sync', title: 'Firebase Durumu', icon: Database },
+        { id: 'firestore', title: 'Firestore Sync', icon: CloudUpload },
+        { id: 'backup', title: 'Veri Yedekleme', icon: Upload },
+        { id: 'offline', title: 'Offline Mod', icon: CloudOff },
+        { id: 'pdf_archive', title: 'PDF/Rapor Arşivi', icon: FileText },
+      ]
+    },
+    {
+      title: 'SİSTEM',
+      items: [
+        { id: 'performance', title: 'Performans Modu', icon: Activity },
+        { id: 'low_power', title: 'Düşük Güç Modu', icon: RotateCcw },
+        { id: 'tablet', title: 'Tablet Optimizasyonu', icon: Monitor },
+        { id: 'network', title: 'Ağ Durumu', icon: Globe },
+        { id: 'notifications', title: 'Bildirimler', icon: Bell },
+        { id: 'presentation', title: t('presentation_mode') || 'Sunum Modu', icon: Monitor },
+      ]
+    }
   ];
   
-  // Mobile states
   const [mobileActiveCategory, setMobileActiveCategory] = useState<string | null>(null);
-
-  // Desktop states
   const [desktopActiveCategory, setDesktopActiveCategory] = useState('profile');
 
   const languages: { code: Language; name: string; flag: string }[] = [
     { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
     { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'az', name: 'Azərbaycan', flag: '🇦🇿' },
     { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+    { code: 'az', name: 'Azərbaycanca', flag: '🇦🇿' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
     { code: 'es', name: 'Español', flag: '🇪🇸' },
   ];
 
@@ -344,18 +389,18 @@ export default function Settings() {
 
       {catId === 'language' && (
         <motion.div key="language" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight">{t('language')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <h3 className="text-2xl font-black text-slate-900 tracking-tight">Dil ve Bölge (Language)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {languages.map(lang => (
               <button
                 key={lang.code}
                 onClick={() => setLanguage(lang.code)}
-                className={`flex items-center gap-4 p-5 rounded-3xl border-2 transition-all ${
-                  language === lang.code ? 'border-brand-blue bg-blue-50 text-brand-blue shadow-lg shadow-brand-blue/5' : 'border-slate-50 bg-slate-50/50 hover:border-slate-100'
+                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border-2 transition-all ${
+                  language === lang.code ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-xl shadow-blue-500/10 scale-105' : 'border-slate-100 bg-white hover:border-slate-300'
                 }`}
               >
-                <span className="text-2xl">{lang.flag}</span>
-                <span className="font-bold text-base">{lang.name}</span>
+                <span className="text-4xl drop-shadow-sm">{lang.flag}</span>
+                <span className="font-bold text-slate-800">{lang.name}</span>
               </button>
             ))}
           </div>
@@ -364,22 +409,33 @@ export default function Settings() {
 
       {catId === 'theme' && (
         <motion.div key="theme" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight">{t('theme')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Object.values(themes).map(t => (
+          <h3 className="text-2xl font-black text-slate-900 tracking-tight">Tema Merkezi</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              {id: 'edevlet', name: 'E-Devlet Premium', p: '#1e3a8a', s: '#3b82f6', a: '#2563eb'},
+              {id: 'medical_glass', name: 'Medical Glass', p: '#0891b2', s: '#06b6d4', a: '#22d3ee'},
+              {id: 'emerald_ai', name: 'Emerald AI', p: '#059669', s: '#10b981', a: '#34d399'},
+              {id: 'titanium', name: 'Titanium Silver', p: '#475569', s: '#94a3b8', a: '#cbd5e1'},
+              {id: 'dark_clinical', name: 'Dark Clinical', p: '#0ea5e9', s: '#38bdf8', a: '#7dd3fc', dark: true},
+              {id: 'graphite_pro', name: 'Graphite Pro', p: '#334155', s: '#64748b', a: '#94a3b8', dark: true},
+            ].map(t => (
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id as ThemeId)}
-                className={`flex flex-col gap-4 p-6 rounded-[2.5rem] border-2 transition-all group ${
-                  theme.id === t.id ? 'border-brand-blue bg-brand-blue/5' : 'border-slate-50 bg-slate-50/50 hover:border-slate-200'
+                className={`flex flex-col gap-4 p-6 rounded-[2.5rem] border-2 transition-all group relative overflow-hidden ${
+                  theme.id === t.id ? 'border-blue-500 bg-white shadow-xl shadow-blue-500/10 ring-4 ring-blue-50' : 'border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50'
                 }`}
               >
+                {theme.id === t.id && <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-xl -mr-12 -mt-12" />}
                 <div className="flex gap-2">
-                  <div className="w-8 h-8 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: t.primary }} />
-                  <div className="w-8 h-8 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: t.secondary }} />
-                  <div className="w-8 h-8 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: t.accent }} />
+                  <div className="w-8 h-8 rounded-full border border-slate-200 shadow-sm" style={{ backgroundColor: t.p }} />
+                  <div className="w-8 h-8 rounded-full border border-slate-200 shadow-sm" style={{ backgroundColor: t.s }} />
+                  <div className="w-8 h-8 rounded-full border border-slate-200 shadow-sm" style={{ backgroundColor: t.a }} />
                 </div>
-                <span className="font-black text-sm uppercase tracking-widest">{t.name}</span>
+                <div className="flex flex-col text-left">
+                   <span className="font-black text-sm uppercase tracking-widest text-slate-800">{t.name}</span>
+                   {t.dark && <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Koyu Görünüm</span>}
+                </div>
               </button>
             ))}
           </div>
@@ -389,7 +445,7 @@ export default function Settings() {
       {catId === 'accessibility' && (
         <motion.div key="accessibility" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
           <h3 className="text-2xl font-black text-slate-900 tracking-tight">{t('accessibility')}</h3>
-          <div className="bg-slate-50 rounded-[2.5rem] p-8 space-y-8">
+          <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 space-y-8 shadow-sm">
              {[
                { id: 'largeText', label: t('large_text'), info: t('large_text_info') },
                { id: 'boldText', label: t('bold_text'), info: t('bold_text_info') },
@@ -403,9 +459,9 @@ export default function Settings() {
                  </div>
                  <button 
                    onClick={() => setAccessibility({ [item.id]: !accessibility[item.id as keyof typeof accessibility] })}
-                   className={`w-14 h-8 rounded-full p-1 transition-all ${accessibility[item.id as keyof typeof accessibility] ? 'bg-brand-blue' : 'bg-slate-300'}`}
+                   className={`w-14 h-8 rounded-full p-1 transition-all ${accessibility[item.id as keyof typeof accessibility] ? 'bg-blue-600 shadow-lg shadow-blue-500/30' : 'bg-slate-200'}`}
                  >
-                   <div className={`w-6 h-6 bg-white rounded-full transition-all shadow-sm ${accessibility[item.id as keyof typeof accessibility] ? 'translate-x-6' : 'translate-x-0'}`} />
+                   <div className={`w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${accessibility[item.id as keyof typeof accessibility] ? 'translate-x-6' : 'translate-x-0'}`} />
                  </button>
                </div>
              ))}
@@ -415,7 +471,7 @@ export default function Settings() {
 
       {catId === 'security' && (
         <motion.div key="security" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight">{t('security')}</h3>
+          <h3 className="text-2xl font-black text-slate-900 tracking-tight">Güvenlik ve İzinler</h3>
           <div className="grid grid-cols-1 gap-4">
              <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm">
                 <p className="text-xs font-black text-blue-600 uppercase tracking-widest mb-1">{t('security_kvkk_title')}</p>
@@ -437,7 +493,7 @@ export default function Settings() {
                    <p className="font-bold text-slate-900 leading-none">{item.label}</p>
                    <button 
                      onClick={() => setOption(item.id as any, !options[item.id as keyof typeof options])}
-                     className={`w-12 h-7 rounded-full p-1 transition-all ${options[item.id as keyof typeof options] ? 'bg-brand-blue' : 'bg-slate-300'}`}
+                     className={`w-12 h-7 rounded-full p-1 transition-all ${options[item.id as keyof typeof options] ? 'bg-blue-600' : 'bg-slate-300'}`}
                    >
                      <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${options[item.id as keyof typeof options] ? 'translate-x-5' : 'translate-x-0'}`} />
                    </button>
@@ -457,7 +513,7 @@ export default function Settings() {
 
       {catId === 'sync' && (
         <motion.div key="sync" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight">{t('system_mode')}</h3>
+          <h3 className="text-2xl font-black text-slate-900 tracking-tight">Firebase Durumu</h3>
           <div className="bg-slate-900 p-8 rounded-[3rem] text-white shadow-2xl shadow-slate-900/20 overflow-hidden relative">
              <Database size={100} className="absolute -bottom-10 -right-10 text-white/5 rotate-12" />
              <div className="relative z-10">
@@ -475,37 +531,118 @@ export default function Settings() {
                     <ShieldCheck size={20} className="text-emerald-500" />
                     <span className="text-xs font-medium">Uçtan Uca Şifreleme</span>
                   </div>
+                  <div className="flex items-center gap-4 text-slate-400">
+                    <Database size={20} className="text-blue-400" />
+                    <span className="text-xs font-medium">Son Senkronizasyon: {new Date().toLocaleTimeString()}</span>
+                  </div>
                 </div>
              </div>
           </div>
         </motion.div>
       )}
 
+      {catId === 'offline' && (
+         <motion.div key="offline" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+           <h3 className="text-2xl font-black text-slate-900 tracking-tight">Offline Mod & Ön Bellek</h3>
+           <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6 relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-slate-100/50 rounded-full blur-xl -translate-y-16 translate-x-16" />
+             <div className="relative z-10 space-y-6">
+                <p className="text-sm font-bold text-slate-500 leading-relaxed">Bağlantı olmadığında bile rapor üretmeye devam etmek için sistem önbelleği kullanır.</p>
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                   <div>
+                     <p className="font-black text-slate-900 tracking-tight">Önbellek Alanı</p>
+                     <p className="text-xs font-bold text-emerald-600 mt-1">45 MB kullanılıyor (Maks. 500 MB)</p>
+                   </div>
+                   <button className="bg-white border border-slate-200 text-rose-500 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-50 hover:border-rose-100 transition-all shadow-sm">Temizle</button>
+                </div>
+             </div>
+           </div>
+         </motion.div>
+      )}
+
+      {catId === 'notifications' && (
+        <motion.div key="notifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+           <h3 className="text-2xl font-black text-slate-900 tracking-tight">Bildirim Ayarları</h3>
+           <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-lg text-slate-900">Push Bildirimleri</p>
+                  <p className="text-sm font-medium text-slate-500 mt-1">Acil durumlarda anında uyarı al.</p>
+                </div>
+                <div className={`w-14 h-8 rounded-full p-1 transition-all cursor-pointer ${options.notifications ? 'bg-blue-600 shadow-lg shadow-blue-500/30' : 'bg-slate-200'}`} onClick={() => setOption('notifications', !options.notifications)}>
+                  <div className={`w-6 h-6 bg-white rounded-full transition-transform ${options.notifications ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-lg text-slate-900">Cihaz İçi Sesli Uyarılar</p>
+                  <p className="text-sm font-medium text-slate-500 mt-1">Kritik hasta analizleri sırasında ses çal.</p>
+                </div>
+                <div className="w-14 h-8 rounded-full bg-slate-200 p-1"><div className="w-6 h-6 bg-white rounded-full transition-transform translate-x-0" /></div>
+              </div>
+           </div>
+        </motion.div>
+      )}
+
+      {catId === 'ai' && (
+        <motion.div key="ai" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+           <h3 className="text-2xl font-black text-slate-900 tracking-tight">AI Araştırma Asistanı</h3>
+           <div className="bg-[#0f172a] rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-indigo-900/20">
+             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px]" />
+             <div className="relative z-10 space-y-8">
+                <div className="flex items-center justify-between bg-white/5 p-6 rounded-3xl border border-white/10 backdrop-blur-md">
+                  <div>
+                    <h4 className="font-black tracking-tight text-lg drop-shadow-md">Akıllı Yanıt Stili</h4>
+                    <p className="text-xs font-bold opacity-70 mt-1 leading-relaxed max-w-[200px]">AI asistanının ürettiği değerlendirmelerin klinik tonunu konfigüre edin.</p>
+                  </div>
+                  <select className="bg-[#1e293b]/80 px-4 py-3 rounded-2xl text-sm border border-white/20 outline-none font-bold shadow-inner min-w-[200px]" aria-label="AI Yanıt Stili">
+                    <option className="text-slate-900">Akademik & Resmi</option>
+                    <option className="text-slate-900">Klinik & Öz (Tavsiye Edilen)</option>
+                    <option className="text-slate-900">Açıklayıcı & Eğitimsel</option>
+                  </select>
+                </div>
+                
+                <div className="flex items-center justify-between p-2">
+                   <div>
+                     <p className="font-bold">Önerge Motoru</p>
+                     <p className="text-[10px] uppercase font-black tracking-widest text-blue-300 mt-1">SÜREKLİ AKTİF</p>
+                   </div>
+                   <div className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-full text-[10px] font-black uppercase shadow-[0_0_10px_rgba(16,185,129,0.3)]">OPTIMIZE EDILDI</div>
+                </div>
+             </div>
+           </div>
+        </motion.div>
+      )}
+
+      {['system', 'developer', 'enterprise', 'emergency', 'backup', 'literature', 'epidemiology', 'clinical_ai', 'case_archive', 'exposure', 'firestore', 'pdf_archive', 'performance', 'low_power', 'tablet', 'network', 'quick_access'].includes(catId) && (
+         <motion.div key={catId} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8 flex flex-col items-center justify-center min-h-[400px]">
+             <ShieldCheck size={80} className="text-slate-200 mb-2 drop-shadow-sm" />
+             <h3 className="text-2xl font-black text-slate-800 tracking-tight text-center">Premium Modül Konfigürasyonu</h3>
+             <p className="text-slate-500 text-center text-sm font-bold bg-slate-50 px-6 py-4 rounded-2xl border border-slate-100 max-w-sm">Bu alan, Premium Kurumsal yapıda lisans modelinize özel erişebileceğiniz aktif bileşenleri listeler.</p>
+         </motion.div>
+      )}
+
       {catId === 'presentation' && (
         <motion.div key="presentation" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight">{t('presentation_mode')}</h3>
-          <div className="bg-emerald-50 p-8 rounded-[3rem] border border-emerald-100">
+          <h3 className="text-2xl font-black text-slate-900 tracking-tight">{t('presentation_mode') || 'Sunum Modu'}</h3>
+          <div className="bg-blue-50 p-8 rounded-[3rem] border border-blue-100">
              <div className="flex items-center gap-5 mb-8">
-                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100"><Terminal size={28}/></div>
+                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-100"><Monitor size={28}/></div>
                 <div>
-                   <p className="font-black text-lg text-slate-900 leading-none mb-1">{t('presentation_mode')}</p>
+                   <p className="font-black text-lg text-slate-900 leading-none mb-1">{t('presentation_mode') || 'Sunum Modu'}</p>
                    <p className="text-xs text-slate-500 font-bold">{t('presentation_mode_info')}</p>
                 </div>
              </div>
              <div className="space-y-6">
                 <div className="flex items-center justify-between">
                    <p className="font-bold text-slate-900 tracking-tight">Sunum Modunu Aktive Et</p>
-                   <button onClick={() => setOption('presentationMode', !options.presentationMode)} className={`w-12 h-7 rounded-full p-1 transition-all ${options.presentationMode ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30' : 'bg-slate-300'}`}>
+                   <button onClick={() => setOption('presentationMode', !options.presentationMode)} className={`w-12 h-7 rounded-full p-1 transition-all ${options.presentationMode ? 'bg-blue-600 shadow-lg shadow-blue-500/30' : 'bg-slate-300'}`}>
                       <div className={`w-5 h-5 bg-white rounded-full transition-transform ${options.presentationMode ? 'translate-x-5' : 'translate-x-0'}`} />
                    </button>
                 </div>
                 <div className="flex items-center justify-between">
                    <p className="font-bold text-slate-900 tracking-tight">Antalya Kongre Etiketi Göster</p>
-                   <div className="w-12 h-7 rounded-full bg-emerald-500 p-1"><div className="w-5 h-5 bg-white rounded-full translate-x-5 shadow-sm" /></div>
-                </div>
-                <div className="flex items-center justify-between">
-                   <p className="font-bold text-slate-900 tracking-tight">Demo Verilerini Zenginleştir</p>
-                   <div className="w-12 h-7 rounded-full bg-emerald-500 p-1"><div className="w-5 h-5 bg-white rounded-full translate-x-5 shadow-sm" /></div>
+                   <div className="w-12 h-7 rounded-full bg-blue-600 p-1"><div className="w-5 h-5 bg-white rounded-full translate-x-5 shadow-sm" /></div>
                 </div>
              </div>
           </div>
@@ -514,74 +651,28 @@ export default function Settings() {
 
       {catId === 'reports' && (
         <motion.div key="reports" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-           <h3 className="text-2xl font-black text-slate-900 tracking-tight">{t('report_settings')}</h3>
+           <h3 className="text-2xl font-black text-slate-900 tracking-tight">Raporlama Merkezi</h3>
            <div className="grid grid-cols-1 gap-4">
               {[
-                { id: 'short', title: t('short_report'), desc: 'Sadece temel risk ve öneriler.' },
-                { id: 'standard', title: t('standard_report'), desc: 'Vaka, laboratuvar ve analiz özeti.' },
-                { id: 'detailed', title: t('academic_report'), desc: 'Tüm bulgular ve akademik referanslar.' }
+                { id: 'short', title: t('short_report') || 'Kısa Rapor', desc: 'Sadece temel risk ve öneriler.' },
+                { id: 'standard', title: t('standard_report') || 'Standart Rapor', desc: 'Vaka, laboratuvar ve analiz özeti.' },
+                { id: 'detailed', title: t('academic_report') || 'Akademik Rapor', desc: 'Tüm bulgular ve akademik referanslar.' }
               ].map(type => (
                 <button 
                   key={type.id}
                   onClick={() => setOption('reportType', type.id as any)}
-                  className={`flex items-center justify-between p-6 rounded-3xl border-2 transition-all ${options.reportType === type.id ? 'border-brand-blue bg-blue-50/50' : 'border-slate-50 hover:border-slate-200'}`}
+                  className={`flex items-center justify-between p-6 rounded-3xl border-2 transition-all ${options.reportType === type.id ? 'border-blue-500 bg-blue-50/50' : 'border-slate-50 hover:border-slate-200'}`}
                 >
                   <div className="text-left">
                      <p className="font-black text-slate-900 uppercase tracking-widest text-xs mb-1">{type.title}</p>
                      <p className="text-xs text-slate-500 font-bold">{type.desc}</p>
                   </div>
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${options.reportType === type.id ? 'border-brand-blue bg-brand-blue' : 'border-slate-200'}`}>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${options.reportType === type.id ? 'border-blue-500 bg-blue-500' : 'border-slate-200'}`}>
                     {options.reportType === type.id && <div className="w-2 h-2 bg-white rounded-full" />}
                   </div>
                 </button>
               ))}
            </div>
-        </motion.div>
-      )}
-
-      {catId === 'about' && (
-        <motion.div key="about" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12">
-          <div className="flex items-center gap-6">
-            <TalepLogo size="lg" variant="glass" />
-            <div>
-              <h3 className="text-4xl font-black text-slate-900 mb-1 leading-none tracking-tighter">TALEP</h3>
-              <p className="text-[11px] font-black text-cyan-600 uppercase tracking-[0.2em]">{t('version')}</p>
-            </div>
-          </div>
-          
-          <div className="space-y-10">
-            <div className="space-y-4">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{t('purpose_title')}</h4>
-               <p className="text-sm font-medium text-slate-600 leading-relaxed uppercase tracking-wide opacity-80">
-                  “Toksikolojik Akıllı Laboratuvar Eşleştirme Platformu: Mesleki Kimyasal Maruziyetlere Yönelik Klinik Karar Destek Sistemi”
-               </p>
-               <p className="text-sm font-medium text-slate-600 leading-relaxed">{t('purpose_text')}</p>
-            </div>
-            
-            <div className="space-y-4">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{t('problem_title')}</h4>
-               <p className="text-sm font-medium text-slate-600 leading-relaxed">{t('problem_text')}</p>
-            </div>
-
-            <div className="space-y-4">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{t('value_title')}</h4>
-               <p className="text-sm font-medium text-slate-600 leading-relaxed">{t('value_text')}</p>
-            </div>
-
-            <div className="p-8 bg-slate-900 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl" />
-               <h4 className="text-[10px] font-black text-cyan-400 uppercase tracking-[0.3em] mb-4">{t('ai_title')}</h4>
-               <p className="text-sm font-bold leading-relaxed">{t('ai_text')}</p>
-            </div>
-
-            <div className="space-y-6 pt-10 border-t border-slate-100">
-               
-            </div>
-
-            <div className="text-center opacity-35 pt-4">
-               <p className="text-[11px] font-black tracking-widest">{t('copyright')}</p>
-            </div>
-          </div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -590,51 +681,63 @@ export default function Settings() {
   return (
     <div className="settings-page w-full max-w-7xl mx-auto min-h-screen md:min-h-0">
       {/* Desktop Layout */}
-      <div className="hidden md:flex gap-6 h-[700px] overflow-hidden">
+      <div className="hidden md:flex gap-6 h-[720px] overflow-hidden">
         {/* Sidebar */}
-        <div className="w-80 bg-white/50 backdrop-blur-3xl border border-white/60 rounded-[3rem] p-8 flex flex-col gap-2 overflow-y-auto shadow-2xl shadow-slate-200/20">
-          <h2 className="text-2xl font-black px-4 mb-8 tracking-tight">{t('settings')}</h2>
-          <div className="space-y-1.5 mb-6">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setDesktopActiveCategory(cat.id)}
-                className={`w-full flex items-center gap-4 px-5 py-4 rounded-[1.25rem] transition-all font-bold group ${
-                  desktopActiveCategory === cat.id 
-                    ? 'bg-brand-blue text-white shadow-2xl shadow-brand-blue/30' 
-                    : 'text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-xl hover:shadow-slate-200/50'
-                }`}
-              >
-                <div className={`p-2 rounded-xl transition-all ${desktopActiveCategory === cat.id ? 'bg-white/20' : 'bg-slate-100 group-hover:bg-brand-blue/10 group-hover:text-brand-blue'}`}>
-                  <cat.icon size={20} />
-                </div>
-                <span className="text-[15px]">{cat.title}</span>
-                {desktopActiveCategory !== cat.id && <ChevronRight size={16} className="ml-auto opacity-0 group-hover:opacity-100 transition-all text-slate-300" />}
-              </button>
+        <div className="w-[340px] shrink-0 bg-white/70 backdrop-blur-3xl border border-slate-200/60 rounded-[3rem] py-8 flex flex-col gap-2 overflow-y-auto shadow-2xl shadow-slate-200/20 custom-scrollbar relative">
+          <h2 className="text-2xl font-black px-8 mb-6 tracking-tight text-slate-900 drop-shadow-sm">{t('settings') || 'Ayarlar'}</h2>
+          
+          <div className="flex-1 overflow-y-auto px-4 space-y-6 pb-20 custom-scrollbar">
+            {categoryGroups.map((group) => (
+              <div key={group.title} className="space-y-1">
+                <p className="px-4 py-2 text-[10px] uppercase font-black tracking-widest text-slate-400">{group.title}</p>
+                {group.items.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setDesktopActiveCategory(cat.id)}
+                    className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all font-bold group relative overflow-hidden ${
+                      desktopActiveCategory === cat.id 
+                        ? 'bg-white shadow-[0_4px_20px_rgba(37,99,235,0.06)] border border-blue-100 text-slate-900' 
+                        : 'text-slate-500 hover:bg-white/50 border border-transparent hover:text-slate-800'
+                    }`}
+                  >
+                    {/* Modern Active Indicator Line */}
+                    {desktopActiveCategory === cat.id && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-blue-500 rounded-r-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                    )}
+                    
+                    <div className={`p-2 rounded-xl transition-all ${
+                      desktopActiveCategory === cat.id 
+                        ? 'bg-blue-50 text-blue-600' 
+                        : 'bg-slate-100 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500'
+                    }`}>
+                      <cat.icon size={18} />
+                    </div>
+                    <span className="text-[14px] truncate">{cat.title}</span>
+                  </button>
+                ))}
+              </div>
             ))}
           </div>
           
-          <div className="mt-auto pt-6 border-t border-slate-100/85">
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white/90 to-transparent">
             <button 
               onClick={handleLogout}
-              className="w-full flex items-center gap-4 px-5 py-4 rounded-[1.25rem] transition-all font-bold text-rose-500 hover:bg-rose-50 hover:text-rose-600 group cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-[1.25rem] transition-all font-bold text-rose-500 hover:bg-rose-50 hover:text-rose-600 group border border-transparent hover:border-rose-100"
             >
-              <div className="p-2 rounded-xl bg-rose-50 text-rose-500 group-hover:bg-rose-100 transition-colors">
-                <LogOut size={20} />
-              </div>
-              <span className="text-[15px]">Oturumu Kapat</span>
+              <LogOut size={18} />
+              <span className="text-[14px]">Oturumu Kapat</span>
             </button>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[3rem] p-12 overflow-y-auto shadow-[0_32px_64px_-16px_rgba(15,23,42,0.1)]">
+        <div className="flex-1 bg-white/80 backdrop-blur-3xl border border-slate-200/60 rounded-[3rem] p-10 overflow-y-auto shadow-[0_32px_64px_-16px_rgba(15,23,42,0.05)] custom-scrollbar">
           {renderContent(desktopActiveCategory)}
         </div>
       </div>
 
       {/* Mobile Layout - iOS Style */}
-      <div className="md:hidden flex flex-col min-h-screen -mx-5 -mt-5 px-5 pt-8 pb-32">
+      <div className="md:hidden flex flex-col min-h-screen -mx-5 -mt-5 px-5 pt-8 pb-32 bg-slate-50">
         <AnimatePresence mode="wait">
           {!mobileActiveCategory ? (
             <motion.div 
@@ -642,76 +745,64 @@ export default function Settings() {
               initial={{ opacity: 0, x: -20 }} 
               animate={{ opacity: 1, x: 0 }} 
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-8"
+              className="space-y-6"
             >
-              <h1 className="text-4xl font-black text-slate-900 px-2 tracking-tight">{t('settings')}</h1>
+              <h1 className="text-3xl font-black text-slate-900 px-2 tracking-tight">{t('settings') || 'Ayarlar'}</h1>
               
-              <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 overflow-hidden shadow-2xl shadow-slate-900/5 divide-y divide-slate-100">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => {
-                      setMobileActiveCategory(cat.id);
-                      window.scrollTo(0, 0);
-                    }}
-                    className="w-full flex items-center gap-4 p-5 active:bg-slate-50 transition-colors group"
-                  >
-                    <div className="w-12 h-12 bg-slate-100/80 rounded-2xl flex items-center justify-center text-slate-600 border border-white ring-4 ring-slate-50/50">
-                      <cat.icon size={24} />
+              <div className="space-y-6">
+                {categoryGroups.map((group) => (
+                  <div key={group.title} className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm shadow-slate-100/50">
+                    <div className="px-5 py-4 bg-slate-50/50 border-b border-slate-100">
+                      <p className="text-[10px] uppercase font-black tracking-widest text-slate-400">{group.title}</p>
                     </div>
-                    <div className="flex flex-col items-start">
-                      <span className="font-bold text-lg text-slate-900">{cat.title}</span>
-                      <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 mt-0.5">{cat.id === 'general' ? 'Sistem' : 'Konfigürasyon'}</span>
+                    <div className="divide-y divide-slate-50">
+                      {group.items.map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => {
+                            setMobileActiveCategory(cat.id);
+                            window.scrollTo(0, 0);
+                          }}
+                          className="w-full flex items-center justify-between p-4 active:bg-slate-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500 border border-slate-100">
+                              <cat.icon size={18} />
+                            </div>
+                            <span className="font-bold text-slate-800 text-sm">{cat.title}</span>
+                          </div>
+                          <ChevronRight size={18} className="text-slate-300" />
+                        </button>
+                      ))}
                     </div>
-                    <ChevronRight size={20} className="ml-auto text-slate-300" />
-                  </button>
+                  </div>
                 ))}
-                
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-4 p-5 active:bg-rose-50 transition-colors group text-rose-500 cursor-pointer"
-                >
-                  <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 border border-white ring-4 ring-rose-50/10">
-                    <LogOut size={24} />
-                  </div>
-                  <div className="flex flex-col items-start">
-                    <span className="font-bold text-lg text-rose-600">Oturumu Kapat</span>
-                    <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 mt-0.5">Güvenli Oturum Çıkışı</span>
-                  </div>
-                  <ChevronRight size={20} className="ml-auto text-rose-300" />
-                </button>
               </div>
-
-              {/* Version Info */}
-              <div className="text-center p-10 opacity-30">
-                <p className="text-xs font-black tracking-[0.3em] uppercase">TALEP {t('version')}</p>
-                <p className="text-[10px] mt-2">© 2026 AI Medical Intelligence</p>
-              </div>
+              
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-3 p-5 rounded-3xl font-black text-rose-500 bg-white border border-rose-100 active:scale-95 transition-transform shadow-sm"
+              >
+                <LogOut size={20} />
+                Güvenli Çıkış Yap
+              </button>
             </motion.div>
           ) : (
-            <motion.div 
-              key="mobile-detail" 
-              initial={{ opacity: 0, x: 20 }} 
-              animate={{ opacity: 1, x: 0 }} 
+            <motion.div
+              key="mobile-detail"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="space-y-8"
+              className="space-y-6 bg-white min-h-screen -mx-5 px-5 pt-6 pb-32"
             >
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => setMobileActiveCategory(null)}
-                  className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-blue shadow-lg shadow-brand-blue/10 border border-white"
-                >
-                  <ChevronLeft size={24} />
-                </button>
-                <div className="flex flex-col">
-                  <h2 className="text-2xl font-black tracking-tight text-slate-900 leading-none">
-                    {categories.find(c => c.id === mobileActiveCategory)?.title}
-                  </h2>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1.5">{t('settings')}</p>
-                </div>
-              </div>
-
-              <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 p-6 shadow-2xl shadow-slate-900/5">
+              <button 
+                onClick={() => setMobileActiveCategory(null)}
+                className="flex items-center gap-2 text-blue-600 font-bold p-2 -ml-2 active:bg-blue-50 rounded-xl transition-colors w-fit"
+              >
+                <ChevronLeft size={24} />
+                <span>Ayarlara Dön</span>
+              </button>
+              <div className="pb-10">
                 {renderContent(mobileActiveCategory)}
               </div>
             </motion.div>

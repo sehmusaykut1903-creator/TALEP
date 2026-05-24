@@ -122,7 +122,7 @@ export default function AIResearchAssistant() {
   // Run Abstract Builder
   const handleGenerateAbstract = () => {
     const abstractText = `BAŞLIK: Üçüncü Basamak Kurumlarda ${abstractToxin} Maruziyeti: ${abstractThesis} Odaklı Retrospektif Akon Analizi\n\n` +
-      `YAZARLAR: Şehmus AYKUT, Fatma Nur AYKUT, Aghajan MUSALI, Prof. Dr. Vugar Ali TÜRKSOY\n\n` +
+      `YAZARLAR: Klinik Araştırma Ekibi\n\n` +
       `GİRİŞ VE AMAÇ: Mesleki maruziyetlerde erken teşhis biyobelirteçlerinin ve genetik yapının incelenmesi kritiktir. Bu çalışmada ${abstractToxin} maruziyeti bulunan sanayi çalışanlarının ${abstractThesis} süreçleri klinik retrospektif olarak araştırılmıştır.\n\n` +
       `GEREÇ VE YÖNTEMLER: Çalışmaya son 5 yılda toksikoloji polikliniğimize başvuran ve ${abstractToxin} maruziyeti kesinleşmiş olan klinik vakalar dahil edilmiştir. Eritrosit kolinesteraz aktivitesi, idrar metabolitleri ve polimorfizmleri kromatografik olarak nicelleştirilmiştir.\n\n` +
       `BULGULAR: Çalışılan popülasyonda ${abstractThesis} dinamiklerinin klinik parametrelerle p < 0.01 seviyesinde istatistiksel ilişki taşıdığı saptanmıştır. Özellikle koruyucu ekipman (PPE) uyumu %80'in altında olan kohortlarda nefrotoksik ve hematotoksik seyirler katlanarak artış göstermiştir.\n\n` +

@@ -1,804 +1,353 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import Markdown from 'react-markdown';
-import { MsdsPremiumBanner } from "../components/MsdsPremiumBanner";
-import { 
-  Bot, 
-  Send, 
-  User,
-  Sparkles, 
-  Brain, 
-  Activity, 
-  ShieldCheck, 
-  ChevronRight, 
-  AlertTriangle,
-  ClipboardList,
-  Stethoscope,
-  FlaskConical,
-  Zap,
-  CheckCircle2,
-  Info,
-  FileText,
-  Save,
-  BarChart2,
-  TrendingUp,
-  Sliders,
-  Award,
-  Database,
-  RefreshCw,
-  FolderLock,
-  Clock,
-  Briefcase,
-  Layers,
-  HeartPulse,
-  ChevronDown,
-  ChevronUp
-} from 'lucide-react';
-import { useSettings } from '../context/SettingsContext';
-import { useAuth } from '../context/AuthContext';
-import { 
-  generateScientificReasoning, 
-  saveAiChatMemory, 
-  getAiChatHistory, 
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import Markdown from "react-markdown";
+import { useSettings } from "../context/SettingsContext";
+import { useAuth } from "../context/AuthContext";
+import {
+  generateScientificReasoning,
+  saveAiChatMemory,
   StructuredAiResponse,
-  AiContext 
-} from '../services/talepAiService';
-
-import { 
-  ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip as ChartTooltip, 
-  LineChart, 
-  Line, 
-  RadarChart, 
-  PolarGrid, 
-  PolarAngleAxis, 
-  PolarRadiusAxis, 
-  Radar,
-  CartesianGrid,
-  Legend
-} from 'recharts';
+} from "../services/talepAiService";
+import { Stethoscope } from "lucide-react";
 
 interface Message {
   id: string;
-  type: 'ai' | 'user';
+  sender: "ai" | "user";
   text?: string;
   structured?: StructuredAiResponse;
   timestamp: Date;
-  modeUsed?: string;
-}
-
-// Extended Context Interface for the Premium Redesign
-interface PremiumAiContext extends AiContext {
-  exposureDuration?: string;
-  doseTracking?: string;
-  analyticalMethod?: string;
-  biomarkersDetailed?: string;
-  decisionSupportOverride?: string;
-  clinicalRecommendationsOverride?: string;
+  isStreaming?: boolean;
 }
 
 export default function TalepAI() {
   const { theme, t } = useSettings();
   const { currentUser } = useAuth();
   const isDark = theme.isDark;
-  
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'ai',
-      text: "TALEP Klinik Yapay Zeka platformuna hoş geldiniz. Sol paneldeki 'Vaka Monitörü' parametrelerini (Biyogöstergeler, maruziyet süreleri, dozaj ve analitik metotlar) dilediğiniz gibi güncelleyebilir, ardından motora analiz sorularınızı yöneltebilirsiniz.",
-      timestamp: new Date(),
-    }
-  ]);
-  
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Response Mode Selection
-  const [selectedMode, setSelectedMode] = useState<'clinical' | 'academic' | 'emergency' | 'surveillance' | 'research'>('clinical');
-  const [sessionId, setSessionId] = useState('');
-  const [historyList, setHistoryList] = useState<any[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [advancedAi, setAdvancedAi] = useState<boolean>(true); // Default to true.
-  
-  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Expanded demographic and state-aware context
-  const [context, setContext] = useState<PremiumAiContext>({
-    sector: "Akü ve Metal Eritme",
-    unit: "Döküm / Hammadde İşleme",
-    symptoms: ["Bilişsel Yavaşlama", "Mikrositer Anemi", "El Titremesi"],
-    riskLevel: 'high',
-    exposureDuration: "4.5 Yıl (Kümülatif)",
-    doseTracking: "BLL: 42 µg/dL, ZPP Yüksek",
-    analyticalMethod: "ICP-MS (Kütle Spektrometresi)",
-    biomarkersDetailed: "Kan Kurşun Seviyesi (>40), İdrarda Ala ve Koproporfirin yükselmesi.",
-    decisionSupportOverride: "Orta-Yüksek kurşun toksisitesi saptandı. Periferik sinir iletimi etkilenebilir.",
-    clinicalRecommendationsOverride: "1. Şelasyon başlanmalı. 2. Maruziyet ortamından uzaklaştırılmalı. 3. Aylık kan tahlili takibi yapılmalı."
-  });
-
-  const [activeTab, setActiveTab] = useState<Record<string, 'text' | 'probability' | 'progression' | 'riskRadar'>>({});
-  const [editContextPanelOpen, setEditContextPanelOpen] = useState(true);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setSessionId(`sess-${Math.random().toString(36).substring(2, 9)}`);
   }, []);
 
-  const loadHistory = async () => {
-    if (currentUser?.uid) {
-      setHistoryLoading(true);
-      try {
-        const hist = await getAiChatHistory(currentUser.uid);
-        setHistoryList(hist);
-      } catch (e) {
-        console.error("Failed to load AI history:", e);
-      } finally {
-        setHistoryLoading(false);
-      }
-    }
-  };
-
+  // Otomatik aşağı kaydırma (Smart Scroll)
   useEffect(() => {
-    loadHistory();
-  }, [currentUser]);
+    if (!messagesEndRef.current) return;
+    const scrollContainer = messagesEndRef.current.closest('main');
+    if (scrollContainer) {
+      // Sadece en alta yakınsak (son 200px) otomatik kaydır, kullanıcının scrollunu kilitleme
+      const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 200;
+      if (isNearBottom) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+      } else if (!messages.some(m => m.isStreaming)) {
+        // Yeni bir tam mesaj eklendiğinde (streaming bittiğinde veya yeni başladığında)
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+      }
+    } else {
+       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isLoading]);
 
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const getSafeTranslation = (key: string, fallback: string) => {
+    const val = t(key);
+    return (val && val !== key) ? val : fallback;
   };
 
-  useEffect(scrollToBottom, [messages, isTyping]);
+  // Hızlı Prompt Önerileri (Yatay Scroll Carousel)
+  const suggestionPills = [
+    { id: "1", text: "💥 " + getSafeTranslation("lead_toxicity", "Kurşun toksisitesi nedir?") },
+    { id: "2", text: "🧪 " + getSafeTranslation("arsenic_exposure", "Arsenik maruziyeti nasıl anlaşılır?") },
+    { id: "3", text: "💊 " + getSafeTranslation("organophosphate_antidote", "Organofosfat zehirlenmesinde antidot nedir?") },
+    { id: "4", text: "🏭 " + getSafeTranslation("occupational_risk", "Mesleki toksik risk analizi yap") },
+    { id: "5", text: "📋 " + getSafeTranslation("clinical_summary", "Klinik vaka özeti oluştur") },
+    { id: "6", text: "🔬 " + getSafeTranslation("benzene_leukemia", "Benzen maruziyeti ve lösemi ilişkisi nedir?") },
+  ];
 
-  const handleSend = async (overrideInput?: string) => {
-    const textToSend = overrideInput || input;
-    if (!textToSend.trim()) return;
+  const handleSendMessage = async (e?: React.FormEvent, overrideInput?: string) => {
+    if (e) e.preventDefault();
+    const textToSend = overrideInput || inputValue;
+    if (!textToSend.trim() || isLoading) return;
 
-    setError(null);
-    const userId = currentUser ? currentUser.uid : "fallback-anonymous-user";
+    setInputValue("");
+    setIsLoading(true);
 
     const userMsg: Message = {
-      id: `u-${Date.now()}-${sessionId}`,
-      type: 'user',
+      id: `u-${Date.now()}`,
+      sender: "user",
       text: textToSend,
       timestamp: new Date(),
     };
-
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
-    setIsTyping(true);
+    setMessages((prev) => [...prev, userMsg]);
 
     try {
-      // Feed full custom context (including exposure duration, biomarkers, dose metrics) 
-      // into clinical reasoning pipeline
-      const fullContextStr = `
-        [Vaka Parametre Kataloğu]
-        Sektör: ${context.sector}
-        Birim: ${context.unit}
-        Maruziyet Süresi: ${context.exposureDuration}
-        Biyogöstergeler: ${context.biomarkersDetailed}
-        Doz Takibi: ${context.doseTracking}
-        Analitik Metot: ${context.analyticalMethod}
-        Mevcut Semptomlar: ${context.symptoms?.join(', ')}
-        Karar Destek Çıktısı: ${context.decisionSupportOverride}
-        Klinik Öneriler: ${context.clinicalRecommendationsOverride}
-      `;
+      // 2. MEVCUT ÇALIŞAN GEMINI BACKEND API BAĞLANTISI (Bozmadan)
+      const mockContext = {
+        sector: "Genel Değerlendirme",
+        unit: "Klinik Kabul",
+      };
 
       const response = await generateScientificReasoning(
-        `${textToSend}\n\n[Mevcut Vaka Konsept Bilgileri]:\n${fullContextStr}`,
-        context,
-        selectedMode,
-        messages.slice(-4).map(m => ({
-          type: m.type,
+        textToSend,
+        mockContext,
+        "clinical",
+        messages.slice(-4).map((m) => ({
+          type: m.sender,
           text: m.text,
-          response: m.structured
+          response: m.structured,
         })),
-        advancedAi
+        true // advanced reasoning enabled
       );
 
-      const aiMsg: Message = {
-        id: `ai-${Date.now()}-${sessionId}`,
-        type: 'ai',
-        structured: response,
+      const aiMsgBase: Message = {
+        id: `ai-${Date.now()}`,
+        sender: "ai",
         timestamp: new Date(),
-        modeUsed: selectedMode
+        isStreaming: true,
       };
 
-      setMessages(prev => [...prev, aiMsg]);
+      // Ensure the message object has a structured field initially empty (if not casual)
+      // If casual, we can use structured too to keep it unified, but with empty text first.
+      const isCasualRes = response.isCasual;
+      const fullText = response.rawText || "";
 
-      if (currentUser?.uid) {
-        await saveAiChatMemory(currentUser.uid, sessionId, selectedMode, textToSend, response);
-        loadHistory();
+      // Add empty message to queue
+      setMessages((prev) => [
+        ...prev,
+        {
+          ...aiMsgBase,
+          structured: { ...response, rawText: "" },
+          text: isCasualRes ? "" : undefined,
+        },
+      ]);
+      
+      setIsLoading(false); // Enable input while streaming (or keep disabled if preferred, we'll let them scroll)
+
+      // Simulate streaming
+      let streamedText = "";
+      // To ensure reasonable speed for long texts
+      const chunkSize = fullText.length > 500 ? 3 : 1; 
+      for (let i = 0; i < fullText.length; i += chunkSize) {
+        streamedText += fullText.slice(i, i + chunkSize);
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === aiMsgBase.id
+              ? {
+                  ...m,
+                  structured: { ...response, rawText: streamedText },
+                  text: isCasualRes ? streamedText : m.text,
+                }
+              : m
+          )
+        );
+        await new Promise((r) => setTimeout(r, 15));
       }
 
+      // Streaming finished
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === aiMsgBase.id
+            ? { ...m, isStreaming: false, structured: response, text: isCasualRes ? response.rawText : m.text }
+            : m
+        )
+      );
+
+      if (currentUser?.uid) {
+        await saveAiChatMemory(currentUser.uid, sessionId, "clinical", textToSend, response);
+      }
     } catch (err: any) {
-      console.error("Clinical AI pipeline error:", err);
-      setError(err?.message || "Servise erişilemedi.");
-      
+      console.error("Mesaj gönderim hatası:", err);
       const errorMsg: Message = {
         id: `err-${Date.now()}`,
-        type: 'ai',
-        text: "Toksikoloji motorundan geçerli bir analiz paketi alınamadı. Lütfen internet bağlantınızı kontrol edin.",
+        sender: "ai",
+        text: "Toksikoloji motorundan geçerli bir analiz alınamadı. Lütfen internet bağlantınızı kontrol edin.",
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMsg]);
+      setMessages((prev) => [...prev, errorMsg]);
     } finally {
-      setIsTyping(false);
+      setIsLoading(false);
     }
-  };
-
-  const handleRestoreHistory = (historyItem: any) => {
-    if (!historyItem?.response) return;
-    
-    const userMsg: Message = {
-      id: `u-restored-${Date.now()}`,
-      type: 'user',
-      text: historyItem.question || "Kayıtlı Analiz Sürveyansı",
-      timestamp: new Date()
-    };
-
-    const aiMsg: Message = {
-      id: `ai-restored-${Date.now()}`,
-      type: 'ai',
-      structured: historyItem.response,
-      timestamp: new Date(),
-      modeUsed: historyItem.mode || 'clinical'
-    };
-
-    setMessages(prev => [...prev, userMsg, aiMsg]);
-  };
-
-  const quickActions = [
-    { label: "Kurşun Zehirlenmesi", query: "BLL > 40 µg/dL ICP-MS maruziyet riski ve şelasyon dozajını yorumla", icon: FlaskConical },
-    { label: "Benzen Akut Lösemi", query: "Boya işçisinde lökopeni (WBC 3.2), idrar tt-MA yüksekliği, IARC Grup 1 takibi", icon: Activity },
-    { label: "Organofosfat Kriz", query: "Yoğun salivasyon, miyozis acil antropatizasyonu ve antidote yönetimi", icon: Zap },
-    { label: "Nöro-Solvent Hasarı", query: "Yapıştırıcı hattında el titremesi (tremor) ve aksonal polinöropati izlemi", icon: Sliders },
-  ];
-
-  const renderVisualsAndReports = (res: StructuredAiResponse, msgId: string) => {
-    if (res.isCasual) {
-      return (
-        <div className="prose prose-invert max-w-none text-slate-200 text-xs md:text-sm leading-relaxed p-4 bg-slate-900/60 border border-white/5 rounded-2xl animate-fade-in markdown-body">
-          <Markdown>{res.rawText}</Markdown>
-        </div>
-      );
-    }
-
-    const currentTab = activeTab[msgId] || 'text';
-
-    const setMsgTab = (tabValue: 'text' | 'probability' | 'progression' | 'riskRadar') => {
-      setActiveTab(prev => ({ ...prev, [msgId]: tabValue }));
-    };
-
-    return (
-      <div className="space-y-4 max-w-full">
-        {/* Horizontal Navigation Control for analytical packages */}
-        <div className="flex gap-2 bg-slate-950/80 p-1.5 rounded-2xl overflow-x-auto scrollbar-hide shrink-0 mb-4 border border-white/5">
-          <button 
-            onClick={() => setMsgTab('text')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
-              currentTab === 'text' ? 'bg-cyan-500/15 border border-cyan-405 border-cyan-404/30 text-cyan-400 font-extrabold shadow-[inset_0_0_10px_rgba(6,182,212,0.15)]' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <FileText size={13} /> Analiz Raporu
-          </button>
-          <button 
-            onClick={() => setMsgTab('probability')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
-              currentTab === 'probability' ? 'bg-cyan-500/15 border border-cyan-404/30 text-cyan-400 font-extrabold shadow-[inset_0_0_10px_rgba(6,182,212,0.15)]' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <BarChart2 size={13} /> Olasılık Dağılımı
-          </button>
-          <button 
-            onClick={() => setMsgTab('progression')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
-              currentTab === 'progression' ? 'bg-cyan-500/15 border border-cyan-404/30 text-cyan-400 font-extrabold shadow-[inset_0_0_10px_rgba(6,182,212,0.15)]' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <TrendingUp size={13} /> Biyobelirteç İlerleme Akışı
-          </button>
-          <button 
-            onClick={() => setMsgTab('riskRadar')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
-              currentTab === 'riskRadar' ? 'bg-cyan-500/15 border border-cyan-404/30 text-cyan-400 font-extrabold shadow-[inset_0_0_10px_rgba(6,182,212,0.15)]' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Brain size={13} /> Risk Radarı
-          </button>
-        </div>
-
-        {/* Content Views */}
-        <div className="min-h-[220px]">
-          {currentTab === 'text' && (
-            <div className="space-y-4 text-slate-100">
-              <div className="p-5 bg-slate-900/60 border border-white/5 rounded-2xl markdown-body text-xs leading-relaxed font-semibold">
-                <Markdown>{res.rawText}</Markdown>
-              </div>
-
-              {/* Dynamic decision recommendations grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
-                  <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <CheckCircle2 size={11} /> KILAVUZ HASTALIK ÖNERİLERİ
-                  </h5>
-                  <ul className="text-xs text-slate-300 space-y-1 pl-3 list-disc">
-                    {res.surveillanceSuggestions?.map((s, idx) => (
-                      <li key={idx} className="font-semibold">{s}</li>
-                    )) || <li>Bulgu bulunamadı.</li>}
-                  </ul>
-                </div>
-                
-                <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl">
-                  <h5 className="text-[10px] font-black text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <Award size={11} /> TAVSİYE EDİLEN EK ANALİTLER
-                  </h5>
-                  <div className="flex flex-wrap gap-1.5">
-                    {res.recommendedNextTests?.map((t, idx) => (
-                      <span key={idx} className="bg-amber-500/10 text-amber-400 px-2 py-1 rounded text-[9px] font-bold uppercase border border-amber-550/10">{t}</span>
-                    )) || <span className="text-xs text-slate-400">Öneri bulunamadı.</span>}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {currentTab === 'probability' && (
-            <div className="h-64 bg-slate-900/40 p-4 border border-white/5 rounded-2xl flex flex-col justify-between">
-              <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest block font-mono">EN OLASI TOKSİK SENDROM DIZILIMI</span>
-              <ResponsiveContainer width="100%" height="80%">
-                <BarChart data={res.probabilityGraph || []}>
-                  <XAxis dataKey="name" stroke="#888888" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#888888" fontSize={10} tickLine={false} />
-                  <ChartTooltip contentStyle={{ fontSize: 11, background: '#0f172a', border: 'none', borderRadius: 12, color: '#fff' }} />
-                  <Bar dataKey="probability" fill="#06b6d4" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {currentTab === 'progression' && (
-            <div className="h-64 bg-slate-900/40 p-4 border border-white/5 rounded-2xl flex flex-col justify-between">
-              <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest block font-mono">BİYOBELİRTEÇ KÜMÜLATİF EŞİK GRAFİĞİ</span>
-              <ResponsiveContainer width="100%" height="80%">
-                <LineChart data={res.biomarkerProgression || []}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                  <XAxis dataKey="period" stroke="#888888" fontSize={10} />
-                  <YAxis stroke="#888888" fontSize={10} />
-                  <ChartTooltip contentStyle={{ fontSize: 11, background: '#0f172a', border: 'none', borderRadius: 12, color: '#fff' }} />
-                  <Line type="monotone" dataKey="value" stroke="#38bdf8" strokeWidth={2.5} name="Saptanan Değer" dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="limit" stroke="#ef4444" strokeWidth={1.5} strokeDasharray="5 5" name="Eşik Limit (Threshold)" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {currentTab === 'riskRadar' && (
-            <div className="h-64 bg-slate-900/40 p-4 border border-white/5 rounded-2xl flex flex-col items-center justify-between">
-              <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest block font-mono self-start">ORGAN HASAR RİSK KATSAYILARI (RADAR)</span>
-              <div className="w-full h-[80%] flex justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={res.riskRadar || []}>
-                    <PolarGrid stroke="#333" />
-                    <PolarAngleAxis dataKey="subject" stroke="#888888" fontSize={9} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#444" fontSize={8} />
-                    <Radar name="Etki Yüzdesi" dataKey="value" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.4} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 h-full min-h-0 overflow-hidden select-none">
-      
-      {/* 1. Left Sidebar: Scientific History Queries */}
-      <div className={`hidden lg:flex w-64 flex-col shrink-0 rounded-[32px] p-5 border transition-all duration-200 ${theme.cardBg}`}>
-        <h3 className={`text-[11px] font-black tracking-widest uppercase mb-3 px-1 ${
-          isDark ? "text-cyan-400" : "text-blue-600"
-        }`}>
-          SORGU HAFIZASI
-        </h3>
-        {historyLoading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <span className={`w-5 h-5 border-2 rounded-full animate-spin ${
-              isDark ? "border-cyan-500 border-t-transparent" : "border-blue-600 border-t-transparent"
-            }`} />
+    <div className="w-full h-full flex flex-col bg-slate-50 dark:bg-[#070b19] transition-colors duration-300 relative overflow-hidden">
+      {/* 1. SADE CHATGPT TARZI HEADER BADGE */}
+      <header className="w-full px-4 md:px-8 py-4 bg-white/90 dark:bg-[#0d1527]/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800/80 sticky top-0 z-30 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-base font-black shadow-md shadow-indigo-600/15">
+            🤖
           </div>
-        ) : historyList.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-            <Sparkles size={24} className="opacity-20 mb-2 animate-pulse" />
-            <span className="text-[10px] opacity-40 font-bold uppercase tracking-wider block">KAYIT BULUNAMADI</span>
+          <div>
+            <h1 className="text-sm md:text-base font-black tracking-tight text-[#0f172a] dark:text-white flex items-center gap-2">
+              TALEP AI
+              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold rounded-full border border-emerald-500/20 flex items-center gap-1 select-none whitespace-nowrap">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                GEMINI CLINICAL AI
+              </span>
+            </h1>
           </div>
-        ) : (
-          <div className="flex-1 space-y-2.5 overflow-y-auto scrollbar-hide pr-1">
-            {historyList.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleRestoreHistory(item)}
-                className={`w-full text-left p-3 rounded-2xl border transition-all duration-250 cursor-pointer ${
-                  isDark 
-                    ? "bg-slate-900/40 hover:bg-slate-900 border-white/5 hover:border-cyan-500/20 text-slate-300" 
-                    : "bg-slate-50 hover:bg-slate-100 hover:shadow-md border-slate-200 hover:border-blue-300 text-slate-705 text-slate-750 text-slate-700"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase font-mono border ${
-                    isDark 
-                      ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/15" 
-                      : "bg-blue-50 text-blue-600 border-blue-200"
-                  }`}>
-                    {item.mode ? item.mode.toUpperCase() : 'KLİNİK'}
-                  </span>
-                  <span className="text-[8px] opacity-40 font-mono">
-                    {item.timestamp ? new Date(item.timestamp).toLocaleDateString() : ''}
-                  </span>
-                </div>
-                <p className="text-[10.5px] font-bold line-clamp-2 leading-snug">
-                  {item.question}
-                </p>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+        </div>
+        <button
+          onClick={() => setMessages([])}
+          className="text-xs font-bold px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-[#1e293b] dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-all select-none whitespace-nowrap"
+        >
+          ➕ {t("new_chat") || "Yeni Sohbet"}
+        </button>
+      </header>
 
-      {/* 2. Middle Column: Case Context Monitor - INTERACTIVE AND EDITABLE FOR REDESIGN */}
-      <div className={`w-full lg:w-80 flex flex-col shrink-0 rounded-[32px] p-5 border overflow-y-auto scrollbar-thin transition-all duration-200 ${theme.cardBg}`}>
-        <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-          <div className="flex items-center gap-2">
-            <HeartPulse size={15} className="text-cyan-400 animate-pulse" />
-            <h3 className={`text-[11px] font-black tracking-widest uppercase ${isDark ? "text-cyan-400" : "text-blue-600"}`}>
-              VAKA MONİTÖRÜ v4
-            </h3>
-          </div>
-          <button 
-            onClick={() => setEditContextPanelOpen(!editContextPanelOpen)}
-            className="text-[10px] font-black uppercase text-cyan-400 hover:underline"
+      {/* 2. CHAT ALANI (Tablet/PC'de Ortalanmış Mükemmel ChatGPT Düzeni) */}
+      <main 
+        className="flex-1 w-full overflow-y-auto px-4 md:px-6 pt-6"
+        style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+      >
+        <div className="w-full max-w-[880px] mx-auto min-h-full flex flex-col justify-end">
+          {messages.length === 0 ? (
+            // Karşılama Ekranı
+            <div className="flex flex-col items-center justify-center text-center px-4 animate-fadeIn my-auto pb-64">
+              <div className="text-4xl mb-4 select-none">🧬</div>
+              <h2 className="text-xl font-black text-[#0f172a] dark:text-white mb-2">
+                {getSafeTranslation("welcome_message", "TALEP AI Klinik Danışmanlık Paneli")}
+              </h2>
+              <p className="text-sm font-semibold text-[#334155] dark:text-slate-400 max-w-md leading-relaxed">
+                Vugar hocanın sürveyans matrisleri ve klinik toksikoloji rehberleri doğrultusunda vakalarınızı analiz edebilirsiniz.
+              </p>
+            </div>
+          ) : (
+            // Mesaj Akışı
+            <div className="space-y-6 w-full">
+              <AnimatePresence>
+                {messages.map((msg, idx) => {
+                  const isAI = msg.sender === "ai";
+                  return (
+                    <motion.div
+                      key={msg.id || idx}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex w-full ${isAI ? "justify-start" : "justify-end"}`}
+                    >
+                      <div
+                        className={`max-w-[92%] md:max-w-[85%] rounded-2xl px-5 py-4 shadow-sm border ${
+                          isAI
+                            ? "bg-white dark:bg-[#0d1527] border-slate-200 dark:border-slate-800/80 text-[#0f172a] dark:text-slate-100"
+                            : "bg-indigo-600 border-indigo-700 text-white shadow-md shadow-indigo-600/10"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1.5 select-none">
+                          <span
+                            className={`text-[10px] font-black uppercase tracking-wider ${
+                              isAI ? "text-indigo-600 dark:text-indigo-400" : "text-indigo-200"
+                            }`}
+                          >
+                            {isAI ? "🤖 TALEP CLINICAL AI" : "👤 KLİNİSYEN"}
+                          </span>
+                        </div>
+                        {/* Tıbbi Format ve Markdown Desteği İçin İçerik */}
+                        <div className="text-sm md:text-[15px] leading-relaxed font-medium break-words prose dark:prose-invert max-w-none text-[#0f172a] dark:text-slate-100 prose-p:text-[#0f172a] dark:prose-p:text-slate-200 prose-headings:text-[#0f172a] dark:prose-headings:text-white prose-strong:text-[#0f172a] dark:prose-strong:text-white prose-li:text-[#0f172a] dark:prose-li:text-slate-200">
+                          {isAI && msg.structured ? (
+                            <div className="space-y-4">
+                              <Markdown>{messageStyleOverride(msg.structured.rawText || "")}</Markdown>
+                              {msg.isStreaming && !msg.structured.rawText && (
+                                <div className="text-slate-400 italic">TALEP AI yazıyor...</div>
+                              )}
+                              {msg.structured.surveillanceSuggestions &&
+                                msg.structured.surveillanceSuggestions.length > 0 && (
+                                  <div className="mt-5 p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 not-prose">
+                                    <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">
+                                      <Stethoscope size={16} className="text-indigo-600 dark:text-indigo-400" /> Klinik
+                                      Öneriler
+                                    </h4>
+                                    <ul className="text-sm space-y-2 text-[#475569] dark:text-slate-300 ml-1">
+                                      {msg.structured.surveillanceSuggestions.map((s, i) => (
+                                        <li key={i} className="flex gap-2.5 items-start">
+                                          <span className="text-indigo-500 mt-0.5">•</span>
+                                          <span className="leading-relaxed">{s}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                            </div>
+                          ) : (
+                            <div className="whitespace-pre-wrap">{msg.text}</div>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+              {isLoading && (
+                <div className="flex justify-start animate-fadeIn">
+                  <div className="bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800/80 rounded-2xl px-5 py-4 text-xs font-semibold text-[#475569] dark:text-slate-400 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                    <span className="ml-2">Analiz ediliyor...</span>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} className="h-[230px] w-full flex-shrink-0" />
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* 3. STICKY BOTTOM INPUT AREA (Alt Navbar Üstüne Çakışmayan Koruma Kalkanı) */}
+      <div className="fixed md:absolute bottom-[calc(92px+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent dark:from-[#070b19] dark:via-[#070b19]/95 dark:to-transparent px-4 pb-2 md:pb-6 pt-10 z-[70] pointer-events-none">
+        <div className="max-w-[760px] mx-auto space-y-3 pointer-events-auto">
+          {/* YATAY SCROLL PROMPT CHIPS CAROUSEL */}
+          {messages.length === 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide select-none">
+              {suggestionPills.map((pill) => (
+                <button
+                  key={pill.id}
+                  onClick={() => handleSendMessage(undefined, pill.text.substring(3))}
+                  className="flex-shrink-0 px-3 py-1.5 bg-white dark:bg-[#0f172a] hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-[#1e293b] dark:text-slate-300 rounded-xl transition-all active:scale-95 shadow-sm whitespace-nowrap"
+                >
+                  {pill.text}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* CHAT INPUT MATRIX */}
+          <form
+            onSubmit={handleSendMessage}
+            className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800/80 rounded-[28px] p-2 flex items-center gap-2 shadow-lg shadow-slate-200/40 dark:shadow-none focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all"
           >
-            {editContextPanelOpen ? "PANELİ DARALT" : "PARAMETRELERİ DÜZENLE"}
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          
-          <AnimatePresence>
-            {editContextPanelOpen && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-3.5"
-              >
-                {/* 1. Sektörel Maruziyet & Birim */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <span className="text-[8.5px] font-black uppercase tracking-widest text-[#64748b] block font-mono">Endüstriyel Sektör</span>
-                    <input 
-                      type="text"
-                      value={context.sector}
-                      onChange={(e) => setContext({ ...context, sector: e.target.value })}
-                      className="w-full px-2.5 py-2 bg-slate-900/60 dark:bg-slate-950 border border-white/5 rounded-xl text-xs font-bold text-slate-100 outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[8.5px] font-black uppercase tracking-widest text-[#64748b] block font-mono">Birim & Görev</span>
-                    <input 
-                      type="text"
-                      value={context.unit}
-                      onChange={(e) => setContext({ ...context, unit: e.target.value })}
-                      className="w-full px-2.5 py-2 bg-slate-900/60 dark:bg-slate-950 border border-white/5 rounded-xl text-xs font-bold text-slate-100 outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                </div>
-
-                {/* 2. Maruziyet Süresi */}
-                <div className="space-y-1">
-                  <span className="text-[8.5px] font-black uppercase tracking-widest text-cyan-400 block font-mono">Maruziyet Süresi (Exposure Duration)</span>
-                  <input 
-                    type="text"
-                    value={context.exposureDuration}
-                    onChange={(e) => setContext({ ...context, exposureDuration: e.target.value })}
-                    placeholder="Örn: 5 Yıl kümülatif"
-                    className="w-full px-3 py-2 bg-slate-900/60 dark:bg-slate-950 border border-white/5 rounded-xl text-xs font-bold text-slate-100 outline-none focus:border-cyan-500"
-                  />
-                </div>
-
-                {/* 3. Doz Takibi */}
-                <div className="space-y-1">
-                  <span className="text-[8.5px] font-black uppercase tracking-widest text-amber-400 block font-mono">Doz Takibi / Dozajlama Analizi</span>
-                  <input 
-                    type="text"
-                    value={context.doseTracking}
-                    onChange={(e) => setContext({ ...context, doseTracking: e.target.value })}
-                    placeholder="Kan, idrar veya inhalasyon dozu"
-                    className="w-full px-3 py-2 bg-slate-900/60 dark:bg-slate-950 border border-white/5 rounded-xl text-xs font-bold text-slate-100 outline-none focus:border-cyan-500"
-                  />
-                </div>
-
-                {/* 4. Analitik Metot Seçimi */}
-                <div className="space-y-1">
-                  <span className="text-[8.5px] font-black uppercase tracking-widest text-violet-400 block font-mono">Analitik Metot Seçimi</span>
-                  <select
-                    value={context.analyticalMethod}
-                    onChange={(e) => setContext({ ...context, analyticalMethod: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-900/60 dark:bg-slate-950 border border-white/5 rounded-xl text-xs font-bold text-slate-100 outline-none focus:border-cyan-500 cursor-pointer"
-                  >
-                    <option value="ICP-MS (İndüktif Eşleşmiş Plazma Kütle Spektrometresi)">ICP-MS (Metaller)</option>
-                    <option value="HPLC (Yüksek Performanslı Sıvı Kromatografisi)">HPLC (Solventler / Metabolit)</option>
-                    <option value="GC-MS (Gaz Kromatografisi Kütle Spektrometresi)">GC-MS (Gazlar ve VOC)</option>
-                    <option value="AAS (Atomik Absorpsiyon Spektroskopisi)">AAS (Temel Toksik Metal)</option>
-                  </select>
-                </div>
-
-                {/* 5. Biyogöstergeler */}
-                <div className="space-y-1">
-                  <span className="text-[8.5px] font-black uppercase tracking-widest text-blue-400 block font-mono">Biyogösterge Bulguları (Biomarkers)</span>
-                  <textarea 
-                    rows={2}
-                    value={context.biomarkersDetailed}
-                    onChange={(e) => setContext({ ...context, biomarkersDetailed: e.target.value })}
-                    placeholder="Kan kurşun biyobelirteçleri, kromatografik idrar asit mutasyonları..."
-                    className="w-full px-3 py-2 bg-slate-900/60 dark:bg-slate-950 border border-white/5 rounded-xl text-xs font-bold text-slate-100 outline-none focus:border-cyan-500 scrollbar-hide resize-none"
-                  />
-                </div>
-
-                {/* Semptomlar */}
-                <div className="space-y-1">
-                  <span className="text-[8.5px] font-black uppercase tracking-widest text-[#64748b] block font-mono">Girilen Değerlendirme Semptomları</span>
-                  <input 
-                    type="text"
-                    value={context.symptoms?.join(', ')}
-                    onChange={(e) => setContext({ ...context, symptoms: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-                    placeholder="Semptomları virgülle ayırarak yazın..."
-                    className="w-full px-3 py-2 bg-slate-900/60 dark:bg-slate-950 border border-white/5 rounded-xl text-xs font-bold text-slate-100 outline-none focus:border-cyan-500"
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* 5. Karar Destek Çıktısı Segment */}
-          <div className="p-4 bg-slate-900/40 border border-white/5 rounded-2xl space-y-2">
-            <span className="text-[8.5px] font-black uppercase tracking-widest text-[#0ea5e9] block font-mono">Karar Destek Çıktısı</span>
-            <span className="text-[9px] bg-red-500/10 text-rose-450 text-rose-400 px-2 py-0.5 rounded border border-rose-500/20 uppercase font-black font-mono">KRİTİK TOKSİKOLOG RAPOR DIZILIMI</span>
-            <textarea 
-              rows={2}
-              value={context.decisionSupportOverride}
-              onChange={(e) => setContext({ ...context, decisionSupportOverride: e.target.value })}
-              className="w-full bg-transparent border-0 text-[11px] font-semibold text-slate-350 leading-relaxed outline-none p-0 focus:ring-0 resize-none"
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={getSafeTranslation("type_message_placeholder", "Mesaj yazın...")}
+              className="flex-1 bg-transparent border-none outline-none pl-4 pr-2 py-2 text-[15px] md:text-base text-[#0f172a] dark:text-white placeholder-[#64748b] dark:placeholder-slate-400 font-semibold"
             />
-          </div>
+            <button
+              type="submit"
+              disabled={!inputValue.trim() || isLoading}
+              className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center transition-all ${
+                inputValue.trim() && !isLoading
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600 cursor-not-allowed"
+              }`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </form>
 
-          {/* 6. Klinik Öneriler Segment */}
-          <div className="p-4 bg-emerald-500/[0.03] border border-emerald-500/10 rounded-2xl space-y-1.5">
-            <span className="text-[8.5px] font-black uppercase tracking-widest text-[#10b981] block font-mono">Otomatik Klinik Öneriler</span>
-            <textarea 
-              rows={3}
-              value={context.clinicalRecommendationsOverride}
-              onChange={(e) => setContext({ ...context, clinicalRecommendationsOverride: e.target.value })}
-              className="w-full bg-transparent border-0 text-[11px] font-semibold text-slate-300 leading-relaxed outline-none p-0 focus:ring-0 resize-none"
-            />
-          </div>
-
-          {/* Luminous Caveat */}
-          <div className="p-4 bg-[#0a101f] border border-cyan-500/10 rounded-[22px]">
-            <p className="text-[8.5px] opacity-75 font-semibold leading-relaxed italic text-slate-400">
-              "TALEP Klinik AI, kümülatif maruziyet dozlarını ve hücresel biyobelirteç tahlillerini kromatografi algoritmalarıyla süzerek kararlar üretir."
-            </p>
-          </div>
+          <p className="text-[10px] md:text-[10.5px] text-center font-semibold text-[#475569] dark:text-slate-500 select-none pb-1 md:pb-2">
+             TALEP AI v4.0 Premium • Medikal Karar Destek Sistemi
+          </p>
         </div>
-      </div>
-
-      {/* 3. Main Chat Screen Area */}
-      <div className={`flex-1 flex flex-col min-w-0 rounded-[32px] p-2.5 border relative backdrop-blur-3xl h-full transition-all duration-200 ${theme.cardBg}`}>
-         
-         <MsdsPremiumBanner className="m-3 mb-0" />
-         
-         {/* MODE SELECTION CONTROL LINE BAR */}
-         <div className={`grid grid-cols-5 gap-1.5 p-2 rounded-2xl border shadow-sm mx-3 mt-3 relative z-20 overflow-x-auto scrollbar-hide shrink-0 ${
-           isDark ? "bg-slate-950/60 border-white/5" : "bg-slate-50 border-slate-200"
-         }`}>
-           {[
-             { id: 'clinical', label: 'KLİNİK', sub: 'YOL / TANI', icon: Stethoscope },
-             { id: 'academic', label: 'AKADEMİK', sub: 'GENETİK', icon: Brain },
-             { id: 'emergency', label: 'ACİL', sub: 'ŞELASYON', icon: Zap },
-             { id: 'surveillance', label: 'SÜRVEYANS', sub: 'TAKİP/LİMİT', icon: ClipboardList },
-             { id: 'research', label: 'YAZI / TEZ', sub: 'BİLDİRİ', icon: FileText }
-           ].map(m => {
-             const Icon = m.icon;
-             const isSelected = selectedMode === m.id;
-             return (
-               <button
-                 key={m.id}
-                 onClick={() => { setSelectedMode(m.id as any); }}
-                 className={`flex flex-col items-center justify-center p-2 rounded-xl cursor-pointer transition-all duration-200 whitespace-nowrap active:scale-95 ${
-                   isSelected 
-                     ? isDark
-                       ? 'bg-gradient-to-tr from-cyan-500/20 to-indigo-500/20 border border-cyan-405/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)] font-black' 
-                       : 'bg-blue-50 border border-blue-200 text-blue-600 font-extrabold shadow-sm'
-                     : isDark
-                       ? 'bg-slate-900/30 hover:bg-slate-900 text-slate-400 font-bold border border-transparent'
-                       : 'bg-transparent hover:bg-slate-100 text-slate-500 border-transparent font-medium'
-                 }`}
-               >
-                 <Icon size={14} className={isSelected ? 'text-cyan-400 animate-pulse' : isDark ? 'text-slate-400' : 'text-slate-500'} />
-                 <span className="text-[9px] font-black uppercase tracking-wider block mt-1 leading-none">{m.label}</span>
-                 <span className="text-[7px] block opacity-40 uppercase font-mono tracking-widest mt-0.5">{m.sub}</span>
-               </button>
-             );
-           })}
-         </div>
-
-         {/* HYBRID CORE SELECTOR BANNER */}
-         <div className={`flex flex-col sm:flex-row justify-between items-center px-4 py-2 border shrink-0 gap-2 mx-3 mt-2 rounded-2xl shadow-sm ${
-           isDark ? "bg-slate-900/20 border-white/5" : "bg-slate-50 border-slate-200/50"
-         }`}>
-           <div className="flex items-center gap-2">
-             <div className="w-1.5 h-1.5 rounded-full animate-ping bg-emerald-400 shrink-0" />
-             <span className={`text-[9.5px] font-black uppercase tracking-wider ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-               Hibrid AI Motoru:
-             </span>
-             <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${
-               advancedAi 
-                 ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' 
-                 : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-             }`}>
-               {advancedAi ? "Gelişmiş Yapay Zeka (Gemini AI)" : "Yerel Bilimsel Karar Destek"}
-             </span>
-           </div>
-           
-           <label className="relative inline-flex items-center cursor-pointer select-none">
-             <input 
-               type="checkbox" 
-               checked={advancedAi}
-               onChange={(e) => setAdvancedAi(e.target.checked)}
-               className="sr-only peer" 
-             />
-             <div className="w-8 h-4 bg-slate-800 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyan-500"></div>
-             <span className={`ml-2 text-[9px] font-black uppercase tracking-wider ${isDark ? "text-slate-305 text-slate-300" : "text-slate-600"}`}>
-               Yüksek Doğruluk Aktif (Gemini)
-             </span>
-           </label>
-         </div>
-
-         {/* Chat Message Scrollable Wall */}
-         <div className="flex-1 p-3 md:p-6 space-y-6 overflow-y-auto scrollbar-hide">
-           <AnimatePresence>
-             {messages.map((msg) => (
-               <motion.div
-                 key={msg.id}
-                 initial={{ opacity: 0, y: 15, scale: 0.98 }}
-                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                 className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-               >
-                 <div className={`flex gap-3 max-w-[95%] md:max-w-[85%] ${msg.type === 'user' ? 'flex-row-reverse' : ''}`}>
-                   <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg transition-transform hover:scale-110 ${
-                     msg.type === 'ai' 
-                       ? isDark 
-                         ? 'bg-gradient-to-tr from-cyan-500/20 to-indigo-500/20 border border-cyan-400/20 text-cyan-400' 
-                         : 'bg-emerald-50 border border-emerald-250 text-emerald-600' 
-                       : isDark 
-                         ? 'bg-slate-900 border border-white/10 text-slate-400' 
-                         : 'bg-slate-100 border border-slate-200 text-slate-600'
-                   }`}>
-                     {msg.type === 'ai' ? <Brain size={14} className="animate-pulse" /> : <User size={14} />}
-                   </div>
-                   <div className={`p-4 rounded-2xl leading-relaxed relative break-words overflow-hidden ${
-                     msg.type === 'ai' 
-                       ? msg.id.startsWith('err-') 
-                         ? 'bg-rose-950/30 border border-rose-500/10 text-rose-400 font-bold'
-                         : isDark 
-                           ? 'bg-slate-900/40 text-slate-200 border-none shadow-none' 
-                           : 'bg-slate-50 text-slate-800 border-none shadow-none' 
-                       : isDark 
-                         ? 'bg-[#212121] text-[#ececec] border-none font-semibold shadow-none'
-                         : 'bg-[#f4f4f4] text-[#0f172a] border-none font-semibold shadow-none'
-                   }`}
-                   style={msg.type === 'user' ? { borderTopRightRadius: '3px' } : { borderTopLeftRadius: '3px' }}
-                   >
-                     {msg.type === 'ai' && msg.modeUsed && (
-                       <div className="flex items-center gap-1.5 text-[8.5px] font-black tracking-widest text-cyan-400 uppercase mb-3 font-mono">
-                         <Sparkles size={10} className="text-cyan-400 animate-spin" />
-                         MODEL ANALİZ PAKETİ: {msg.modeUsed.toUpperCase()} MODU
-                       </div>
-                     )}
-                     
-                     <div className="text-[13px] md:text-[13.5px] font-semibold">
-                       {msg.structured ? renderVisualsAndReports(msg.structured, msg.id) : (
-                         <div className="leading-relaxed markdown-body">
-                            <Markdown>{msg.text || ''}</Markdown>
-                         </div>
-                       )}
-                     </div>
-
-                     <div className={`text-[8.5px] opacity-45 mt-3 font-black uppercase tracking-widest font-mono text-right ${msg.type === 'user' ? 'text-slate-350' : 'text-slate-400'}`}>
-                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                     </div>
-                   </div>
-                 </div>
-               </motion.div>
-             ))}
-             {isTyping && (
-               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start gap-3">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
-                    isDark ? "bg-slate-900 border-cyan-500/10 text-cyan-400" : "bg-emerald-50 border-emerald-250 text-emerald-600"
-                  }`}>
-                     <Brain size={14} className="animate-spin" />
-                  </div>
-                  <div className={`p-3.5 border rounded-xl flex gap-3 items-center ${
-                    isDark ? "bg-slate-900/40 border-white/5" : "bg-slate-50 border-slate-200/80 shadow-sm"
-                  }`}>
-                     <span className={`w-3 h-3 border-2 border-t-transparent rounded-full animate-spin shrink-0 ${
-                       isDark ? "border-cyan-400" : "border-emerald-600"
-                     }`} />
-                     <span className={`text-[10px] font-black uppercase tracking-widest font-mono animate-pulse ${
-                       isDark ? "text-cyan-400" : "text-emerald-700"
-                     }`}>
-                       TALEP COGNITIVE CORE ANALYZING...
-                     </span>
-                  </div>
-               </motion.div>
-             )}
-           </AnimatePresence>
-           <div ref={chatEndRef} />
-         </div>
-
-         {/* Bottom Control Send Section */}
-         <div className={`p-3 border-t sticky bottom-0 z-10 rounded-b-[24px] ${
-           isDark ? "bg-slate-950/60 border-white/5" : "bg-white border-slate-100"
-         }`}>
-           
-           {/* Slider Actions Chips Carousel */}
-           <div className="mb-3.5">
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 snap-x">
-                 {quickActions.map((action, i) => (
-                   <button 
-                     key={i}
-                     onClick={() => handleSend(action.query)}
-                     className={`flex-shrink-0 flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border transition-all active:scale-95 snap-start min-w-[155px] font-black text-[9.5px] uppercase cursor-pointer ${
-                       isDark 
-                         ? "bg-slate-900 hover:bg-cyan-500/10 hover:border-cyan-400/25 border-white/5 text-slate-300" 
-                         : "bg-slate-50 hover:bg-blue-50 hover:border-blue-300 border-slate-200 text-slate-700 shadow-sm"
-                     }`}
-                   >
-                     <span>{action.label}</span>
-                   </button>
-                 ))}
-              </div>
-           </div>
-
-           <div className={`flex gap-2.5 items-center border rounded-2xl p-1.5 focus-within:border-cyan-500/30 transition-all ${
-             isDark ? "bg-slate-900 border-white/5" : "bg-slate-50 border-slate-200/80 shadow-inner"
-           }`}>
-             <input 
-               type="text" 
-               value={input}
-               onChange={(e) => setInput(e.target.value)}
-               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-               placeholder={`"${selectedMode.toUpperCase()}" motoruna toksikolojik parametre girin...`}
-               className={`flex-1 bg-transparent px-4 py-2.5 text-xs font-bold outline-none ${
-                 isDark ? "text-white placeholder:text-slate-500" : "text-slate-800 placeholder:text-slate-400"
-               }`}
-             />
-             <button 
-               onClick={() => handleSend()}
-               disabled={isTyping}
-               className="w-10 h-10 bg-gradient-to-tr from-cyan-500 to-indigo-500 text-slate-950 rounded-xl flex items-center justify-center shadow-lg active:scale-90 hover:scale-105 transition-all shrink-0 cursor-pointer disabled:opacity-50"
-             >
-               <Send size={15} />
-             </button>
-           </div>
-         </div>
-
       </div>
     </div>
   );
+}
+
+// Utility to ensure Markdown text renders nicely in prose class
+function messageStyleOverride(text: string) {
+  return text;
 }

@@ -198,6 +198,8 @@ app.post("/api/talep-ai/reason", async (req: Request, res: Response): Promise<vo
     mode = body.mode || "clinical";
     history = body.history || [];
 
+    const isCasual = body.isCasual || false;
+
     if (!question || !question.trim()) {
       res.status(400).json({ error: "Soru veya veri girişi zorunludur." });
       return;
@@ -213,6 +215,67 @@ app.post("/api/talep-ai/reason", async (req: Request, res: Response): Promise<vo
         response: getDynamicFallbackResponse(question, context, mode)
       });
       return;
+    }
+
+    if (isCasual) {
+      // Just do a normal chat response
+      try {
+        const gResponse = await client.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: `Kullanıcı: "${question}"
+Sen TALEP AI, Şehmus Aykut tarafından geliştirilmiş profesyonel bir mesleki toksikoloji ve yapay zeka asistanısın. Kullanıcıya kısa, doğal, samimi ve saygılı (ChatGPT gibi) günlük dilde cevap ver.
+- Uzun listeler veya tıbbi formatlamalar yapma.
+- "Selam", "naber" gibi mesajlara doğal yanıt ver: "Selam! Ben buradayım, toksikoloji veya vaka analizi konularında nasıl yardımcı olabilirim?"
+- Hava durumu sorulursa: "Bende hava durumu modülü veya anlık API bağlı değil, istersen bana şehri söyle sana elimdeki genel veriyi söyleyeyim" gibi dürüst ol. Uydurma yapma.`,
+          config: {
+            temperature: 0.7,
+          },
+        });
+        
+        const rawText = gResponse.text || "Merhaba! Size nasıl yardımcı olabilirim?";
+        const casualObj = {
+          rawText,
+          isCasual: true,
+          riskLevel: "Düşük",
+          exposureSeverity: 0,
+          carcinogenicityGroup: "Bulgu Yok",
+          confidenceScore: 100,
+          evidenceLevel: "Level IV",
+          targetOrgans: [],
+          biomarkerInterpretation: "",
+          recommendedNextTests: [],
+          ppeRecommendations: [],
+          surveillanceSuggestions: [],
+          probabilityGraph: [],
+          biomarkerProgression: [],
+          riskRadar: [],
+          riskHeatmap: []
+        };
+        res.json({ response: casualObj });
+        return;
+      } catch (casualErr: any) {
+        console.log("Offline local mode active for casual greeting.");
+        const casualObj = {
+          rawText: "Merhaba! Şu an yerel tıbbi asistan aktif durumda. Size toksikoloji veya vaka analizi konularında nasıl yardımcı olabilirim?",
+          isCasual: true,
+          riskLevel: "Düşük",
+          exposureSeverity: 0,
+          carcinogenicityGroup: "Bulgu Yok",
+          confidenceScore: 100,
+          evidenceLevel: "Level IV",
+          targetOrgans: [],
+          biomarkerInterpretation: "Sistem limiti nedeniyle çevrimdışı karar destek modülü etkindir.",
+          recommendedNextTests: [],
+          ppeRecommendations: [],
+          surveillanceSuggestions: [],
+          probabilityGraph: [],
+          biomarkerProgression: [],
+          riskRadar: [],
+          riskHeatmap: []
+        };
+        res.json({ response: casualObj });
+        return;
+      }
     }
 
     // Constructing an optimized memory and analysis context
@@ -394,12 +457,16 @@ app.post("/api/talep-ai/reason", async (req: Request, res: Response): Promise<vo
       res.json({ response: parsedData });
     } catch (apiError: any) {
       const errStr = String(apiError.message || apiError);
-      console.warn("Gemini API call failed, triggers high-performance local fallback:", errStr);
-      
       const isQuotaOrBilling = errStr.includes("RESOURCE_EXHAUSTED") || errStr.includes("429") || errStr.includes("prepayment") || errStr.includes("quota") || errStr.includes("billing");
       
+      if (isQuotaOrBilling) {
+        console.log("Local clinical decision-support engine activated due to server biling limitations.");
+      } else {
+        console.log("Local backup analysis engine fallback active.", errStr);
+      }
+      
       fallbackBanner = isQuotaOrBilling
-        ? `⚠️ **ÖNEMLİ BİLGİLENDİRME (AI STUDIO PROJE VE LİMİT HASTALIĞI):**\n` +
+        ? `⚠️ **ÖNEMLİ BİLGİLENDİRME (AI STUDIO PROJE VE LİMİT DURUMU):**\n` +
           `Sistem şu an **Lokal Klinik Karar Destek Motoru v4.0** algoritması üzerinden çalışmaktadır. AI Studio hesabınızdaki ön ödemeli (prepayment) kredileriniz sonlanmıştır veya geçici kota dolumu mevcuttur. \n` +
           `Sistem kesintisiz olarak çalışmaya devam edebilir, ancak canlı bulut analizi yapabilmek için lütfen [Google AI Studio (https://ai.studio/projects)](https://ai.studio/projects) paneline geçerek bakiyenizi düzenleyiniz veya alternatif bir API Değeri tanımlayınız.\n\n`
         : `⚠️ **LOKAL TOKSİKOLOJİK KARAR DESTEK SİSTEMİ AKTİF:**\n` +
@@ -419,7 +486,7 @@ app.post("/api/talep-ai/reason", async (req: Request, res: Response): Promise<vo
     }
 
   } catch (error: any) {
-    console.error("Critical Scientific Core Error:", error);
+    console.log("Scientific fallback service layer initialized.");
     try {
       const fallbackObj = getDynamicFallbackResponse(question, context, mode);
       fallbackObj.rawText = `⚠️ **KRİTİK HATA KURTARMA KATMANI:**\n` +

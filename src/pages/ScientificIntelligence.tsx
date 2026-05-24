@@ -52,9 +52,8 @@ export default function ScientificIntelligence({ defaultTab = 'literature' }: Sc
                         Prof. Dr. Vugar Ali Türksoy Akademik Katmanı
                      </span>
                   </div>
-                  {/* MAIN DEVELOPER SUBTITLE CREDITS */}
+                  {/* ACADEMIC INSTITUTION SUBTITLE */}
                   <div className="text-[10px] font-mono tracking-[0.12em] text-indigo-300 font-bold uppercase pl-5 mt-1 space-y-0.5">
-                     <p>Proje Ekibi: Şehmus AYKUT • Fatma Nur AYKUT • Aghajan MUSALI</p>
                      <p className="text-[8px] text-slate-400 font-sans tracking-wide">Yozgat Bozok Üniversitesi Tıp Fakültesi Halk Sağlığı Anabilim Dalı</p>
                   </div>
                </div>
