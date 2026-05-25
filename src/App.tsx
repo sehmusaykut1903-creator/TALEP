@@ -335,7 +335,11 @@ export default function App() {
       {/* CORE CONTENT LAYOUT WRAPPER (Independent scrolling on Desktop and Mobile) */}
       <div className="flex-1 h-full md:h-screen flex flex-col justify-between relative z-10 overflow-hidden">
         
-        <main className="p-4 sm:p-6 md:p-8 flex-1 space-y-6 max-w-full overflow-x-hidden overflow-y-auto pb-[180px] md:pb-16 flex flex-col min-h-0">
+        <main className={`flex-1 max-w-full flex flex-col min-h-0 ${
+          activeTab === "ai" 
+            ? "p-0 space-y-0 overflow-y-hidden pb-0" 
+            : "p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto pb-[180px] md:pb-16"
+        }`}>
           
           {/* ACTIVE VIEW MANAGER (DYNAMICS) */}
           <div className="min-h-0 w-full flex-1">
